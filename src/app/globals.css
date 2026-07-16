@@ -1,26 +1,192 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #020a06; /* Deepest forest green black */
+  --foreground: #f2fbf7; /* Crisp mint white */
+  
+  --card: #051810; /* Rich dark green cards */
+  --card-foreground: #f2fbf7;
+  
+  --primary: #d4af37; /* Metallic Gold */
+  --primary-foreground: #020a06;
+  
+  --muted: #08251a; /* Medium dark green */
+  --muted-foreground: #73a48e; /* Sage green muted text */
+  
+  --accent: #d4af37; /* Gold */
+  --accent-foreground: #020a06;
+  
+  --border: #0d3d29; /* Dark green border */
+  --input: #0d3d29;
+  
+  --ring: rgba(212, 175, 55, 0.4);
+
+  /* Slate mappings for Dark Forest Green theme */
+  --slate-50: #ffffff;       /* Pure white/mint for light text */
+  --slate-100: #f2fbf7;      /* Primary text / headings */
+  --slate-200: #e0f7ec;      /* Important text */
+  --slate-300: #c3ebd9;      /* Normal text */
+  --slate-350: #a8d5c2;      /* Medium text */
+  --slate-400: #8cbfa9;      /* Muted text */
+  --slate-500: #73a48e;      /* Very muted text */
+  --slate-600: #1c6b50;      /* Icons / lines */
+  --slate-700: #135238;      /* Borders */
+  --slate-800: #0d3d29;      /* Borders / separators */
+  --slate-850: #09251a;      /* Table rows */
+  --slate-900: #051810;      /* Cards and sidebar */
+  --slate-950: #020a06;      /* Page background */
+}
+
+.dark {
+  --background: #020a06;
+  --foreground: #f2fbf7;
+  --card: #051810;
+  --card-foreground: #f2fbf7;
+  --primary: #d4af37;
+  --primary-foreground: #020a06;
+  --muted: #08251a;
+  --muted-foreground: #73a48e;
+  --accent: #d4af37;
+  --accent-foreground: #020a06;
+  --border: #0d3d29;
+  --input: #0d3d29;
+  --ring: rgba(212, 175, 55, 0.4);
+
+  --slate-50: #ffffff;
+  --slate-100: #f2fbf7;
+  --slate-200: #e0f7ec;
+  --slate-300: #c3ebd9;
+  --slate-350: #a8d5c2;
+  --slate-400: #8cbfa9;
+  --slate-500: #73a48e;
+  --slate-600: #1c6b50;
+  --slate-700: #135238;
+  --slate-800: #0d3d29;
+  --slate-850: #09251a;
+  --slate-900: #051810;
+  --slate-950: #020a06;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary-custom: var(--primary);
+  --color-accent-custom: var(--accent);
+  --color-muted-custom: var(--muted);
+  --color-muted-foreground-custom: var(--muted-foreground);
+  --color-border-custom: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Dynamic Slate overriding */
+  --color-slate-50: var(--slate-50);
+  --color-slate-100: var(--slate-100);
+  --color-slate-200: var(--slate-200);
+  --color-slate-300: var(--slate-300);
+  --color-slate-350: var(--slate-350);
+  --color-slate-400: var(--slate-400);
+  --color-slate-500: var(--slate-500);
+  --color-slate-600: var(--slate-600);
+  --color-slate-700: var(--slate-700);
+  --color-slate-800: var(--slate-800);
+  --color-slate-850: var(--slate-850);
+  --color-slate-900: var(--slate-900);
+  --color-slate-950: var(--slate-950);
+
+  /* Golden Touch: Override Indigos with premium Golds */
+  --color-indigo-50: #fbf9ec;
+  --color-indigo-100: #f6f0cd;
+  --color-indigo-200: #eedda1;
+  --color-indigo-300: #f3d06d;
+  --color-indigo-400: #e5c158;
+  --color-indigo-500: #cda12c;
+  --color-indigo-600: #d4af37; /* Gold */
+  --color-indigo-700: #ab7921;
+  --color-indigo-800: #71491a;
+  --color-indigo-900: #5d3b19;
+  --color-indigo-950: #351f0c;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom premium scrollbar thumb */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1c6b50;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Premium Gold Accent overrides for elements with bg-indigo-600 */
+.bg-indigo-600 {
+  color: #020a06 !important; /* Deep forest black text */
+}
+.bg-indigo-600 svg {
+  stroke: #020a06 !important;
+}
+.bg-indigo-600:hover {
+  background-color: #eedda1 !important; /* Soft golden tint on hover */
+}
+.bg-indigo-600:hover svg {
+  stroke: #020a06 !important;
+}
+
+/* Premium Gold Pill Badge styling for role tags/highlights */
+.bg-indigo-50 {
+  color: #c5972c !important; /* Premium gold/bronze text */
+  border-color: #eedda1 !important;
+  background-color: rgba(212, 175, 55, 0.1) !important;
+}
+
+/* Custom Premium Glassmorphism */
+.glass {
+  background: rgba(5, 24, 16, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+/* Soft Animations */
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Premium Card hover effects */
+.hover-card-trigger {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-card-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
 }

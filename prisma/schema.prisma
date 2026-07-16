@@ -1,0 +1,246 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  DIRECTOR
+  BRANCH_MANAGER
+  COUNSELOR
+  FINANCE
+  SUB_AGENT
+  STUDENT_PORTAL
+}
+
+enum PipelineStage {
+  INQUIRY
+  COUNSELLING
+  CLASS_ENROLLMENT
+  APPLICATION_SUBMITTED
+  OFFER
+  VISA_FILED
+  VISA_DECISION
+  PRE_DEPARTURE
+}
+
+enum DocumentStatus {
+  NOT_SUBMITTED
+  SUBMITTED
+  VERIFIED
+  TRANSLATION_PENDING
+  EXPIRED
+}
+
+enum CommunicationType {
+  NOTE
+  TASK
+  WHATSAPP
+  SMS
+  EMAIL
+}
+
+model Organization {
+  id                  String              @id @default(uuid())
+  name                String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  branches            Branch[]
+  users               User[]
+  applicants          Applicant[]
+  destinations        Destination[]
+  partnerUniversities PartnerUniversity[]
+}
+
+model Branch {
+  id                    String       @id @default(uuid())
+  name                  String
+  branchCommissionSplit Float?       // Flat rate or percentage of commission split (e.g. 0.40 for 40% to branch)
+  organizationId        String
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  users                 User[]
+  applicants            Applicant[]
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+}
+
+model User {
+  id                      String       @id @default(uuid())
+  email                   String       @unique
+  passwordHash            String
+  name                    String
+  role                    Role
+  organizationId          String
+  organization            Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branchId                String?
+  branch                  Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  
+  assignedApplicants      Applicant[]  @relation("counselor")
+  createdApplicants       Applicant[]  @relation("creator")
+  subAgentApplicants      Applicant[]  @relation("subAgent")
+  
+  subAgentCommissionSplit Float?       // Flat rate or percentage if this user is a sub-agent (e.g. 0.50 for 50%)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+}
+
+model Applicant {
+  id                      String               @id @default(uuid())
+  name                    String
+  email                   String?
+  phone                   String?
+  academicHistory         String?              // Multi-line summary of degrees
+  testScores              Json?                // JSON format: { ielts: 7.5, pte: 78, sat: 1350 }
+  targetCountry           String               // Australia, Canada, UK, USA, etc.
+  targetCourse            String?
+  targetUniversity        String?
+  source                  String               // WEB_FORM, WALK_IN, FACEBOOK_AD, SUB_AGENT
+  pipelineStage           PipelineStage        @default(INQUIRY)
+  daysInCurrentStage      Int                  @default(0)
+  stageUpdatedAt          DateTime             @default(now())
+  priority                String?              // HOT, WARM, COLD
+  
+  organizationId          String
+  organization            Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  branchId                String
+  branch                  Branch               @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  
+  counselorId             String?
+  counselor               User?                @relation("counselor", fields: [counselorId], references: [id], onDelete: SetNull)
+  
+  creatorId               String?
+  creator                 User?                @relation("creator", fields: [creatorId], references: [id], onDelete: SetNull)
+  
+  subAgentId              String?
+  subAgent                User?                @relation("subAgent", fields: [subAgentId], references: [id], onDelete: SetNull)
+  subAgentCommissionSplit Float?               // Overwrite standard split for this applicant: Flat amount (e.g. 15000) or percentage (0.4)
+  branchCommissionSplit   Float?               // Overwrite standard branch split for this applicant: Flat amount or percentage
+  
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  
+  guardians               Guardian[]
+  pipelineStageLogs       PipelineStageLog[]
+  documents               Document[]
+  communicationLogs       CommunicationLog[]
+  commissions             CommissionLedger[]
+  applications            Application[]
+}
+
+model Application {
+  id               String        @id @default(uuid())
+  applicantId      String
+  applicant        Applicant     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  targetCountry    String
+  targetCourse     String
+  targetUniversity String?
+  stage            PipelineStage @default(INQUIRY)
+  daysInStage      Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Guardian {
+  id          String    @id @default(uuid())
+  name        String
+  relation    String    // Father, Mother, Uncle, Spouse, etc.
+  email       String?
+  phone       String?
+  applicantId String
+  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PipelineStageLog {
+  id           String        @id @default(uuid())
+  applicantId  String
+  applicant    Applicant     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  stage        PipelineStage
+  enteredAt    DateTime      @default(now())
+  exitedAt     DateTime?
+  durationDays Int?
+}
+
+model Document {
+  id           String         @id @default(uuid())
+  name         String         // e.g. "IELTS Marksheet", "No Objection Certificate (NOC)", "Bank Statement"
+  type         String         // NOC, BANK_STATEMENT, EDUCATION_LOAN, ACADEMIC_TRANSCRIPT, PASSPORT, OTHER
+  status       DocumentStatus @default(NOT_SUBMITTED)
+  fileUrl      String?
+  applicantId  String
+  applicant    Applicant      @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  verifiedById String?        // User ID of who verified it
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model CommunicationLog {
+  id          String            @id @default(uuid())
+  type        CommunicationType
+  title       String
+  content     String            @db.Text
+  status      String?           // SENT, FAILED, PENDING, COMPLETED, IN_PROGRESS
+  senderName  String?           // Cache sender's name (e.g. system, counselor name)
+  applicantId String
+  applicant   Applicant         @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  dueDate     DateTime?         // For task types
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model CommissionLedger {
+  id                       String    @id @default(uuid())
+  applicantId              String
+  applicant                Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  partnerUniversity        String
+  commissionAmountForeign  Float     // commission value in foreign currency (e.g. 3000)
+  currency                 String    // AUD, CAD, GBP, USD
+  nprExchangeRate          Float     // Exchange rate at creation time (e.g. 88.50)
+  commissionAmountNpr      Float     // Total calculated in NPR (commissionAmountForeign * nprExchangeRate)
+  subAgentAmountNpr        Float     @default(0) // Split paid to sub-agent
+  branchAmountNpr          Float     @default(0) // Split paid to branch office
+  hqAmountNpr              Float     // Net amount retained by HQ
+  invoiceNumber            String?
+  invoiceGeneratedAt       DateTime?
+  status                   String    // PENDING, RECEIVED, PAID_TO_SUBAGENT
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+}
+
+model Destination {
+  id             String                @id @default(uuid())
+  countryName    String
+  organizationId String
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  checklists     DestinationChecklist[]
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@unique([countryName, organizationId])
+}
+
+model DestinationChecklist {
+  id            String      @id @default(uuid())
+  documentName  String      // e.g. No Objection Certificate
+  documentType  String      // NOC, BANK_STATEMENT, EDUCATION_LOAN, ACADEMIC_TRANSCRIPT, PASSPORT, OTHER
+  destinationId String
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model PartnerUniversity {
+  id             String       @id @default(uuid())
+  name           String       // e.g. York University
+  country        String       // e.g. Canada
+  course         String       // e.g. Master of Business Administration
+  tuitionFee     String       // e.g. CAD 24,000 / Year
+  intakes        String       // e.g. Jan, Sept
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
