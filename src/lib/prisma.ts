@@ -8,7 +8,7 @@ let prisma: PrismaClient;
 const connectionString = process.env.DATABASE_URL;
 
 if (process.env.NODE_ENV === 'production') {
-  const pool = new Pool({ connectionString });
+  const pool = new Pool({ connectionString, max: 1 }); // PGlite can't handle concurrent connections
   const adapter = new PrismaPg(pool);
   prisma = new PrismaClient({ adapter });
 } else {
@@ -19,7 +19,7 @@ if (process.env.NODE_ENV === 'production') {
   };
   
   if (!globalWithPrisma.pool) {
-    globalWithPrisma.pool = new Pool({ connectionString });
+    globalWithPrisma.pool = new Pool({ connectionString, max: 1 }); // PGlite can't handle concurrent connections
   }
   
   if (!globalWithPrisma.prisma) {

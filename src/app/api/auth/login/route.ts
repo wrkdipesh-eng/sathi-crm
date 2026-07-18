@@ -15,13 +15,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find user in DB
+    // Find user in DB — no include, PGlite can't handle parallel connections
     const user = await prisma.user.findUnique({
       where: { email },
-      include: {
-        organization: true,
-        branch: true,
-      },
     });
 
     if (!user) {
@@ -30,6 +26,14 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Fetch org and branch sequentially (not in parallel)
+    const organization = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+    });
+    const branch = user.branchId
+      ? await prisma.branch.findUnique({ where: { id: user.branchId } })
+      : null;
 
     // Verify password
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
@@ -58,8 +62,8 @@ export async function POST(req: NextRequest) {
         email: user.email,
         name: user.name,
         role: user.role,
-        organizationName: user.organization.name,
-        branchName: user.branch?.name || null,
+        organizationName: organization?.name || '',
+        branchName: branch?.name || null,
       },
     });
 
