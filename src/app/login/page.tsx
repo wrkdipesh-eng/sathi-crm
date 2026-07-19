@@ -144,11 +144,6 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-3.5">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-bold tracking-wider uppercase w-fit">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              <span>Student Success CRM</span>
-            </div>
-            
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
               {org.name}
               <span className="block mt-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent text-2xl md:text-3xl font-black">

@@ -1174,7 +1174,7 @@ export default function AdminSettingsPage() {
                   <div className="flex flex-col justify-center items-center p-6 bg-slate-950/40 border border-slate-800 rounded-2xl space-y-4">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live Sidebar Header Preview</span>
                     
-                    <div className="w-full max-w-[240px] p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center space-x-3 shadow-lg select-none">
+                    <div className="w-full max-w-[270px] p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center space-x-3 shadow-lg select-none">
                       {orgForm.logoUrl ? (
                         <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 p-0.5 shadow-sm">
                           <img src={orgForm.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded-lg" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -1195,10 +1195,10 @@ export default function AdminSettingsPage() {
                         </div>
                       )}
                       <div className="overflow-hidden">
-                        <h2 className="font-bold text-xs text-slate-100 truncate max-w-[145px]" title={orgForm.name || 'Thinkcone CRM'}>
+                        <h2 className="font-bold text-xs text-slate-100 truncate max-w-[175px]" title={orgForm.name || 'Thinkcone CRM'}>
                           {orgForm.name || 'Thinkcone CRM'}
                         </h2>
-                        <span className="text-[9px] text-slate-400 font-medium tracking-wide block truncate max-w-[145px]" title={orgForm.tagline || 'Thinkcone Study Abroad'}>
+                        <span className="text-[9px] text-slate-400 font-medium tracking-wide block truncate max-w-[175px]" title={orgForm.tagline || 'Thinkcone Study Abroad'}>
                           {orgForm.tagline || 'Thinkcone Study Abroad'}
                         </span>
                       </div>

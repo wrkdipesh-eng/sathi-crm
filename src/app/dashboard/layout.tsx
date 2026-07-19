@@ -67,7 +67,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col justify-between shrink-0">
+      <aside className="w-72 border-r border-slate-800 bg-slate-900 flex flex-col justify-between shrink-0">
         <div>
           {/* Logo / Org Header */}
           <div className="h-20 flex items-center px-4 border-b border-slate-800 space-x-3">
@@ -81,10 +81,10 @@ export default async function DashboardLayout({
               </div>
             )}
             <div className="overflow-hidden">
-              <h2 className="font-bold text-xs text-slate-100 truncate max-w-[185px]" title={org?.name || 'Thinkcone CRM'}>
+              <h2 className="font-bold text-xs text-slate-100 truncate max-w-[210px]" title={org?.name || 'Thinkcone CRM'}>
                 {org?.name || 'Thinkcone CRM'}
               </h2>
-              <span className="text-[9px] text-slate-400 font-medium tracking-wide block truncate max-w-[185px]" title={org?.tagline || 'Thinkcone Study Abroad'}>
+              <span className="text-[9px] text-slate-400 font-medium tracking-wide block truncate max-w-[210px]" title={org?.tagline || 'Thinkcone Study Abroad'}>
                 {org?.tagline || 'Thinkcone Study Abroad'}
               </span>
             </div>
