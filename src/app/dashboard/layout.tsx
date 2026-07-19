@@ -7,14 +7,12 @@ import {
   Wallet, 
   LogOut, 
   LayoutDashboard, 
-  FolderOpen, 
   MapPin, 
-  User, 
-  ShieldAlert,
   Globe,
   Settings
 } from 'lucide-react';
 import Link from 'next/link';
+import LogoutButton from './LogoutButton';
 
 export default async function DashboardLayout({
   children,
@@ -138,15 +136,7 @@ export default async function DashboardLayout({
             </div>
           </div>
 
-          <form action="/api/auth/logout" method="POST" className="w-full">
-            <button
-              type="submit"
-              className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-all text-xs font-medium cursor-pointer"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sign Out</span>
-            </button>
-          </form>
+          <LogoutButton />
 
           <div className="pt-1 text-center text-[9px] text-slate-500 font-medium">
             Powered by <a href="https://thinkcone.com.np" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-400 hover:text-indigo-400 transition-all hover:underline">Thinkcone Technology</a>

@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth';
-
-// Helper mock rates for NPR exchange rate snapshotting
-const NPR_EXCHANGE_RATES: Record<string, number> = {
-  AUD: 89.20,
-  CAD: 89.45,
-  GBP: 168.50,
-  USD: 133.50,
-};
+import { fetchSellingRates, FALLBACK_RATES } from '@/lib/forex';
 
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -42,38 +35,15 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get exchange rate snapshot (dynamically fetch latest selling price from NRB API, with hardcoded fallback)
-    let exchangeRate = NPR_EXCHANGE_RATES[currency.toUpperCase()] || 133.0;
+    // Get exchange rate snapshot (dynamically fetch latest selling price from NRB API or website)
+    let exchangeRate = FALLBACK_RATES[currency.toUpperCase()] || 133.0;
     try {
-      const toDate = new Date();
-      const fromDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000); // 10-day window to guarantee capturing latest daily rates over weekends/holidays
-      const toStr = toDate.toISOString().split('T')[0];
-      const fromStr = fromDate.toISOString().split('T')[0];
-      
-      const nrbUrl = `https://www.nrb.org.np/api/forex/v1/rates?page=1&per_page=10&from=${fromStr}&to=${toStr}`;
-      const response = await fetch(nrbUrl, { next: { revalidate: 3600 } });
-      if (response.ok) {
-        const json = await response.json();
-        const payloads = json?.data?.payload || [];
-        // Sort payloads by date descending to get the absolute latest rates
-        payloads.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
-        const latestPayload = payloads[0];
-        if (latestPayload?.rates) {
-          const matchingRate = latestPayload.rates.find(
-            (r: any) => r.currency?.iso3?.toUpperCase() === currency.toUpperCase()
-          );
-          if (matchingRate) {
-            const sellVal = parseFloat(matchingRate.sell);
-            const unitVal = parseFloat(matchingRate.currency?.unit || '1');
-            if (!isNaN(sellVal) && unitVal > 0) {
-              exchangeRate = sellVal / unitVal;
-            }
-          }
-        }
+      const rates = await fetchSellingRates();
+      if (rates[currency.toUpperCase()]) {
+        exchangeRate = rates[currency.toUpperCase()];
       }
     } catch (err) {
-      console.error('Failed to retrieve dynamic exchange rate from NRB, falling back to static snapshot:', err);
+      console.error('Failed to retrieve dynamic exchange rate, falling back to static snapshot:', err);
     }
     const commissionAmountNpr = parseFloat(commissionAmountForeign) * exchangeRate;
 

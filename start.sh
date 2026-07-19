@@ -9,8 +9,8 @@ if ! nc -z 127.0.0.1 3004; then
   sleep 3
 fi
 
-# Check if Next.js is running on port 3003
-if ! nc -z 127.0.0.1 3003; then
+# Check if Next.js is running on port 3022
+if ! nc -z 127.0.0.1 3022; then
   echo "Starting Next.js..."
-  nohup npx next start -p 3003 > next.log 2>&1 &
+  nohup npx next start -p 3022 > next.log 2>&1 &
 fi

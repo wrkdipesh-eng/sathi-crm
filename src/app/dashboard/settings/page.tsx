@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   Building, 
@@ -53,6 +53,7 @@ export default function AdminSettingsPage() {
     course: '',
     tuitionFee: '',
     intakes: '',
+    commissionPercentage: '',
   });
 
   // Bulk Import state
@@ -91,6 +92,36 @@ export default function AdminSettingsPage() {
     branchId: '',
     subAgentCommissionSplit: '0.40'
   });
+
+  // Group universities by name + country
+  const groupedUnis = useMemo(() => {
+    const groups: Record<string, { name: string; country: string; programs: any[] }> = {};
+    universities.forEach(uni => {
+      const key = `${uni.name.trim()}|${uni.country.trim()}`;
+      if (!groups[key]) {
+        groups[key] = {
+          name: uni.name.trim(),
+          country: uni.country.trim(),
+          programs: [],
+        };
+      }
+      groups[key].programs.push(uni);
+    });
+    return Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
+  }, [universities]);
+
+  const existingUniversities = useMemo(() => {
+    const list: { name: string; country: string }[] = [];
+    const seen = new Set<string>();
+    universities.forEach(u => {
+      const key = u.name.trim();
+      if (!seen.has(key.toLowerCase())) {
+        seen.add(key.toLowerCase());
+        list.push({ name: u.name.trim(), country: u.country.trim() });
+      }
+    });
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  }, [universities]);
 
   const loadData = async () => {
     setLoading(true);
@@ -301,7 +332,7 @@ export default function AdminSettingsPage() {
       if (res.ok) {
         setIsUniModalOpen(false);
         setEditingUni(null);
-        setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '' });
+        setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '' });
         fetchUniversities();
       } else {
         const data = await res.json();
@@ -357,12 +388,13 @@ export default function AdminSettingsPage() {
             course: parts[2]?.trim(),
             tuitionFee: parts[3]?.trim() || '',
             intakes: parts[4]?.trim() || '',
+            commissionPercentage: parts[5]?.trim() && !isNaN(parseFloat(parts[5].trim())) ? parseFloat(parts[5].trim()) : null,
           });
         }
       }
 
       if (parsed.length === 0) {
-        setBulkError("Could not parse any valid rows. Format: Name, Country, Course, Fee, Intakes");
+        setBulkError("Could not parse any valid rows. Format: Name, Country, Course, Fee, Intakes, Commission %");
         setIsImportingBulk(false);
         return;
       }
@@ -634,7 +666,6 @@ export default function AdminSettingsPage() {
                       <th className="px-4 py-3">Email Address</th>
                       <th className="px-4 py-3">Assigned Branch</th>
                       <th className="px-4 py-3">Access Role</th>
-                      <th className="px-4 py-3">Split Rate</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -652,11 +683,6 @@ export default function AdminSettingsPage() {
                             <span className="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-300 text-[8px] font-bold uppercase rounded tracking-wide border border-indigo-500/20">
                               {u.role.replace('_', ' ')}
                             </span>
-                          </td>
-                          <td className="px-4 py-3 font-mono text-amber-400">
-                            {u.role === 'SUB_AGENT' ? (
-                              u.subAgentCommissionSplit !== null ? `${(u.subAgentCommissionSplit * 100).toFixed(0)}%` : '-'
-                            ) : '-'}
                           </td>
                           <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
                             <button
@@ -692,8 +718,8 @@ export default function AdminSettingsPage() {
               </div>
 
               {/* Add Branch Inline Form */}
-              <form onSubmit={handleAddBranch} className="p-4 bg-slate-950/40 border border-slate-800/85 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div className="md:col-span-2">
+              <form onSubmit={handleAddBranch} className="p-4 bg-slate-950/40 border border-slate-800/85 rounded-2xl flex gap-4 items-end">
+                <div className="flex-1">
                   <label className="block text-[9px] text-slate-400 font-medium mb-1.5" htmlFor="branchName">
                     New Branch Office Name *
                   </label>
@@ -707,29 +733,14 @@ export default function AdminSettingsPage() {
                     className="w-full px-3.5 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-[9px] text-slate-400 font-medium mb-1.5" htmlFor="branchSplit">
-                    Default split share (NPR or Split rate)
-                  </label>
-                  <div className="flex space-x-2">
-                    <input
-                      id="branchSplit"
-                      type="text"
-                      placeholder="e.g. 0.40 or 15000"
-                      value={newBranchSplit}
-                      onChange={(e) => setNewBranchSplit(e.target.value)}
-                      className="flex-1 px-3.5 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none font-mono"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSavingBranch}
-                      className="py-1.5 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold rounded-lg transition-all flex items-center space-x-1 cursor-pointer disabled:opacity-50 shrink-0 h-8"
-                    >
-                      {isSavingBranch ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                      <span>Add Branch</span>
-                    </button>
-                  </div>
-                </div>
+                <button
+                  type="submit"
+                  disabled={isSavingBranch}
+                  className="py-1.5 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold rounded-lg transition-all flex items-center space-x-1 cursor-pointer disabled:opacity-50 shrink-0 h-8"
+                >
+                  {isSavingBranch ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  <span>Add Branch</span>
+                </button>
               </form>
 
               {branchError && (
@@ -751,11 +762,6 @@ export default function AdminSettingsPage() {
                         <span className="font-semibold text-slate-200 text-sm block">{b.name}</span>
                         <div className="flex items-center space-x-2 mt-0.5 select-none">
                           <span className="text-[9px] text-slate-500 font-mono">{b.id.slice(0, 8).toUpperCase()}</span>
-                          {b.branchCommissionSplit !== null && b.branchCommissionSplit !== undefined && (
-                            <span className="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-bold font-mono rounded">
-                              Split: {b.branchCommissionSplit >= 1 ? `Rs. ${b.branchCommissionSplit.toLocaleString()}` : `${Math.round(b.branchCommissionSplit * 100)}%`}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -866,7 +872,7 @@ export default function AdminSettingsPage() {
                   <button
                     onClick={() => {
                       setEditingUni(null);
-                      setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '' });
+                      setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '' });
                       setUniError(null);
                       setIsUniModalOpen(true);
                     }}
@@ -887,12 +893,12 @@ export default function AdminSettingsPage() {
                   <form onSubmit={handleBulkImport} className="p-4 border-t border-slate-800 space-y-3">
                     {bulkError && <div className="text-[10px] text-rose-500 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">{bulkError}</div>}
                     <div>
-                      <label className="block text-[10px] text-slate-400 font-medium mb-1.5">Paste comma-separated rows (Format: `Name, Country, Course, Fee, Intakes` - One row per line)</label>
+                      <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Paste comma-separated rows (Format: `Name, Country, Course, Fee, Intakes, Commission %` - One row per line)</label>
                       <textarea
                         rows={4}
                         value={bulkText}
                         onChange={(e) => setBulkText(e.target.value)}
-                        placeholder="York University, Canada, MBA, CAD 24000 / Year, Jan Sept&#10;UTS, Australia, Master of IT, AUD 38000 / Year, Feb July Nov"
+                        placeholder="York University, Canada, MBA, CAD 24000 / Year, Jan Sept, 15&#10;UTS, Australia, Master of IT, AUD 38000 / Year, Feb July Nov, 12.5"
                         className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs font-mono focus:outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -909,70 +915,105 @@ export default function AdminSettingsPage() {
                 </details>
               </div>
 
-              {/* Universities Table */}
-              <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-                <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider">Active Representation List ({universities.length} programs)</h4>
-                
-                <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/20">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-slate-950/60 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        <th className="px-4 py-3">University Name</th>
-                        <th className="px-4 py-3">Country</th>
-                        <th className="px-4 py-3">Course / Degree</th>
-                        <th className="px-4 py-3">Tuition Fee</th>
-                        <th className="px-4 py-3">Intakes</th>
-                        <th className="px-4 py-3 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800 text-slate-350">
-                      {universities.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                            No represented universities listed. Add one manually or use the bulk importer above to populate.
-                          </td>
-                        </tr>
-                      ) : (
-                        universities.map((uni) => (
-                          <tr key={uni.id} className="hover:bg-slate-850/30 transition-all">
-                            <td className="px-4 py-3.5 font-bold text-slate-100">{uni.name}</td>
-                            <td className="px-4 py-3.5 font-semibold text-indigo-500">{uni.country}</td>
-                            <td className="px-4 py-3.5">{uni.course}</td>
-                            <td className="px-4 py-3.5 font-mono text-[11px] text-slate-300">{uni.tuitionFee || 'N/A'}</td>
-                            <td className="px-4 py-3.5 text-slate-400">{uni.intakes || 'N/A'}</td>
-                            <td className="px-4 py-3.5 text-right space-x-1.5 whitespace-nowrap">
-                              <button
-                                onClick={() => {
-                                  setEditingUni(uni);
-                                  setUniForm({
-                                    name: uni.name,
-                                    country: uni.country,
-                                    course: uni.course,
-                                    tuitionFee: uni.tuitionFee || '',
-                                    intakes: uni.intakes || '',
-                                  });
-                                  setUniError(null);
-                                  setIsUniModalOpen(true);
-                                }}
-                                className="p-1.5 rounded bg-slate-850 border border-slate-800 text-indigo-400 hover:bg-indigo-900/30 cursor-pointer inline-flex items-center"
-                                title="Edit"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleUniDelete(uni.id)}
-                                className="p-1.5 rounded bg-slate-850 border border-slate-800 text-rose-500 hover:bg-rose-50 cursor-pointer inline-flex items-center"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+              {/* Grouped Universities Representation List */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider">Represented Universities & Programs ({universities.length} total)</h4>
                 </div>
+
+                {groupedUnis.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500 bg-slate-900 border border-slate-800 rounded-2xl">
+                    No represented universities listed. Add one manually or use the bulk importer above to populate.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {groupedUnis.map((group, idx) => (
+                      <div key={idx} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                        {/* Group Header Card */}
+                        <div className="px-5 py-3.5 bg-slate-950/40 border-b border-slate-800/80 flex justify-between items-center">
+                          <div>
+                            <h4 className="font-bold text-xs text-slate-100 font-sans tracking-wide">{group.name}</h4>
+                            <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider font-mono mt-0.5 inline-block">{group.country}</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setEditingUni(null);
+                              setUniForm({
+                                name: group.name,
+                                country: group.country,
+                                course: '',
+                                tuitionFee: '',
+                                intakes: '',
+                                commissionPercentage: '',
+                              });
+                              setUniError(null);
+                              setIsUniModalOpen(true);
+                            }}
+                            className="flex items-center space-x-1 py-1 px-2 bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[9px] font-bold rounded-lg transition-all cursor-pointer font-mono"
+                          >
+                            <Plus className="w-3 h-3 text-indigo-400" />
+                            <span>Add Program</span>
+                          </button>
+                        </div>
+
+                        {/* Programs Nested Table */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="bg-slate-950/20 border-b border-slate-850 text-[9px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                                <th className="px-5 py-2.5">Course / Program</th>
+                                <th className="px-5 py-2.5">Tuition Fee</th>
+                                <th className="px-5 py-2.5">Intakes</th>
+                                <th className="px-5 py-2.5 text-center">Comm %</th>
+                                <th className="px-5 py-2.5 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-850/60 text-slate-350">
+                              {group.programs.map((uni) => (
+                                <tr key={uni.id} className="hover:bg-slate-850/25 transition-all">
+                                  <td className="px-5 py-3 font-semibold text-slate-200">{uni.course}</td>
+                                  <td className="px-5 py-3 font-mono text-[10px] text-slate-400">{uni.tuitionFee || 'N/A'}</td>
+                                  <td className="px-5 py-3 text-slate-400">{uni.intakes || 'N/A'}</td>
+                                  <td className="px-5 py-3 text-center font-mono font-bold text-emerald-400">
+                                    {uni.commissionPercentage !== null && uni.commissionPercentage !== undefined ? `${uni.commissionPercentage}%` : 'N/A'}
+                                  </td>
+                                  <td className="px-5 py-3 text-right space-x-1.5 whitespace-nowrap">
+                                    <button
+                                      onClick={() => {
+                                        setEditingUni(uni);
+                                        setUniForm({
+                                          name: uni.name,
+                                          country: uni.country,
+                                          course: uni.course,
+                                          tuitionFee: uni.tuitionFee || '',
+                                          intakes: uni.intakes || '',
+                                          commissionPercentage: uni.commissionPercentage !== null && uni.commissionPercentage !== undefined ? uni.commissionPercentage.toString() : '',
+                                        });
+                                        setUniError(null);
+                                        setIsUniModalOpen(true);
+                                      }}
+                                      className="p-1 rounded bg-slate-850 border border-slate-800 text-indigo-400 hover:bg-indigo-900/20 cursor-pointer inline-flex items-center"
+                                      title="Edit Program"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleUniDelete(uni.id)}
+                                      className="p-1 rounded bg-slate-850 border border-slate-800 text-rose-500 hover:bg-rose-900/20 cursor-pointer inline-flex items-center"
+                                      title="Delete Program"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1069,63 +1110,24 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-slate-850 pt-3 mt-2">
-                {/* Branch Assignment - disabled for Directors & Sub-agents */}
-                {userForm.role !== 'DIRECTOR' && userForm.role !== 'SUB_AGENT' ? (
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5">
-                      Assign Branch Office *
-                    </label>
-                    <select
-                      value={userForm.branchId}
-                      required
-                      onChange={(e) => setUserForm(prev => ({ ...prev, branchId: e.target.value }))}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
-                    >
-                      <option value="">Select Branch</option>
-                      {branches.map((b) => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1.5 select-none">
-                      Branch Assignment
-                    </label>
-                    <div className="px-3 py-2 bg-slate-950/40 border border-slate-800/40 rounded-xl text-slate-650 text-xs select-none">
-                      Not Applicable
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-agent split rate */}
-                {userForm.role === 'SUB_AGENT' ? (
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5" htmlFor="regSplit">
-                      Sub-Agent Split Rate (Percentage) *
-                    </label>
-                    <input
-                      id="regSplit"
-                      type="text"
-                      required
-                      value={userForm.subAgentCommissionSplit}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, subAgentCommissionSplit: e.target.value }))}
-                      placeholder="e.g. 0.40 for 40%"
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none"
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1.5 select-none">
-                      Commission Split
-                    </label>
-                    <div className="px-3 py-2 bg-slate-950/40 border border-slate-800/40 rounded-xl text-slate-650 text-xs select-none">
-                      Not Applicable
-                    </div>
-                  </div>
-                )}
-              </div>
+              {userForm.role !== 'DIRECTOR' && userForm.role !== 'SUB_AGENT' && (
+                <div className="border-t border-slate-850 pt-3 mt-2">
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5">
+                    Assign Branch Office *
+                  </label>
+                  <select
+                    value={userForm.branchId}
+                    required
+                    onChange={(e) => setUserForm(prev => ({ ...prev, branchId: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                  >
+                    <option value="">Select Branch</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Modal Actions */}
               <div className="pt-4 border-t border-slate-800 flex justify-end space-x-3 mt-4">
@@ -1182,11 +1184,25 @@ export default function AdminSettingsPage() {
                 <input
                   type="text"
                   required
+                  list="existing-unis"
                   value={uniForm.name}
-                  onChange={(e) => setUniForm(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const matched = existingUniversities.find(eu => eu.name.toLowerCase() === val.toLowerCase());
+                    setUniForm(prev => ({
+                      ...prev,
+                      name: val,
+                      country: matched ? matched.country : prev.country,
+                    }));
+                  }}
                   placeholder="e.g. York University"
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
                 />
+                <datalist id="existing-unis">
+                  {existingUniversities.map((eu, idx) => (
+                    <option key={idx} value={eu.name}>{eu.country}</option>
+                  ))}
+                </datalist>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1235,6 +1251,20 @@ export default function AdminSettingsPage() {
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Commission Percentage (%)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={uniForm.commissionPercentage}
+                  onChange={(e) => setUniForm(prev => ({ ...prev, commissionPercentage: e.target.value }))}
+                  placeholder="e.g. 15.00"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono"
+                />
               </div>
 
               <div className="pt-4 border-t border-slate-800 flex justify-end space-x-2">

@@ -69,6 +69,19 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Validate if primary pipeline stage is VISA_FILED or beyond
+    const blockStages: PipelineStage[] = [
+      PipelineStage.VISA_FILED,
+      PipelineStage.VISA_DECISION,
+      PipelineStage.PRE_DEPARTURE,
+    ];
+    if (blockStages.includes(applicant.pipelineStage)) {
+      return NextResponse.json(
+        { error: 'Cannot add a secondary target once the primary target has filed for a visa.' },
+        { status: 400 }
+      );
+    }
+
     // Create the Application record
     const application = await prisma.application.create({
       data: {

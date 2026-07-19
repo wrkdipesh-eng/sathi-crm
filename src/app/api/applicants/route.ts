@@ -79,6 +79,7 @@ export async function GET(req: NextRequest) {
     const stuckThreshold = parseInt(searchParams.get('stuckThreshold') || '7', 10);
     const priority = searchParams.get('priority');
     const category = searchParams.get('category');
+    const targetCountry = searchParams.get('targetCountry');
 
     // Enforce data-isolation filter criteria
     const accessFilter = getAccessQueryFilter(authUser);
@@ -119,6 +120,8 @@ export async function GET(req: NextRequest) {
             ? { pipelineStage: { in: ['VISA_DECISION', 'PRE_DEPARTURE'] } }
             : {}
           : {},
+        // Filter by target country
+        targetCountry ? { targetCountry } : {},
         // Filter by branch
         branchId ? { branchId } : {},
         // Filter by counselor
@@ -151,6 +154,7 @@ export async function GET(req: NextRequest) {
         branch: { select: { name: true } },
         counselor: { select: { id: true, name: true } },
         subAgent: { select: { id: true, name: true } },
+        applications: true,
       },
       orderBy: { updatedAt: 'desc' },
     });

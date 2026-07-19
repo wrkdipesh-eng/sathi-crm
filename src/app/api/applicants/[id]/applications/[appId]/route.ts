@@ -17,7 +17,7 @@ export async function PATCH(
 
     const { id: applicantId, appId } = params;
     const body = await req.json();
-    const { targetCourse, targetUniversity, stage } = body;
+    const { targetCountry, targetCourse, targetUniversity, stage, makePrimary } = body;
 
     const application = await prisma.application.findUnique({
       where: { id: appId },
@@ -33,12 +33,62 @@ export async function PATCH(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    if (makePrimary) {
+      const oldPrimaryCountry = application.applicant.targetCountry;
+      const oldPrimaryCourse = application.applicant.targetCourse;
+      const oldPrimaryUniversity = application.applicant.targetUniversity;
+      const oldPrimaryStage = application.applicant.pipelineStage;
+      const oldPrimaryDays = application.applicant.daysInCurrentStage;
+
+      const newPrimaryCountry = application.targetCountry;
+      const newPrimaryCourse = application.targetCourse;
+      const newPrimaryUniversity = application.targetUniversity;
+      const newPrimaryStage = application.stage;
+      const newPrimaryDays = application.daysInStage;
+
+      await prisma.applicant.update({
+        where: { id: applicantId },
+        data: {
+          targetCountry: newPrimaryCountry,
+          targetCourse: newPrimaryCourse,
+          targetUniversity: newPrimaryUniversity,
+          pipelineStage: newPrimaryStage,
+          daysInCurrentStage: newPrimaryDays,
+          stageUpdatedAt: new Date(),
+        },
+      });
+
+      await prisma.application.update({
+        where: { id: appId },
+        data: {
+          targetCountry: oldPrimaryCountry || 'Undecided',
+          targetCourse: oldPrimaryCourse || 'Undecided',
+          targetUniversity: oldPrimaryUniversity,
+          stage: oldPrimaryStage,
+          daysInStage: oldPrimaryDays,
+        },
+      });
+
+      await prisma.communicationLog.create({
+        data: {
+          type: CommunicationType.NOTE,
+          title: 'Primary Target Changed',
+          content: `Promoted ${newPrimaryCountry} (${newPrimaryUniversity || 'N/A'}) to Primary Target. Demoted ${oldPrimaryCountry} (${oldPrimaryUniversity || 'N/A'}) to secondary.`,
+          senderName: authUser.name,
+          applicantId,
+        },
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
     const oldStage = application.stage;
 
     // Update fields
     const updated = await prisma.application.update({
       where: { id: appId },
       data: {
+        targetCountry: targetCountry !== undefined ? targetCountry : undefined,
         targetCourse: targetCourse !== undefined ? targetCourse : undefined,
         targetUniversity: targetUniversity !== undefined ? targetUniversity : undefined,
         stage: stage !== undefined ? (stage as PipelineStage) : undefined,

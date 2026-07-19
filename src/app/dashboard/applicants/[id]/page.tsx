@@ -26,7 +26,9 @@ import {
   Loader2,
   AlertCircle,
   X,
-  Trash2
+  Trash2,
+  Pencil,
+  Star
 } from 'lucide-react';
 
 const STAGES = [
@@ -56,6 +58,8 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
   const [showAppModal, setShowAppModal] = useState(false);
   const [appForm, setAppForm] = useState({ targetCountry: '', targetCourse: '', targetUniversity: '' });
   const [isSavingApp, setIsSavingApp] = useState(false);
+  const [editingAppId, setEditingAppId] = useState<string | null>(null);
+  const [editAppForm, setEditAppForm] = useState({ targetCountry: '', targetCourse: '', targetUniversity: '' });
   const [partnerUnis, setPartnerUnis] = useState<any[]>([]);
 
   // Metadata dropdowns
@@ -79,6 +83,12 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
 
   // Invoice Modal State for Printing
   const [selectedCommission, setSelectedCommission] = useState<any>(null);
+
+  const isVisaFiledOrBeyond = applicant ? [
+    'VISA_FILED',
+    'VISA_DECISION',
+    'PRE_DEPARTURE'
+  ].includes(applicant.pipelineStage) : false;
 
   // Fetch applicant details
   const fetchApplicantDetails = async () => {
@@ -243,6 +253,57 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
       }
     } catch (err) {
       alert('An error occurred.');
+    }
+  };
+
+  const handleStartEdit = (appId: string, currentData: any) => {
+    setEditingAppId(appId);
+    setEditAppForm({
+      targetCountry: currentData.targetCountry || '',
+      targetCourse: currentData.targetCourse || '',
+      targetUniversity: currentData.targetUniversity || '',
+    });
+  };
+
+  const handleSaveEdit = async (appId: string) => {
+    try {
+      if (appId === 'primary') {
+        const res = await fetch(`/api/applicants/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editAppForm),
+        });
+        if (!res.ok) throw new Error('Failed to update primary target');
+      } else {
+        const res = await fetch(`/api/applicants/${id}/applications/${appId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editAppForm),
+        });
+        if (!res.ok) throw new Error('Failed to update secondary target');
+      }
+      setEditingAppId(null);
+      await fetchApplicantDetails();
+      fetchApplications();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Failed to save changes');
+    }
+  };
+
+  const handleMakePrimary = async (appId: string) => {
+    try {
+      const res = await fetch(`/api/applicants/${id}/applications/${appId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ makePrimary: true }),
+      });
+      if (!res.ok) throw new Error('Failed to make primary');
+      await fetchApplicantDetails();
+      fetchApplications();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Failed to change primary target');
     }
   };
 
@@ -650,6 +711,16 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
           {activeTab === 'applications' && (
             <div className="space-y-6">
               
+              {isVisaFiledOrBeyond && (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start space-x-3 text-amber-400">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div className="space-y-1 text-xs">
+                    <h4 className="font-bold">Additional targets are locked</h4>
+                    <p className="text-amber-500/80">Secondary target applications cannot be added because the primary visa has already been filed or decided.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Header Card */}
               <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 flex justify-between items-center">
                 <div>
@@ -657,8 +728,14 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   <p className="text-[10px] text-slate-400 mt-1">Manage multiple target universities and study destinations for this student.</p>
                 </div>
                 <button
+                  disabled={isVisaFiledOrBeyond}
                   onClick={() => setShowAppModal(true)}
-                  className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-slate-950 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center space-x-1"
+                  className={`py-1.5 px-3 text-xs font-bold rounded-xl transition-all flex items-center space-x-1 ${
+                    isVisaFiledOrBeyond
+                      ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-slate-950 cursor-pointer'
+                  }`}
+                  title={isVisaFiledOrBeyond ? "Cannot add targets once visa is filed" : "Add Target"}
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Target</span>
@@ -668,75 +745,210 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
               {/* Applications List */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                {/* 1. Primary Application (Cached on Applicant) */}
+                {/* 1. Primary Target Card */}
                 <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 relative overflow-hidden">
                   <div className="absolute top-0 right-0 px-2.5 py-0.5 bg-indigo-600/10 border-l border-b border-indigo-500/20 rounded-bl-xl text-[9px] font-bold text-indigo-400 uppercase tracking-wide">
                     Primary Target
                   </div>
-                  <div>
-                    <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Target Country</span>
-                    <span className="text-sm font-bold text-slate-200">{applicant.targetCountry}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">University</span>
-                      <span className="text-xs text-slate-350">{applicant.targetUniversity || 'Undecided'}</span>
+                  
+                  {editingAppId === 'primary' ? (
+                    <div className="space-y-4 pt-2">
+                      <div>
+                        <label className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-1">Target Country</label>
+                        <select
+                          value={editAppForm.targetCountry}
+                          onChange={(e) => setEditAppForm(prev => ({ ...prev, targetCountry: e.target.value }))}
+                          className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                        >
+                          {countries.map((c) => (
+                            <option key={c.id} value={c.countryName}>{c.countryName}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-1">University</label>
+                        <input
+                          type="text"
+                          value={editAppForm.targetUniversity}
+                          onChange={(e) => setEditAppForm(prev => ({ ...prev, targetUniversity: e.target.value }))}
+                          className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-1">Course / Degree</label>
+                        <input
+                          type="text"
+                          value={editAppForm.targetCourse}
+                          onChange={(e) => setEditAppForm(prev => ({ ...prev, targetCourse: e.target.value }))}
+                          className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <button
+                          onClick={() => setEditingAppId(null)}
+                          className="px-2.5 py-1 bg-slate-800 hover:bg-slate-750 text-slate-350 text-[10px] font-bold rounded-lg transition-all"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleSaveEdit('primary')}
+                          className="px-2.5 py-1 bg-indigo-650 hover:bg-indigo-750 text-white text-[10px] font-bold rounded-lg transition-all"
+                        >
+                          Save
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Course / Degree</span>
-                      <span className="text-xs text-slate-350">{applicant.targetCourse || 'Undecided'}</span>
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                    <div>
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider mb-1">Status Stage</span>
-                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-100 text-[9px] font-bold uppercase rounded">
-                        {applicant.pipelineStage.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-mono mt-2">{applicant.daysInCurrentStage} days in stage</span>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Target Country</span>
+                          <span className="text-sm font-bold text-slate-200">{applicant.targetCountry}</span>
+                        </div>
+                        <button
+                          onClick={() => handleStartEdit('primary', applicant)}
+                          className="p-1.5 hover:bg-slate-850 text-slate-400 hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
+                          title="Edit Target Details"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">University</span>
+                          <span className="text-xs text-slate-350">{applicant.targetUniversity || 'Undecided'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Course / Degree</span>
+                          <span className="text-xs text-slate-350">{applicant.targetCourse || 'Undecided'}</span>
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider mb-1">Status Stage</span>
+                          <select
+                            value={applicant.pipelineStage}
+                            onChange={(e) => handleStageChange(e.target.value)}
+                            disabled={stageLoading}
+                            className="bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] text-slate-100 rounded-lg focus:outline-none cursor-pointer disabled:opacity-50"
+                          >
+                            {STAGES.map((stg) => (
+                              <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-mono mt-2">{applicant.daysInCurrentStage} days in stage</span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* 2. Secondary Applications */}
                 {applications.map((app) => (
                   <div key={app.id} className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 relative">
-                    <button
-                      onClick={() => handleAppDelete(app.id)}
-                      className="absolute top-4 right-4 p-1.5 hover:bg-slate-850 text-slate-400 hover:text-rose-500 rounded-lg transition-all cursor-pointer"
-                      title="Remove Target Application"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    <div>
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Target Country</span>
-                      <span className="text-sm font-bold text-slate-200">{app.targetCountry}</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">University</span>
-                        <span className="text-xs text-slate-350">{app.targetUniversity || 'Undecided'}</span>
+                    {editingAppId === app.id ? (
+                      <div className="space-y-4 pt-2">
+                        <div>
+                          <label className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-1">Target Country</label>
+                          <select
+                            value={editAppForm.targetCountry}
+                            onChange={(e) => setEditAppForm(prev => ({ ...prev, targetCountry: e.target.value }))}
+                            className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                          >
+                            {countries.map((c) => (
+                              <option key={c.id} value={c.countryName}>{c.countryName}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-1">University</label>
+                          <input
+                            type="text"
+                            value={editAppForm.targetUniversity}
+                            onChange={(e) => setEditAppForm(prev => ({ ...prev, targetUniversity: e.target.value }))}
+                            className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-1">Course / Degree</label>
+                          <input
+                            type="text"
+                            value={editAppForm.targetCourse}
+                            onChange={(e) => setEditAppForm(prev => ({ ...prev, targetCourse: e.target.value }))}
+                            className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-2">
+                          <button
+                            onClick={() => setEditingAppId(null)}
+                            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-750 text-slate-350 text-[10px] font-bold rounded-lg transition-all"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleSaveEdit(app.id)}
+                            className="px-2.5 py-1 bg-indigo-650 hover:bg-indigo-750 text-white text-[10px] font-bold rounded-lg transition-all"
+                          >
+                            Save
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Course / Degree</span>
-                        <span className="text-xs text-slate-350">{app.targetCourse || 'Undecided'}</span>
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                      <div>
-                        <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider mb-1">Status Stage</span>
-                        <select
-                          value={app.stage}
-                          onChange={(e) => handleAppStageChange(app.id, e.target.value)}
-                          className="bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] text-slate-100 rounded-lg focus:outline-none cursor-pointer"
-                        >
-                          {STAGES.map((stg) => (
-                            <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-mono mt-2">{app.daysInStage} days in stage</span>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="absolute top-4 right-4 flex items-center space-x-1.5 font-bold z-10">
+                          <button
+                            onClick={() => handleMakePrimary(app.id)}
+                            className="p-1.5 hover:bg-slate-850 text-slate-400 hover:text-amber-500 rounded-lg transition-all cursor-pointer"
+                            title="Set as Primary Target"
+                          >
+                            <Star className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleStartEdit(app.id, app)}
+                            className="p-1.5 hover:bg-slate-850 text-slate-400 hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
+                            title="Edit Target Details"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleAppDelete(app.id)}
+                            className="p-1.5 hover:bg-slate-850 text-slate-400 hover:text-rose-500 rounded-lg transition-all cursor-pointer"
+                            title="Remove Target Application"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Target Country</span>
+                          <span className="text-sm font-bold text-slate-200">{app.targetCountry}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">University</span>
+                            <span className="text-xs text-slate-350">{app.targetUniversity || 'Undecided'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider">Course / Degree</span>
+                            <span className="text-xs text-slate-350">{app.targetCourse || 'Undecided'}</span>
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                          <div>
+                            <span className="text-[9px] text-slate-500 block uppercase font-bold tracking-wider mb-1">Status Stage</span>
+                            <select
+                              value={app.stage}
+                              onChange={(e) => handleAppStageChange(app.id, e.target.value)}
+                              className="bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] text-slate-100 rounded-lg focus:outline-none cursor-pointer"
+                            >
+                              {STAGES.map((stg) => (
+                                <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono mt-2">{app.daysInStage} days in stage</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

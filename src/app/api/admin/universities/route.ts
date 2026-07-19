@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
         course: item.course?.trim() || '',
         tuitionFee: item.tuitionFee?.trim() || '',
         intakes: item.intakes?.trim() || '',
+        commissionPercentage: item.commissionPercentage !== undefined && item.commissionPercentage !== null && !isNaN(parseFloat(item.commissionPercentage)) ? parseFloat(item.commissionPercentage) : null,
         organizationId: authUser.organizationId,
       })).filter((item: any) => item.name && item.country && item.course);
 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, count: created.count });
     } else {
       // Single insert
-      const { name, country, course, tuitionFee, intakes } = body;
+      const { name, country, course, tuitionFee, intakes, commissionPercentage } = body;
 
       if (!name || !country || !course) {
         return NextResponse.json({ error: 'Name, country, and course are required fields' }, { status: 400 });
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
           course: course.trim(),
           tuitionFee: (tuitionFee || '').trim(),
           intakes: (intakes || '').trim(),
+          commissionPercentage: commissionPercentage !== undefined && commissionPercentage !== null && commissionPercentage !== '' && !isNaN(parseFloat(commissionPercentage)) ? parseFloat(commissionPercentage) : null,
           organizationId: authUser.organizationId,
         },
       });

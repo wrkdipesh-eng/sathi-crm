@@ -45,6 +45,7 @@ export default function ApplicantsListPage() {
   const [counselorFilter, setCounselorFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [universityFilter, setUniversityFilter] = useState('');
+  const [targetCountryFilter, setTargetCountryFilter] = useState('');
 
   const [stuckFilter, setStuckFilter] = useState(false);
   const [stuckThreshold, setStuckThreshold] = useState(7);
@@ -142,6 +143,7 @@ export default function ApplicantsListPage() {
       if (counselorFilter) params.append('counselorId', counselorFilter);
       if (sourceFilter) params.append('source', sourceFilter);
       if (universityFilter) params.append('university', universityFilter);
+      if (targetCountryFilter) params.append('targetCountry', targetCountryFilter);
       if (stuckFilter) {
         params.append('stuck', 'true');
         params.append('stuckThreshold', stuckThreshold.toString());
@@ -165,9 +167,17 @@ export default function ApplicantsListPage() {
       const pri = params.get('priority');
       const cat = params.get('category');
       const stuck = params.get('stuck');
+      const counselor = params.get('counselorId');
+      const src = params.get('source');
+      const country = params.get('targetCountry') || params.get('country');
+
       if (pri) setPriorityFilter(pri);
       if (cat) setCategoryFilter(cat);
       if (stuck === 'true') setStuckFilter(true);
+      if (counselor) setCounselorFilter(counselor);
+      if (src) setSourceFilter(src);
+      if (country) setTargetCountryFilter(country);
+      
       setInitialized(true);
     }
   }, []);
@@ -176,7 +186,7 @@ export default function ApplicantsListPage() {
     if (initialized) {
       fetchApplicants();
     }
-  }, [initialized, search, stage, branchFilter, counselorFilter, sourceFilter, universityFilter, stuckFilter, stuckThreshold]);
+  }, [initialized, search, stage, branchFilter, counselorFilter, sourceFilter, universityFilter, stuckFilter, stuckThreshold, targetCountryFilter]);
 
   useEffect(() => {
     const filtered = allApplicants.filter(app => {
@@ -397,6 +407,18 @@ export default function ApplicantsListPage() {
             <option value="">All Lead Sources</option>
             {SOURCES.map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+
+          {/* Target Country Filter */}
+          <select
+            value={targetCountryFilter}
+            onChange={(e) => setTargetCountryFilter(e.target.value)}
+            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+          >
+            <option value="">All Target Countries</option>
+            {countries.map((c) => (
+              <option key={c.id} value={c.countryName}>{c.countryName}</option>
             ))}
           </select>
 
@@ -702,10 +724,38 @@ export default function ApplicantsListPage() {
                         <span className="text-[10px] text-slate-400 block mt-0.5">{app.phone || app.email || 'No contact'}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-slate-200 truncate block max-w-[200px]" title={app.targetCourse}>
-                          {app.targetCourse || 'Undecided'}
-                        </span>
-                        <span className="text-[10px] text-indigo-600 mt-0.5 block">{app.targetCountry}</span>
+                        {/* Primary Target */}
+                        <div className="mb-2">
+                          <span className="font-semibold text-slate-200 truncate block max-w-[200px]" title={app.targetCourse}>
+                            {app.targetCourse || 'Undecided'}
+                          </span>
+                          <div className="flex items-center space-x-1.5 mt-0.5">
+                            <span className="px-1 py-0.2 bg-indigo-950/40 text-indigo-300 border border-indigo-900/30 text-[8px] rounded uppercase font-bold tracking-wide">
+                              Primary
+                            </span>
+                            <span className="text-[10px] text-indigo-400 font-semibold">{app.targetCountry}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Secondary Targets */}
+                        {app.applications && app.applications.map((otherApp: any) => (
+                          <div key={otherApp.id} className="mt-2 pt-2 border-t border-slate-800/40">
+                            <span className="text-slate-300 text-[11px] truncate block max-w-[200px] font-medium" title={otherApp.targetCourse}>
+                              {otherApp.targetCourse || 'Undecided'}
+                            </span>
+                            <div className="flex items-center flex-wrap gap-1 mt-0.5 text-[10px]">
+                              <span className="px-1 py-0.2 bg-slate-800 text-slate-400 border border-slate-700/60 text-[8px] rounded uppercase font-bold tracking-wide">
+                                Secondary
+                              </span>
+                              <span className="text-slate-400 font-semibold">{otherApp.targetCountry}</span>
+                              {otherApp.stage && (
+                                <span className="px-1.5 py-0.2 bg-slate-900 text-slate-400 border border-slate-800 text-[8px] rounded-full uppercase font-bold tracking-wide ml-0.5">
+                                  {otherApp.stage.replace('_', ' ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-slate-300">{app.counselor?.name || 'Unassigned'}</div>

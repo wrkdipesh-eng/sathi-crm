@@ -101,16 +101,16 @@ export default function LoginPage() {
                   key={acc.email}
                   type="button"
                   onClick={() => fillCredentials(acc.email)}
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-900 hover:bg-indigo-50 border border-slate-800 hover:border-indigo-200 transition-all text-left text-xs group"
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800/60 border border-slate-800 hover:border-indigo-500/30 transition-all text-left text-xs group cursor-pointer"
                 >
                   <div className="flex items-center space-x-2">
-                    <UserCheck className="w-4 h-4 text-indigo-600" />
+                    <UserCheck className="w-4 h-4 text-indigo-500 group-hover:text-indigo-400 transition-colors" />
                     <div>
-                      <div className="font-semibold text-slate-200">{acc.label}</div>
-                      <div className="text-[10px] text-slate-455">{acc.email}</div>
+                      <div className="font-semibold text-slate-200 group-hover:text-white transition-colors">{acc.label}</div>
+                      <div className="text-[10px] text-slate-400 group-hover:text-slate-300 transition-colors">{acc.email}</div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-indigo-650 group-hover:bg-indigo-100">
+                  <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-indigo-400 group-hover:bg-indigo-950/60 group-hover:text-indigo-300 transition-all">
                     {acc.role}
                   </span>
                 </button>

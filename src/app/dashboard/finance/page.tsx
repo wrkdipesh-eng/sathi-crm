@@ -30,6 +30,7 @@ export default function FinanceLedgerPage() {
   const [branchFilter, setBranchFilter] = useState('');
   
   const [branches, setBranches] = useState<any[]>([]);
+  const [universities, setUniversities] = useState<any[]>([]);
   const [selectedCommission, setSelectedCommission] = useState<any>(null);
   const [isSendingInvoice, setIsSendingInvoice] = useState(false);
   const [forexRates, setForexRates] = useState<any>(null);
@@ -341,6 +342,21 @@ export default function FinanceLedgerPage() {
     }
   };
 
+  const parseFeeAndCurrency = (feeStr: string) => {
+    const normalized = (feeStr || '').toUpperCase();
+    let currency = 'USD'; // default fallback
+    if (normalized.includes('AUD')) currency = 'AUD';
+    else if (normalized.includes('CAD')) currency = 'CAD';
+    else if (normalized.includes('GBP')) currency = 'GBP';
+    else if (normalized.includes('USD')) currency = 'USD';
+
+    // Extract numbers and decimals
+    const digitsOnly = normalized.replace(/[^0-9.]/g, '');
+    const numericFee = parseFloat(digitsOnly) || 0;
+
+    return { currency, numericFee };
+  };
+
   useEffect(() => {
     async function initPage() {
       try {
@@ -360,6 +376,14 @@ export default function FinanceLedgerPage() {
         if (forexRes.ok) {
           const forexData = await forexRes.json();
           setForexRates(forexData.rates);
+        }
+
+        const uniRes = await fetch('/api/admin/universities');
+        if (uniRes.ok) {
+          const uniData = await uniRes.json();
+          if (uniData.success) {
+            setUniversities(uniData.universities);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -984,6 +1008,42 @@ export default function FinanceLedgerPage() {
 
             <form onSubmit={handleEditSubmit} className="p-6 space-y-4 text-xs">
               <div>
+                <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Autofill from Represented Program (Optional)</label>
+                <select
+                  onChange={(e) => {
+                    const uniId = e.target.value;
+                    if (!uniId) return;
+                    const chosen = universities.find(u => u.id === uniId);
+                    if (chosen) {
+                      const { currency, numericFee } = parseFeeAndCurrency(chosen.tuitionFee);
+                      let computedComm = '';
+                      if (chosen.commissionPercentage && numericFee > 0) {
+                        computedComm = ((numericFee * chosen.commissionPercentage) / 100).toFixed(2);
+                      }
+                      
+                      const rate = forexRates && forexRates[currency] ? String(forexRates[currency].toFixed(2)) : '';
+
+                      setEditForm(prev => ({
+                        ...prev,
+                        partnerUniversity: chosen.name,
+                        currency,
+                        commissionAmountForeign: computedComm,
+                        nprExchangeRate: rate,
+                      }));
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 focus:outline-none text-xs font-mono"
+                >
+                  <option value="">-- Select Represented Program --</option>
+                  {universities.map((uni) => (
+                    <option key={uni.id} value={uni.id}>
+                      {uni.name} - {uni.course} ({uni.country}) {uni.commissionPercentage ? `[${uni.commissionPercentage}% Comm]` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-[10px] text-slate-400 font-medium mb-1">Partner University / Institution *</label>
                 <input
                   type="text"
@@ -1195,7 +1255,43 @@ export default function FinanceLedgerPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] text-slate-400 font-medium mb-1">Partner University / Institution *</label>
+                <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Autofill from Represented Program (Optional)</label>
+                <select
+                  onChange={(e) => {
+                    const uniId = e.target.value;
+                    if (!uniId) return;
+                    const chosen = universities.find(u => u.id === uniId);
+                    if (chosen) {
+                      const { currency, numericFee } = parseFeeAndCurrency(chosen.tuitionFee);
+                      let computedComm = '';
+                      if (chosen.commissionPercentage && numericFee > 0) {
+                        computedComm = ((numericFee * chosen.commissionPercentage) / 100).toFixed(2);
+                      }
+                      
+                      const rate = forexRates && forexRates[currency] ? String(forexRates[currency].toFixed(2)) : '';
+
+                      setAddForm(prev => ({
+                        ...prev,
+                        partnerUniversity: chosen.name,
+                        currency,
+                        commissionAmountForeign: computedComm,
+                        nprExchangeRate: rate,
+                      }));
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 focus:outline-none text-xs font-mono"
+                >
+                  <option value="">-- Select Represented Program --</option>
+                  {universities.map((uni) => (
+                    <option key={uni.id} value={uni.id}>
+                      {uni.name} - {uni.course} ({uni.country}) {uni.commissionPercentage ? `[${uni.commissionPercentage}% Comm]` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-400 font-medium mb-1 font-sans">Partner University / Institution *</label>
                 <input
                   type="text"
                   required

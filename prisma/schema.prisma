@@ -233,14 +233,17 @@ model DestinationChecklist {
 }
 
 model PartnerUniversity {
-  id             String       @id @default(uuid())
-  name           String       // e.g. York University
-  country        String       // e.g. Canada
-  course         String       // e.g. Master of Business Administration
-  tuitionFee     String       // e.g. CAD 24,000 / Year
-  intakes        String       // e.g. Jan, Sept
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                   String       @id @default(uuid())
+  name                 String       // e.g. York University
+  country              String       // e.g. Canada
+  course               String       // e.g. Master of Business Administration
+  tuitionFee           String       // e.g. CAD 24,000 / Year
+  intakes              String       // e.g. Jan, Sept
+  commissionPercentage Float?       // e.g. 15 for 15%
+  organizationId       String
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 }
+
+
