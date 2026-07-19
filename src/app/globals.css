@@ -1,55 +1,64 @@
 @import "tailwindcss";
 
 :root {
-  --background: #020a06; /* Deepest forest green black */
-  --foreground: #f2fbf7; /* Crisp mint white */
+  --background: #f8fafc;
+  --foreground: #0f172a;
   
-  --card: #051810; /* Rich dark green cards */
-  --card-foreground: #f2fbf7;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
   
-  --primary: #d4af37; /* Metallic Gold */
-  --primary-foreground: #020a06;
+  --primary: #c29415;
+  --primary-foreground: #ffffff;
   
-  --muted: #08251a; /* Medium dark green */
-  --muted-foreground: #73a48e; /* Sage green muted text */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   
-  --accent: #d4af37; /* Gold */
-  --accent-foreground: #020a06;
+  --accent: #d4af37;
+  --accent-foreground: #ffffff;
   
-  --border: #0d3d29; /* Dark green border */
-  --input: #0d3d29;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
   
   --ring: rgba(212, 175, 55, 0.4);
 
-  /* Slate mappings for Dark Forest Green theme */
-  --slate-50: #ffffff;       /* Pure white/mint for light text */
-  --slate-100: #f2fbf7;      /* Primary text / headings */
-  --slate-200: #e0f7ec;      /* Important text */
-  --slate-300: #c3ebd9;      /* Normal text */
-  --slate-350: #a8d5c2;      /* Medium text */
-  --slate-400: #8cbfa9;      /* Muted text */
-  --slate-500: #73a48e;      /* Very muted text */
-  --slate-600: #1c6b50;      /* Icons / lines */
-  --slate-700: #135238;      /* Borders */
-  --slate-800: #0d3d29;      /* Borders / separators */
-  --slate-850: #09251a;      /* Table rows */
-  --slate-900: #051810;      /* Cards and sidebar */
-  --slate-950: #020a06;      /* Page background */
+  /* Slate mappings for Light mode (inverted colors) */
+  --slate-50: #0f172a;
+  --slate-100: #1e293b;
+  --slate-200: #334155;
+  --slate-300: #475569;
+  --slate-350: #64748b;
+  --slate-400: #64748b;
+  --slate-500: #94a3b8;
+  --slate-600: #cbd5e1;
+  --slate-700: #e2e8f0;
+  --slate-800: #f1f5f9;
+  --slate-850: #f8fafc;
+  --slate-900: #ffffff;
+  --slate-950: #f8fafc;
+
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(15, 23, 42, 0.08);
 }
 
 .dark {
   --background: #020a06;
   --foreground: #f2fbf7;
+  
   --card: #051810;
   --card-foreground: #f2fbf7;
+  
   --primary: #d4af37;
   --primary-foreground: #020a06;
+  
   --muted: #08251a;
   --muted-foreground: #73a48e;
+  
   --accent: #d4af37;
   --accent-foreground: #020a06;
+  
   --border: #0d3d29;
   --input: #0d3d29;
+  
   --ring: rgba(212, 175, 55, 0.4);
 
   --slate-50: #ffffff;
@@ -65,6 +74,9 @@
   --slate-850: #09251a;
   --slate-900: #051810;
   --slate-950: #020a06;
+
+  --glass-bg: rgba(5, 24, 16, 0.75);
+  --glass-border: rgba(212, 175, 55, 0.1);
 }
 
 @theme inline {
@@ -127,11 +139,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1c6b50;
+  background: var(--slate-600);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4af37;
+  background: var(--primary);
 }
 
 /* Premium Gold Accent overrides for elements with bg-indigo-600 */
@@ -157,10 +169,10 @@ body {
 
 /* Custom Premium Glassmorphism */
 .glass {
-  background: rgba(5, 24, 16, 0.75);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  border: 1px solid var(--glass-border);
 }
 
 /* Soft Animations */

@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Wallet
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const TEST_ACCOUNTS = [
   { label: 'Director (HQ)', email: 'director@thinkcone.com.np', role: 'DIRECTOR', desc: 'HQ roll-up (all branches)' },
@@ -119,6 +120,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950 text-slate-100 px-4">
+      {/* Top right theme toggle */}
+      <div className="absolute top-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Background gradients */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-200/30 blur-[120px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-violet-200/30 blur-[120px]" />

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from './LogoutButton';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default async function DashboardLayout({
   children,
@@ -198,6 +199,7 @@ export default async function DashboardLayout({
             <span className="text-xs text-slate-400">
               {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
+            <ThemeToggle />
           </div>
         </header>
 
