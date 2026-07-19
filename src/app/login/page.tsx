@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, UserCheck, Loader2 } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  UserCheck, 
+  Loader2,
+  GraduationCap,
+  BookOpen,
+  School,
+  Compass,
+  Building,
+  Globe
+} from 'lucide-react';
 
 const TEST_ACCOUNTS = [
   { label: 'Director (HQ)', email: 'director@thinkcone.com.np', role: 'DIRECTOR', desc: 'HQ roll-up (all branches)' },
@@ -12,12 +22,53 @@ const TEST_ACCOUNTS = [
   { label: 'Sub-agent Ram', email: 'subagent.ram@thinkcone.com.np', role: 'SUB_AGENT', desc: 'Only self-submitted leads' },
 ];
 
+const getIconComponent = (iconName: string | null) => {
+  switch (iconName) {
+    case 'GraduationCap': return GraduationCap;
+    case 'BookOpen': return BookOpen;
+    case 'School': return School;
+    case 'Compass': return Compass;
+    case 'ShieldCheck': return ShieldCheck;
+    case 'Building': return Building;
+    default: return Globe;
+  }
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('password123'); // Default from seed
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [org, setOrg] = useState({
+    name: 'Thinkcone CRM',
+    tagline: '',
+    logoUrl: null as string | null,
+    logoIcon: 'ShieldCheck' as string | null,
+  });
+
+  // Fetch organization settings
+  useEffect(() => {
+    async function fetchOrgInfo() {
+      try {
+        const res = await fetch('/api/public/organization');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.organization) {
+            setOrg({
+              name: data.organization.name,
+              tagline: data.organization.tagline || '',
+              logoUrl: data.organization.logoUrl,
+              logoIcon: data.organization.logoIcon,
+            });
+          }
+        }
+      } catch (e) {
+        // Safe to ignore
+      }
+    }
+    fetchOrgInfo();
+  }, []);
 
   // Check if already logged in
   useEffect(() => {
@@ -74,20 +125,26 @@ export default function LoginPage() {
         {/* Left Side: Product Intro */}
         <div className="md:col-span-5 flex flex-col justify-center space-y-6 text-left">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl shadow-lg shadow-indigo-500/30">
-              <ShieldCheck className="w-8 h-8 text-white" />
-            </div>
+            {org.logoUrl ? (
+              <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center bg-slate-950 border border-slate-800 p-1 shadow-lg">
+                <img src={org.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded-xl" />
+              </div>
+            ) : (
+              <div className="p-2.5 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl shadow-lg shadow-indigo-500/30 shrink-0">
+                {React.createElement(getIconComponent(org.logoIcon), { className: "w-8 h-8 text-white" })}
+              </div>
+            )}
             <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-650 bg-clip-text text-transparent">
-              Thinkcone CRM
+              {org.name}
             </span>
           </div>
 
           <div className="space-y-3">
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-100 leading-tight">
-              Thinkcone for <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Study abroad CRM</span>
+              {org.name} <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">CRM</span>
             </h1>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Designed for Nepali consultancies to manage branch operations, tracking applications from initial inquiry through visa decisions, document management, and sub-agent commission ledgers.
+              {org.tagline || 'Designed for Nepali consultancies to manage branch operations, tracking applications from initial inquiry through visa decisions, document management, and sub-agent commission ledgers.'}
             </p>
           </div>
 
@@ -131,7 +188,7 @@ export default function LoginPage() {
             <div className="mb-6">
               <h2 className="text-xl font-bold text-slate-100">Welcome back</h2>
               <p className="text-xs text-slate-400 mt-1">
-                Enter your credentials to manage Thinkcone CRM portal
+                Enter your credentials to manage {org.name} portal
               </p>
             </div>
 
@@ -188,7 +245,7 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 pt-6 border-t border-slate-800 text-center text-[10px] text-slate-500 space-y-1">
-              <div>By logging in, you agree to the Thinkcone CRM Terms of Service.</div>
+              <div>By logging in, you agree to the {org.name} Terms of Service.</div>
               <div>
                 Powered by <a href="https://thinkcone.com.np" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-400 hover:text-indigo-400 transition-all hover:underline">Thinkcone Technology</a>
               </div>
