@@ -70,21 +70,21 @@ export default async function DashboardLayout({
       <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col justify-between shrink-0">
         <div>
           {/* Logo / Org Header */}
-          <div className="h-16 flex items-center px-6 border-b border-slate-800 space-x-2.5">
+          <div className="h-20 flex items-center px-4 border-b border-slate-800 space-x-3">
             {org?.logoUrl ? (
-              <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 p-0.5">
-                <img src={org.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded" />
+              <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 p-0.5 shadow-sm">
+                <img src={org.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded-lg" />
               </div>
             ) : (
-              <div className="p-1.5 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg shrink-0">
-                <IconComponent className="w-5 h-5 text-white" />
+              <div className="p-2 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-xl shrink-0 flex items-center justify-center">
+                <IconComponent className="w-6 h-6 text-white" />
               </div>
             )}
             <div className="overflow-hidden">
-              <h2 className="font-bold text-sm text-slate-100 truncate max-w-[170px]" title={org?.name || 'Thinkcone CRM'}>
+              <h2 className="font-bold text-xs text-slate-100 truncate max-w-[185px]" title={org?.name || 'Thinkcone CRM'}>
                 {org?.name || 'Thinkcone CRM'}
               </h2>
-              <span className="text-[10px] text-slate-400 font-medium tracking-wide block truncate max-w-[170px]" title={org?.tagline || 'Thinkcone Study Abroad'}>
+              <span className="text-[9px] text-slate-400 font-medium tracking-wide block truncate max-w-[185px]" title={org?.tagline || 'Thinkcone Study Abroad'}>
                 {org?.tagline || 'Thinkcone Study Abroad'}
               </span>
             </div>
