@@ -11,7 +11,10 @@ import {
   School,
   Compass,
   Building,
-  Globe
+  Globe,
+  Users,
+  ClipboardList,
+  Wallet
 } from 'lucide-react';
 
 const TEST_ACCOUNTS = [
@@ -123,7 +126,8 @@ export default function LoginPage() {
       <div className="w-full max-w-5xl grid md:grid-cols-12 gap-8 z-10 my-8">
         
         {/* Left Side: Product Intro */}
-        <div className="md:col-span-5 flex flex-col justify-center space-y-6 text-left">
+        <div className="md:col-span-5 flex flex-col justify-center space-y-5 text-left">
+          
           <div className="flex items-center space-x-3">
             {org.logoUrl ? (
               <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 p-1 shadow-lg">
@@ -134,18 +138,59 @@ export default function LoginPage() {
                 {React.createElement(getIconComponent(org.logoIcon), { className: "w-8 h-8 text-white" })}
               </div>
             )}
-            <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-650 bg-clip-text text-transparent">
+            <span className="text-xl font-extrabold tracking-tight text-white truncate max-w-[180px]" title={org.name}>
               {org.name}
             </span>
           </div>
 
-          <div className="space-y-3">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-100 leading-tight">
-              {org.name} <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">CRM</span>
+          <div className="space-y-3.5">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-bold tracking-wider uppercase w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+              <span>Student Success CRM</span>
+            </div>
+            
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+              {org.name}
+              <span className="block mt-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent text-2xl md:text-3xl font-black">
+                CRM Portal
+              </span>
             </h1>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            
+            <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
               {org.tagline || 'Designed for Nepali consultancies to manage branch operations, tracking applications from initial inquiry through visa decisions, document management, and sub-agent commission ledgers.'}
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2.5 pt-1.5">
+            <div className="flex items-center space-x-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-sm hover:border-indigo-500/20 transition-all">
+              <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400 shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-[11px] font-bold text-slate-200">Branch & Counselor Workflows</h4>
+                <p className="text-[9px] text-slate-500">Track and assign student leads across all office locations.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-sm hover:border-purple-500/20 transition-all">
+              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400 shrink-0">
+                <ClipboardList className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-[11px] font-bold text-slate-200">Application Document Checklists</h4>
+                <p className="text-[9px] text-slate-500">Real-time status tracking from inquiry through visa decision.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 backdrop-blur-sm hover:border-pink-500/20 transition-all">
+              <div className="p-2 bg-pink-500/10 rounded-lg text-pink-400 shrink-0">
+                <Wallet className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-[11px] font-bold text-slate-200">Commission & Sub-Agent Ledgers</h4>
+                <p className="text-[9px] text-slate-500">Accurate partner payouts, invoice billing, and split ledgers.</p>
+              </div>
+            </div>
           </div>
 
           <div className="border-t border-slate-800 pt-6">
