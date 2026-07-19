@@ -1176,7 +1176,7 @@ export default function AdminSettingsPage() {
                     
                     <div className="w-full max-w-[240px] p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center space-x-2.5 shadow-lg select-none">
                       {orgForm.logoUrl ? (
-                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-slate-950 border border-slate-800 p-0.5">
+                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 p-0.5">
                           <img src={orgForm.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                         </div>
                       ) : (

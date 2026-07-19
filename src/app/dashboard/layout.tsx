@@ -72,7 +72,7 @@ export default async function DashboardLayout({
           {/* Logo / Org Header */}
           <div className="h-16 flex items-center px-6 border-b border-slate-800 space-x-2.5">
             {org?.logoUrl ? (
-              <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-slate-950 border border-slate-800 p-0.5">
+              <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 p-0.5">
                 <img src={org.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded" />
               </div>
             ) : (

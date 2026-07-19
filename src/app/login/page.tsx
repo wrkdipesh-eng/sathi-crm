@@ -126,7 +126,7 @@ export default function LoginPage() {
         <div className="md:col-span-5 flex flex-col justify-center space-y-6 text-left">
           <div className="flex items-center space-x-3">
             {org.logoUrl ? (
-              <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center bg-slate-950 border border-slate-800 p-1 shadow-lg">
+              <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-slate-200 p-1 shadow-lg">
                 <img src={org.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded-xl" />
               </div>
             ) : (
