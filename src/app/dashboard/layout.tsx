@@ -2,6 +2,7 @@ import React from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { verifyToken } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 import { 
   Users, 
   Wallet, 
@@ -9,7 +10,13 @@ import {
   LayoutDashboard, 
   MapPin, 
   Globe,
-  Settings
+  Settings,
+  GraduationCap,
+  BookOpen,
+  School,
+  Compass,
+  ShieldCheck,
+  Building
 } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from './LogoutButton';
@@ -33,6 +40,30 @@ export default async function DashboardLayout({
 
   const isSubAgent = user.role === 'SUB_AGENT';
 
+  // Fetch organization settings from DB to support dynamic logo/name
+  const org = user.organizationId ? await prisma.organization.findUnique({
+    where: { id: user.organizationId },
+    select: {
+      name: true,
+      tagline: true,
+      logoUrl: true,
+      logoIcon: true,
+    }
+  }) : null;
+
+  // Icon selector
+  const IconComponent = (() => {
+    switch (org?.logoIcon) {
+      case 'GraduationCap': return GraduationCap;
+      case 'BookOpen': return BookOpen;
+      case 'School': return School;
+      case 'Compass': return Compass;
+      case 'ShieldCheck': return ShieldCheck;
+      case 'Building': return Building;
+      default: return Globe;
+    }
+  })();
+
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* Sidebar */}
@@ -40,15 +71,21 @@ export default async function DashboardLayout({
         <div>
           {/* Logo / Org Header */}
           <div className="h-16 flex items-center px-6 border-b border-slate-800 space-x-2.5">
-            <div className="p-1.5 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg">
-              <Globe className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="font-bold text-sm text-slate-100 truncate max-w-[170px]">
-                {user.organizationId ? 'Thinkcone CRM' : 'Consultancy Portal'}
+            {org?.logoUrl ? (
+              <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-slate-950 border border-slate-800 p-0.5">
+                <img src={org.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded" />
+              </div>
+            ) : (
+              <div className="p-1.5 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg shrink-0">
+                <IconComponent className="w-5 h-5 text-white" />
+              </div>
+            )}
+            <div className="overflow-hidden">
+              <h2 className="font-bold text-sm text-slate-100 truncate max-w-[170px]" title={org?.name || 'Thinkcone CRM'}>
+                {org?.name || 'Thinkcone CRM'}
               </h2>
-              <span className="text-[10px] text-slate-400 font-medium tracking-wide block truncate max-w-[170px]">
-                Thinkcone Study Abroad
+              <span className="text-[10px] text-slate-400 font-medium tracking-wide block truncate max-w-[170px]" title={org?.tagline || 'Thinkcone Study Abroad'}>
+                {org?.tagline || 'Thinkcone Study Abroad'}
               </span>
             </div>
           </div>

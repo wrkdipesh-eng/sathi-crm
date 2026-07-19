@@ -18,7 +18,12 @@ import {
   ShieldCheck,
   UserPlus,
   ClipboardList,
-  GraduationCap
+  GraduationCap,
+  Palette,
+  Globe,
+  BookOpen,
+  School,
+  Compass
 } from 'lucide-react';
 
 const ROLES = [
@@ -34,13 +39,23 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeSubTab, setActiveSubTab] = useState<'branches' | 'staff' | 'checklists' | 'universities'>('staff');
+  const [activeSubTab, setActiveSubTab] = useState<'branches' | 'staff' | 'checklists' | 'universities' | 'branding'>('staff');
 
   // Core Data
   const [branches, setBranches] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [universities, setUniversities] = useState<any[]>([]);
+
+  // Branding Customization state
+  const [orgForm, setOrgForm] = useState({
+    name: '',
+    tagline: '',
+    logoUrl: '',
+    logoIcon: 'Globe'
+  });
+  const [isSavingOrg, setIsSavingOrg] = useState(false);
+  const [orgError, setOrgError] = useState<string | null>(null);
 
   // University Management states
   const [isUniModalOpen, setIsUniModalOpen] = useState(false);
@@ -157,6 +172,20 @@ export default function AdminSettingsPage() {
       if (destRes.ok) {
         const data = await destRes.json();
         setDestinations(data.destinations || []);
+      }
+
+      // Fetch organization settings
+      const orgRes = await fetch('/api/admin/organization');
+      if (orgRes.ok) {
+        const data = await orgRes.json();
+        if (data.organization) {
+          setOrgForm({
+            name: data.organization.name || '',
+            tagline: data.organization.tagline || '',
+            logoUrl: data.organization.logoUrl || '',
+            logoIcon: data.organization.logoIcon || 'Globe',
+          });
+        }
       }
 
       // Fetch partner universities
@@ -496,6 +525,35 @@ export default function AdminSettingsPage() {
     }
   };
 
+  // Update Organization Branding
+  const handleOrgSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orgForm.name.trim()) {
+      setOrgError('Organization Name is required.');
+      return;
+    }
+    setIsSavingOrg(true);
+    setOrgError(null);
+
+    try {
+      const res = await fetch('/api/admin/organization', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orgForm),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update organization profile');
+
+      alert('Organization profile and branding updated successfully!');
+      window.location.reload();
+    } catch (err: any) {
+      setOrgError(err.message || 'Error occurred while saving branding');
+    } finally {
+      setIsSavingOrg(false);
+    }
+  };
+
   // Rename Branch
   const renameBranch = async (branchId: string, oldName: string) => {
     const bObj = branches.find(b => b.id === branchId);
@@ -634,6 +692,18 @@ export default function AdminSettingsPage() {
           >
             <GraduationCap className="w-4 h-4 text-indigo-500" />
             <span>Partner Universities ({universities.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('branding')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left text-xs font-semibold border transition-all cursor-pointer ${
+              activeSubTab === 'branding' 
+                ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/10' 
+                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-850'
+            }`}
+          >
+            <Palette className="w-4 h-4 text-indigo-500" />
+            <span>Organization Branding</span>
           </button>
         </div>
 
@@ -1015,6 +1085,144 @@ export default function AdminSettingsPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeSubTab === 'branding' && (
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6">
+              <div className="border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-sm text-slate-100">Organization Branding & Customization</h3>
+                <p className="text-[10px] text-slate-400 mt-1">Configure your consultancy's logo and name displayed across the system panels.</p>
+              </div>
+
+              {orgError && (
+                <div className="p-2.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-455 text-[10px]">
+                  {orgError}
+                </div>
+              )}
+
+              <form onSubmit={handleOrgSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column: Input Fields */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-semibold mb-1.5 uppercase tracking-wider" htmlFor="orgName">
+                        Consultancy / Organization Name *
+                      </label>
+                      <input
+                        id="orgName"
+                        type="text"
+                        required
+                        placeholder="e.g. Thinkcone CRM"
+                        value={orgForm.name}
+                        onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-semibold mb-1.5 uppercase tracking-wider" htmlFor="orgTagline">
+                        Subtitle / Tagline
+                      </label>
+                      <input
+                        id="orgTagline"
+                        type="text"
+                        placeholder="e.g. Thinkcone Study Abroad"
+                        value={orgForm.tagline}
+                        onChange={(e) => setOrgForm({ ...orgForm, tagline: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-semibold mb-1.5 uppercase tracking-wider" htmlFor="orgLogoIcon">
+                        Default Logo Preset Icon (When no custom image is set)
+                      </label>
+                      <select
+                        id="orgLogoIcon"
+                        value={orgForm.logoIcon}
+                        onChange={(e) => setOrgForm({ ...orgForm, logoIcon: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="Globe">Globe</option>
+                        <option value="GraduationCap">Graduation Cap</option>
+                        <option value="BookOpen">Book Open</option>
+                        <option value="School">School / University</option>
+                        <option value="Compass">Compass</option>
+                        <option value="ShieldCheck">Shield Check</option>
+                        <option value="Building">Building / HQ</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-semibold mb-1.5 uppercase tracking-wider" htmlFor="orgLogoUrl">
+                        Custom Logo Image URL (Overrides preset icon)
+                      </label>
+                      <input
+                        id="orgLogoUrl"
+                        type="url"
+                        placeholder="e.g. https://example.com/logo.png"
+                        value={orgForm.logoUrl}
+                        onChange={(e) => setOrgForm({ ...orgForm, logoUrl: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <span className="text-[9px] text-slate-500 mt-1 block">Paste an image link or base64 data URI here (PNG, JPG, SVG supported).</span>
+                    </div>
+                  </div>
+
+                  {/* Live Sidebar Preview */}
+                  <div className="flex flex-col justify-center items-center p-6 bg-slate-950/40 border border-slate-800 rounded-2xl space-y-4">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live Sidebar Header Preview</span>
+                    
+                    <div className="w-full max-w-[240px] p-4 bg-slate-900 border border-slate-800 rounded-xl flex items-center space-x-2.5 shadow-lg select-none">
+                      {orgForm.logoUrl ? (
+                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-slate-950 border border-slate-800 p-0.5">
+                          <img src={orgForm.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain rounded" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        </div>
+                      ) : (
+                        <div className="p-1.5 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg shrink-0 flex items-center justify-center">
+                          {(() => {
+                            switch (orgForm.logoIcon) {
+                              case 'GraduationCap': return <GraduationCap className="w-5 h-5 text-white" />;
+                              case 'BookOpen': return <BookOpen className="w-5 h-5 text-white" />;
+                              case 'School': return <School className="w-5 h-5 text-white" />;
+                              case 'Compass': return <Compass className="w-5 h-5 text-white" />;
+                              case 'ShieldCheck': return <ShieldCheck className="w-5 h-5 text-white" />;
+                              case 'Building': return <Building className="w-5 h-5 text-white" />;
+                              default: return <Globe className="w-5 h-5 text-white" />;
+                            }
+                          })()}
+                        </div>
+                      )}
+                      <div className="overflow-hidden">
+                        <h2 className="font-bold text-xs text-slate-100 truncate">
+                          {orgForm.name || 'Thinkcone CRM'}
+                        </h2>
+                        <span className="text-[9px] text-slate-400 font-medium tracking-wide block truncate">
+                          {orgForm.tagline || 'Thinkcone Study Abroad'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t border-slate-800">
+                  <button
+                    type="submit"
+                    disabled={isSavingOrg}
+                    className="py-2 px-5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer shadow-md shadow-indigo-600/10"
+                  >
+                    {isSavingOrg ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                        <span>Updating Branding...</span>
+                      </>
+                    ) : (
+                      <span>Save Branding Settings</span>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 

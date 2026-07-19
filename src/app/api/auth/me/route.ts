@@ -20,6 +20,9 @@ export async function GET(req: NextRequest) {
         organization: {
           select: {
             name: true,
+            tagline: true,
+            logoUrl: true,
+            logoIcon: true,
           },
         },
         branchId: true,
@@ -44,6 +47,9 @@ export async function GET(req: NextRequest) {
         role: user.role,
         organizationId: user.organizationId,
         organizationName: user.organization.name,
+        organizationTagline: user.organization.tagline || null,
+        organizationLogoUrl: user.organization.logoUrl || null,
+        organizationLogoIcon: user.organization.logoIcon || null,
         branchId: user.branchId,
         branchName: user.branch?.name || null,
       },
