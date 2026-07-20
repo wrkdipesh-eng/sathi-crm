@@ -1485,7 +1485,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   <option value="">-- Choose Partner University Listing --</option>
                   {partnerUnis.map((uni) => (
                     <option key={uni.id} value={uni.id}>
-                      {uni.name} ({uni.course} - {uni.country})
+                      {uni.name} ({uni.course} - {uni.country}) {uni.type === 'PORTAL' ? `[Portal: ${uni.portalName || 'N/A'}]` : '[Direct]'}
                     </option>
                   ))}
                   <option value="CUSTOM">Custom (Fill manual fields below)</option>

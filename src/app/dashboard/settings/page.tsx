@@ -69,6 +69,8 @@ export default function AdminSettingsPage() {
     tuitionFee: '',
     intakes: '',
     commissionPercentage: '',
+    type: 'DIRECT',
+    portalName: '',
   });
 
   // Bulk Import state
@@ -361,7 +363,7 @@ export default function AdminSettingsPage() {
       if (res.ok) {
         setIsUniModalOpen(false);
         setEditingUni(null);
-        setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '' });
+        setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '', type: 'DIRECT', portalName: '' });
         fetchUniversities();
       } else {
         const data = await res.json();
@@ -411,6 +413,9 @@ export default function AdminSettingsPage() {
         if (!line.trim()) continue;
         const parts = line.split(',');
         if (parts.length >= 3) {
+          const parsedType = parts[6]?.trim().toUpperCase();
+          const type = parsedType === 'PORTAL' ? 'PORTAL' : 'DIRECT';
+          const portalName = type === 'PORTAL' ? (parts[7]?.trim() || '') : '';
           parsed.push({
             name: parts[0]?.trim(),
             country: parts[1]?.trim(),
@@ -418,6 +423,8 @@ export default function AdminSettingsPage() {
             tuitionFee: parts[3]?.trim() || '',
             intakes: parts[4]?.trim() || '',
             commissionPercentage: parts[5]?.trim() && !isNaN(parseFloat(parts[5].trim())) ? parseFloat(parts[5].trim()) : null,
+            type,
+            portalName,
           });
         }
       }
@@ -942,7 +949,7 @@ export default function AdminSettingsPage() {
                   <button
                     onClick={() => {
                       setEditingUni(null);
-                      setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '' });
+                      setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '', type: 'DIRECT', portalName: '' });
                       setUniError(null);
                       setIsUniModalOpen(true);
                     }}
@@ -963,12 +970,12 @@ export default function AdminSettingsPage() {
                   <form onSubmit={handleBulkImport} className="p-4 border-t border-slate-800 space-y-3">
                     {bulkError && <div className="text-[10px] text-rose-500 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">{bulkError}</div>}
                     <div>
-                      <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Paste comma-separated rows (Format: `Name, Country, Course, Fee, Intakes, Commission %` - One row per line)</label>
+                      <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Paste comma-separated rows (Format: `Name, Country, Course, Fee, Intakes, Commission %, [Type], [Portal Name]` - One row per line)</label>
                       <textarea
                         rows={4}
                         value={bulkText}
                         onChange={(e) => setBulkText(e.target.value)}
-                        placeholder="York University, Canada, MBA, CAD 24000 / Year, Jan Sept, 15&#10;UTS, Australia, Master of IT, AUD 38000 / Year, Feb July Nov, 12.5"
+                        placeholder="York University, Canada, MBA, CAD 24000 / Year, Jan Sept, 15, PORTAL, ApplyBoard&#10;UTS, Australia, Master of IT, AUD 38000 / Year, Feb July Nov, 12.5, DIRECT"
                         className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs font-mono focus:outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -1015,6 +1022,8 @@ export default function AdminSettingsPage() {
                                 tuitionFee: '',
                                 intakes: '',
                                 commissionPercentage: '',
+                                type: 'DIRECT',
+                                portalName: '',
                               });
                               setUniError(null);
                               setIsUniModalOpen(true);
@@ -1032,8 +1041,8 @@ export default function AdminSettingsPage() {
                             <thead>
                               <tr className="bg-slate-950/20 border-b border-slate-850 text-[9px] font-bold text-slate-500 uppercase tracking-wider font-mono">
                                 <th className="px-5 py-2.5">Course / Program</th>
+                                <th className="px-5 py-2.5">Type</th>
                                 <th className="px-5 py-2.5">Tuition Fee</th>
-                                <th className="px-5 py-2.5">Intakes</th>
                                 <th className="px-5 py-2.5 text-center">Comm %</th>
                                 <th className="px-5 py-2.5 text-right">Actions</th>
                               </tr>
@@ -1042,6 +1051,17 @@ export default function AdminSettingsPage() {
                               {group.programs.map((uni) => (
                                 <tr key={uni.id} className="hover:bg-slate-850/25 transition-all">
                                   <td className="px-5 py-3 font-semibold text-slate-200">{uni.course}</td>
+                                  <td className="px-5 py-3">
+                                    {uni.type === 'PORTAL' ? (
+                                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-950 text-purple-400 border border-purple-900/50" title={uni.portalName || "Portal"}>
+                                        PORTAL: {uni.portalName || 'N/A'}
+                                      </span>
+                                    ) : (
+                                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-950 text-sky-400 border border-sky-900/50">
+                                        DIRECT
+                                      </span>
+                                    )}
+                                  </td>
                                   <td className="px-5 py-3 font-mono text-[10px] text-slate-400">{uni.tuitionFee || 'N/A'}</td>
                                   <td className="px-5 py-3 text-slate-400">{uni.intakes || 'N/A'}</td>
                                   <td className="px-5 py-3 text-center font-mono font-bold text-emerald-400">
@@ -1058,6 +1078,8 @@ export default function AdminSettingsPage() {
                                           tuitionFee: uni.tuitionFee || '',
                                           intakes: uni.intakes || '',
                                           commissionPercentage: uni.commissionPercentage !== null && uni.commissionPercentage !== undefined ? uni.commissionPercentage.toString() : '',
+                                          type: uni.type || 'DIRECT',
+                                          portalName: uni.portalName || '',
                                         });
                                         setUniError(null);
                                         setIsUniModalOpen(true);
@@ -1473,6 +1495,40 @@ export default function AdminSettingsPage() {
                   placeholder="e.g. 15.00"
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Representation Type</label>
+                  <select
+                    value={uniForm.type}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setUniForm(prev => ({ 
+                        ...prev, 
+                        type: val,
+                        portalName: val === 'DIRECT' ? '' : prev.portalName 
+                      }));
+                    }}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 text-xs focus:outline-none cursor-pointer focus:border-indigo-500"
+                  >
+                    <option value="DIRECT">Direct Representation</option>
+                    <option value="PORTAL">Portal Representation</option>
+                  </select>
+                </div>
+                {uniForm.type === 'PORTAL' && (
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Portal Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={uniForm.portalName}
+                      onChange={(e) => setUniForm(prev => ({ ...prev, portalName: e.target.value }))}
+                      placeholder="e.g. ApplyBoard, KC, Adventus"
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 border-t border-slate-800 flex justify-end space-x-2">

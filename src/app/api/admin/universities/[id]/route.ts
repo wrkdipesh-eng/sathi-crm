@@ -22,7 +22,7 @@ export async function PATCH(
 
     const { id } = params;
     const body = await req.json();
-    const { name, country, course, tuitionFee, intakes, commissionPercentage } = body;
+    const { name, country, course, tuitionFee, intakes, commissionPercentage, type, portalName } = body;
 
     const university = await prisma.partnerUniversity.findUnique({
       where: { id },
@@ -47,6 +47,10 @@ export async function PATCH(
         commissionPercentage: commissionPercentage !== undefined 
           ? (commissionPercentage !== null && commissionPercentage !== '' && !isNaN(parseFloat(commissionPercentage)) ? parseFloat(commissionPercentage) : null)
           : undefined,
+        type: type !== undefined ? (type === 'PORTAL' ? 'PORTAL' : 'DIRECT') : undefined,
+        portalName: type !== undefined 
+          ? (type === 'PORTAL' ? (portalName || '').trim() : null)
+          : (portalName !== undefined ? portalName : undefined),
       },
     });
 

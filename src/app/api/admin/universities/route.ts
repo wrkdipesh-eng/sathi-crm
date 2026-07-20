@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
         tuitionFee: item.tuitionFee?.trim() || '',
         intakes: item.intakes?.trim() || '',
         commissionPercentage: item.commissionPercentage !== undefined && item.commissionPercentage !== null && !isNaN(parseFloat(item.commissionPercentage)) ? parseFloat(item.commissionPercentage) : null,
+        type: item.type === 'PORTAL' ? 'PORTAL' : 'DIRECT',
+        portalName: item.type === 'PORTAL' ? (item.portalName || '').trim() : null,
         organizationId: authUser.organizationId,
       })).filter((item: any) => item.name && item.country && item.course);
 
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, count: created.count });
     } else {
       // Single insert
-      const { name, country, course, tuitionFee, intakes, commissionPercentage } = body;
+      const { name, country, course, tuitionFee, intakes, commissionPercentage, type, portalName } = body;
 
       if (!name || !country || !course) {
         return NextResponse.json({ error: 'Name, country, and course are required fields' }, { status: 400 });
@@ -75,6 +77,8 @@ export async function POST(req: NextRequest) {
           tuitionFee: (tuitionFee || '').trim(),
           intakes: (intakes || '').trim(),
           commissionPercentage: commissionPercentage !== undefined && commissionPercentage !== null && commissionPercentage !== '' && !isNaN(parseFloat(commissionPercentage)) ? parseFloat(commissionPercentage) : null,
+          type: type === 'PORTAL' ? 'PORTAL' : 'DIRECT',
+          portalName: type === 'PORTAL' ? (portalName || '').trim() : null,
           organizationId: authUser.organizationId,
         },
       });
