@@ -72,7 +72,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     // Validate if primary pipeline stage is VISA_FILED or beyond
     const blockStages: PipelineStage[] = [
       PipelineStage.VISA_FILED,
-      PipelineStage.VISA_DECISION,
+      PipelineStage.VISA_GRANTED,
+      PipelineStage.VISA_REFUSED,
       PipelineStage.PRE_DEPARTURE,
     ];
     if (blockStages.includes(applicant.pipelineStage)) {

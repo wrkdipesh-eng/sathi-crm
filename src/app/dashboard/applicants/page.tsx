@@ -23,7 +23,8 @@ const STAGES = [
   'APPLICATION_SUBMITTED',
   'OFFER',
   'VISA_FILED',
-  'VISA_DECISION',
+  'VISA_GRANTED',
+  'VISA_REFUSED',
   'PRE_DEPARTURE'
 ];
 
@@ -210,9 +211,9 @@ export default function ApplicantsListPage() {
         } else if (categoryFilter === 'ABROAD_ENROLLMENTS') {
           if (!['APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED'].includes(stage)) return false;
         } else if (categoryFilter === 'DECISION') {
-          if (!['VISA_DECISION', 'PRE_DEPARTURE'].includes(stage)) return false;
+          if (!['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(stage)) return false;
         } else if (categoryFilter === 'ACTIVE_PIPELINES') {
-          if (!['COUNSELLING', 'CLASS_ENROLLMENT', 'APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED', 'VISA_DECISION'].includes(stage)) return false;
+          if (!['COUNSELLING', 'CLASS_ENROLLMENT', 'APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED', 'VISA_GRANTED'].includes(stage)) return false;
         } else if (categoryFilter === 'PRE_DEPARTURE') {
           if (stage !== 'PRE_DEPARTURE') return false;
         }
@@ -289,7 +290,8 @@ export default function ApplicantsListPage() {
       case 'APPLICATION_SUBMITTED': return 'bg-yellow-50 text-yellow-700 border border-yellow-100';
       case 'OFFER': return 'bg-orange-50 text-orange-700 border border-orange-100';
       case 'VISA_FILED': return 'bg-pink-50 text-pink-700 border border-pink-100';
-      case 'VISA_DECISION': return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+      case 'VISA_GRANTED': return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+      case 'VISA_REFUSED': return 'bg-rose-50 text-rose-700 border border-rose-100';
       case 'PRE_DEPARTURE': return 'bg-teal-50 text-teal-700 border border-teal-100';
       default: return 'bg-slate-100 text-slate-700 border border-slate-200';
     }
@@ -305,10 +307,10 @@ export default function ApplicantsListPage() {
   const inquiringCount = allApplicants.filter(a => a.pipelineStage === 'COUNSELLING').length;
   const classEnrollmentCount = allApplicants.filter(a => a.pipelineStage === 'CLASS_ENROLLMENT').length;
   const abroadEnrollmentCount = allApplicants.filter(a => ['APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED'].includes(a.pipelineStage)).length;
-  const decisionCount = allApplicants.filter(a => ['VISA_DECISION', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
+  const decisionCount = allApplicants.filter(a => ['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
 
   const totalLeadsCount = allApplicants.length;
-  const activePipelinesCount = allApplicants.filter(a => !['INQUIRY', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
+  const activePipelinesCount = allApplicants.filter(a => !['INQUIRY', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
   const stuckLeadsCount = allApplicants.filter(a => a.daysInCurrentStage >= stuckThreshold).length;
 
   return (

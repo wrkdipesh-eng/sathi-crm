@@ -31,13 +31,14 @@ import {
   Star
 } from 'lucide-react';
 
-const STAGES = [
+const PROMOTE_OPTIONS = [
   'INQUIRY',
   'COUNSELLING',
   'APPLICATION_SUBMITTED',
   'OFFER',
   'VISA_FILED',
-  'VISA_DECISION',
+  'VISA_GRANTED',
+  'VISA_REFUSED',
   'PRE_DEPARTURE'
 ];
 
@@ -48,6 +49,27 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
 
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [applicant, setApplicant] = useState<any>(null);
+
+  const STAGES = applicant 
+    ? [
+        'INQUIRY',
+        'COUNSELLING',
+        'APPLICATION_SUBMITTED',
+        'OFFER',
+        'VISA_FILED',
+        applicant.pipelineStage === 'VISA_REFUSED' ? 'VISA_REFUSED' : 'VISA_GRANTED',
+        'PRE_DEPARTURE'
+      ]
+    : [
+        'INQUIRY',
+        'COUNSELLING',
+        'APPLICATION_SUBMITTED',
+        'OFFER',
+        'VISA_FILED',
+        'VISA_GRANTED',
+        'PRE_DEPARTURE'
+      ];
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,7 +108,8 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
 
   const isVisaFiledOrBeyond = applicant ? [
     'VISA_FILED',
-    'VISA_DECISION',
+    'VISA_GRANTED',
+    'VISA_REFUSED',
     'PRE_DEPARTURE'
   ].includes(applicant.pipelineStage) : false;
 
@@ -498,7 +521,8 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
       case 'APPLICATION_SUBMITTED': return 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
       case 'OFFER': return 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
       case 'VISA_FILED': return 'bg-pink-500/10 text-pink-400 border border-pink-500/20';
-      case 'VISA_DECISION': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+      case 'VISA_GRANTED': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+      case 'VISA_REFUSED': return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
       case 'PRE_DEPARTURE': return 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
       default: return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
     }
@@ -604,7 +628,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
               onChange={(e) => handleStageChange(e.target.value)}
               className="bg-slate-950 border border-slate-800 px-3 py-1.5 text-xs text-slate-100 rounded-xl focus:outline-none focus:border-indigo-500 cursor-pointer disabled:opacity-50"
             >
-              {STAGES.map((stg) => (
+              {PROMOTE_OPTIONS.map((stg) => (
                 <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
               ))}
             </select>
@@ -621,7 +645,9 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                 <div className="flex-1 flex items-center space-x-3 md:flex-col md:space-x-0 md:space-y-2 md:text-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all ${
                     isCurrent 
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 scale-115 border border-indigo-400' 
+                      ? stg === 'VISA_REFUSED'
+                        ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20 scale-115 border border-rose-400'
+                        : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 scale-115 border border-indigo-400' 
                       : isPassed 
                         ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
                         : 'bg-slate-950 text-slate-400 border border-slate-800'
@@ -630,7 +656,13 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   </div>
                   <div>
                     <span className={`text-[10px] font-bold block ${
-                      isCurrent ? 'text-indigo-600' : isPassed ? 'text-emerald-600' : 'text-slate-400'
+                      isCurrent 
+                        ? stg === 'VISA_REFUSED'
+                          ? 'text-rose-500'
+                          : 'text-indigo-600' 
+                        : isPassed 
+                          ? 'text-emerald-600' 
+                          : 'text-slate-400'
                     }`}>
                       {stg.replace('_', ' ')}
                     </span>
@@ -832,7 +864,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                             disabled={stageLoading}
                             className="bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] text-slate-100 rounded-lg focus:outline-none cursor-pointer disabled:opacity-50"
                           >
-                            {STAGES.map((stg) => (
+                            {PROMOTE_OPTIONS.map((stg) => (
                               <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
                             ))}
                           </select>
@@ -940,7 +972,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                               onChange={(e) => handleAppStageChange(app.id, e.target.value)}
                               className="bg-slate-950 border border-slate-800 px-2 py-1 text-[10px] text-slate-100 rounded-lg focus:outline-none cursor-pointer"
                             >
-                              {STAGES.map((stg) => (
+                              {PROMOTE_OPTIONS.map((stg) => (
                                 <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
                               ))}
                             </select>

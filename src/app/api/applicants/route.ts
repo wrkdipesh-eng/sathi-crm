@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
             : category === 'ABROAD_ENROLLMENTS' || category === 'ABROAD_ENROLLMENT'
             ? { pipelineStage: { in: ['APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED'] } }
             : category === 'DECISION'
-            ? { pipelineStage: { in: ['VISA_DECISION', 'PRE_DEPARTURE'] } }
+            ? { pipelineStage: { in: ['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'] } }
             : {}
           : {},
         // Filter by target country

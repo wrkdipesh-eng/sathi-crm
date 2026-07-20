@@ -377,7 +377,7 @@ async function main() {
       targetUniversity: 'University of British Columbia',
       source: 'SUB_AGENT',
       subAgentId: subAgent.id,
-      pipelineStage: PipelineStage.VISA_DECISION,
+      pipelineStage: PipelineStage.VISA_GRANTED,
       daysInCurrentStage: 2,
       stageUpdatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       organizationId: org.id,

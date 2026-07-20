@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
         where: {
           AND: [
             combinedFilter,
-            { pipelineStage: { in: [PipelineStage.VISA_DECISION, PipelineStage.PRE_DEPARTURE] } },
+            { pipelineStage: { in: [PipelineStage.VISA_GRANTED, PipelineStage.VISA_REFUSED, PipelineStage.PRE_DEPARTURE] } },
           ],
         },
       }),
@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
         where: {
           AND: [
             combinedFilter,
-            { pipelineStage: { in: [PipelineStage.VISA_DECISION, PipelineStage.PRE_DEPARTURE] } },
+            { pipelineStage: { in: [PipelineStage.VISA_GRANTED, PipelineStage.PRE_DEPARTURE] } },
           ],
         },
       }),
@@ -174,7 +174,7 @@ export async function GET(req: NextRequest) {
       const total = c.assignedApplicants.length;
       const converted = c.assignedApplicants.filter((app) =>
         (
-          [PipelineStage.OFFER, PipelineStage.VISA_FILED, PipelineStage.VISA_DECISION, PipelineStage.PRE_DEPARTURE] as PipelineStage[]
+          [PipelineStage.OFFER, PipelineStage.VISA_FILED, PipelineStage.VISA_GRANTED, PipelineStage.PRE_DEPARTURE] as PipelineStage[]
         ).includes(app.pipelineStage)
       ).length;
       return {
@@ -193,7 +193,7 @@ export async function GET(req: NextRequest) {
       visaByCountry[country].total += 1;
       if (
         app.pipelineStage === PipelineStage.PRE_DEPARTURE ||
-        app.pipelineStage === PipelineStage.VISA_DECISION
+        app.pipelineStage === PipelineStage.VISA_GRANTED
       ) {
         visaByCountry[country].approved += 1;
       }
