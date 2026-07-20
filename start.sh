@@ -3,7 +3,7 @@ export PATH=/home/kavyaglo/nodejs/bin:$PATH
 cd /home/kavyaglo/git/crm.git
 
 # Check if PGlite is running on port 3004
-if ! nc -z 127.0.0.1 3004; then
+if ! node -e "const net = require('net'); const client = net.connect(3004, '127.0.0.1', () => { process.exit(0); }); client.on('error', () => { process.exit(1); });" >/dev/null 2>&1; then
   echo "Starting PGlite..."
   nohup node pglite-server.js > pglite.log 2>&1 &
   disown
@@ -11,7 +11,7 @@ if ! nc -z 127.0.0.1 3004; then
 fi
 
 # Check if Next.js is running on port 3022
-if ! nc -z 127.0.0.1 3022; then
+if ! node -e "const net = require('net'); const client = net.connect(3022, '127.0.0.1', () => { process.exit(0); }); client.on('error', () => { process.exit(1); });" >/dev/null 2>&1; then
   echo "Starting Next.js..."
   nohup npx next start -p 3022 > next.log 2>&1 &
   disown
