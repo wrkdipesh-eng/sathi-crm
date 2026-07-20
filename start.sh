@@ -1,6 +1,6 @@
 #!/bin/bash
-export PATH=/home1/mjwgflte/nodejs/bin:$PATH
-cd /home1/mjwgflte/public_html/website_875c4662/crm
+export PATH=/home/kavyaglo/nodejs/bin:$PATH
+cd /home/kavyaglo/git/crm.git
 
 # Check if PGlite is running on port 3004
 if ! nc -z 127.0.0.1 3004; then
