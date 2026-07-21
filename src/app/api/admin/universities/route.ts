@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth';
-import { Role } from '@prisma/client';
+import { Role, UniversityType } from '@prisma/client';
 
 // GET: Retrieve all partner universities for the organization
 export async function GET(req: NextRequest) {
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         tuitionFee: item.tuitionFee?.trim() || '',
         intakes: item.intakes?.trim() || '',
         commissionPercentage: item.commissionPercentage !== undefined && item.commissionPercentage !== null && !isNaN(parseFloat(item.commissionPercentage)) ? parseFloat(item.commissionPercentage) : null,
-        type: item.type === 'PORTAL' ? 'PORTAL' : 'DIRECT',
+        type: (item.type === 'PORTAL' ? 'PORTAL' : 'DIRECT') as UniversityType,
         portalName: item.type === 'PORTAL' ? (item.portalName || '').trim() : null,
         organizationId: authUser.organizationId,
       })).filter((item: any) => item.name && item.country && item.course);
