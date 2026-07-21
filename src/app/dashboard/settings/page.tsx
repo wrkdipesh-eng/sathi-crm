@@ -52,8 +52,14 @@ export default function AdminSettingsPage() {
     name: '',
     tagline: '',
     logoUrl: '',
-    logoIcon: 'Globe'
+    logoIcon: 'Globe',
+    themePalette: 'dark-emerald',
   });
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('organization_theme_palette') || 'dark-emerald';
+    setOrgForm(prev => ({ ...prev, themePalette: savedTheme }));
+  }, []);
   const [isSavingOrg, setIsSavingOrg] = useState(false);
   const [orgError, setOrgError] = useState<string | null>(null);
 
@@ -186,12 +192,13 @@ export default function AdminSettingsPage() {
       if (orgRes.ok) {
         const data = await orgRes.json();
         if (data.organization) {
-          setOrgForm({
+          setOrgForm(prev => ({
+            ...prev,
             name: data.organization.name || '',
             tagline: data.organization.tagline || '',
             logoUrl: data.organization.logoUrl || '',
             logoIcon: data.organization.logoIcon || 'Globe',
-          });
+          }));
         }
       }
 
@@ -594,6 +601,14 @@ export default function AdminSettingsPage() {
     setOrgError(null);
 
     try {
+      localStorage.setItem('organization_theme_palette', orgForm.themePalette);
+      document.documentElement.setAttribute('data-theme', orgForm.themePalette);
+      if (orgForm.themePalette === 'light-executive') {
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+      }
+
       const res = await fetch('/api/admin/organization', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -603,7 +618,7 @@ export default function AdminSettingsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update organization profile');
 
-      alert('Organization profile and branding updated successfully!');
+      alert('Organization profile, branding, and theme updated successfully!');
       window.location.reload();
     } catch (err: any) {
       setOrgError(err.message || 'Error occurred while saving branding');
@@ -1288,6 +1303,138 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Organization Theme & Color Palette Selector Grid */}
+                  <div className="pt-6 border-t border-slate-800 space-y-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                        Organization System Theme & Brand Color Palette *
+                      </label>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Select the official primary theme color scheme for your organization's CRM portal across all staff & branch accounts.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                      
+                      {/* Theme Option 1: Dark Emerald & Gold (Dark Green, Yellow & White) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrgForm(prev => ({ ...prev, themePalette: 'dark-emerald' }));
+                          document.documentElement.setAttribute('data-theme', 'dark-emerald');
+                          document.documentElement.classList.add('dark');
+                        }}
+                        className={`p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-3 ${
+                          orgForm.themePalette === 'dark-emerald'
+                            ? 'bg-[#051810] border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10'
+                            : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-100">Dark Green & Gold</span>
+                          {orgForm.themePalette === 'dark-emerald' && (
+                            <CheckCircle className="w-4 h-4 text-emerald-400" />
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-5 h-5 rounded-full bg-[#020a06] border border-[#0d3d29]" title="Background: Dark Green" />
+                          <span className="w-5 h-5 rounded-full bg-[#051810] border border-emerald-500/40" title="Card: Forest" />
+                          <span className="w-5 h-5 rounded-full bg-yellow-500" title="Accent: Yellow Gold" />
+                          <span className="w-5 h-5 rounded-full bg-white" title="Text: Crisp White" />
+                        </div>
+                        <span className="text-[10px] text-slate-400 block font-medium">Dark Green, Yellow & White (Thinkcone Default)</span>
+                      </button>
+
+                      {/* Theme Option 2: Dark Slate & Cyan */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrgForm(prev => ({ ...prev, themePalette: 'dark-slate' }));
+                          document.documentElement.setAttribute('data-theme', 'dark-slate');
+                          document.documentElement.classList.add('dark');
+                        }}
+                        className={`p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-3 ${
+                          orgForm.themePalette === 'dark-slate'
+                            ? 'bg-[#0f172a] border-cyan-500 ring-2 ring-cyan-500/30 shadow-lg shadow-cyan-500/10'
+                            : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-100">Dark Slate & Cyan</span>
+                          {orgForm.themePalette === 'dark-slate' && (
+                            <CheckCircle className="w-4 h-4 text-cyan-400" />
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-5 h-5 rounded-full bg-[#020617] border border-[#1e293b]" title="Background: Slate" />
+                          <span className="w-5 h-5 rounded-full bg-[#0f172a] border border-slate-700" title="Card: Navy" />
+                          <span className="w-5 h-5 rounded-full bg-cyan-400" title="Accent: Electric Cyan" />
+                          <span className="w-5 h-5 rounded-full bg-white" title="Text: Crisp White" />
+                        </div>
+                        <span className="text-[10px] text-slate-400 block font-medium">Obsidian Navy, Cyan & White</span>
+                      </button>
+
+                      {/* Theme Option 3: Dark Royal Purple & Amber */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrgForm(prev => ({ ...prev, themePalette: 'dark-purple' }));
+                          document.documentElement.setAttribute('data-theme', 'dark-purple');
+                          document.documentElement.classList.add('dark');
+                        }}
+                        className={`p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-3 ${
+                          orgForm.themePalette === 'dark-purple'
+                            ? 'bg-[#140728] border-purple-500 ring-2 ring-purple-500/30 shadow-lg shadow-purple-500/10'
+                            : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-100">Dark Royal Purple</span>
+                          {orgForm.themePalette === 'dark-purple' && (
+                            <CheckCircle className="w-4 h-4 text-purple-400" />
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-5 h-5 rounded-full bg-[#090314] border border-[#2e1059]" title="Background: Midnight Purple" />
+                          <span className="w-5 h-5 rounded-full bg-[#140728] border border-purple-800" title="Card: Royal Purple" />
+                          <span className="w-5 h-5 rounded-full bg-amber-400" title="Accent: Warm Amber" />
+                          <span className="w-5 h-5 rounded-full bg-white" title="Text: Crisp White" />
+                        </div>
+                        <span className="text-[10px] text-slate-400 block font-medium">Midnight Purple, Amber & White</span>
+                      </button>
+
+                      {/* Theme Option 4: Executive Light Mode */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrgForm(prev => ({ ...prev, themePalette: 'light-executive' }));
+                          document.documentElement.setAttribute('data-theme', 'light-executive');
+                          document.documentElement.classList.remove('dark');
+                        }}
+                        className={`p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-3 ${
+                          orgForm.themePalette === 'light-executive'
+                            ? 'bg-slate-100 border-emerald-600 ring-2 ring-emerald-500/30 shadow-lg'
+                            : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-900">Executive Light Mode</span>
+                          {orgForm.themePalette === 'light-executive' && (
+                            <CheckCircle className="w-4 h-4 text-emerald-600" />
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-5 h-5 rounded-full bg-slate-100 border border-slate-300" title="Background: Light" />
+                          <span className="w-5 h-5 rounded-full bg-white border border-slate-300" title="Card: White" />
+                          <span className="w-5 h-5 rounded-full bg-emerald-600" title="Accent: Emerald" />
+                          <span className="w-5 h-5 rounded-full bg-slate-900" title="Text: Dark" />
+                        </div>
+                        <span className="text-[10px] text-slate-400 block font-medium">Clean Executive Light Theme</span>
+                      </button>
+
+                    </div>
+                  </div>
 
                 <div className="flex justify-end pt-4 border-t border-slate-800">
                   <button

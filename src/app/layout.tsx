@@ -33,7 +33,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.getItem('theme') === 'light') {
+                const savedTheme = localStorage.getItem('organization_theme_palette') || 'dark-emerald';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                if (savedTheme === 'light-executive') {
                   document.documentElement.classList.remove('dark');
                 } else {
                   document.documentElement.classList.add('dark');
