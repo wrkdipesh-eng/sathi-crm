@@ -76,6 +76,10 @@ export default function FinanceLedgerPage() {
     invoiceNumber: '',
     nprExchangeRate: '133.0',
     status: 'PENDING',
+    baseCommType: 'PERCENT' as 'PERCENT' | 'FLAT',
+    baseCommValue: '10',
+    bonusType: 'NONE' as 'PERCENT' | 'FLAT' | 'NONE',
+    bonusValue: '',
   });
   const [bulkCalculations, setBulkCalculations] = useState<any[]>([]);
   const [bulkSaveLoading, setBulkSaveLoading] = useState(false);
@@ -113,6 +117,10 @@ export default function FinanceLedgerPage() {
       invoiceNumber: '',
       nprExchangeRate: '133.0',
       status: 'PENDING',
+      baseCommType: 'PERCENT',
+      baseCommValue: '10',
+      bonusType: 'NONE',
+      bonusValue: '',
     });
     setBulkCalculations([]);
     setIsBulkModalOpen(true);
@@ -129,7 +137,8 @@ export default function FinanceLedgerPage() {
 
     const cleanUniName = uniName.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
     const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanUniName.toLowerCase());
-    setBulkSlabs(Array.isArray(partnerUniRecord?.slabs) ? partnerUniRecord.slabs : []);
+    const slabsList = Array.isArray(partnerUniRecord?.slabs) ? partnerUniRecord.slabs : [];
+    setBulkSlabs(slabsList);
 
     const firstComm = matchingComms[0];
     const defaultRate = firstComm?.nprExchangeRate ? String(firstComm.nprExchangeRate) : '133.0';
@@ -137,10 +146,34 @@ export default function FinanceLedgerPage() {
     const baseUniName = uniName.replace(/\s+\[(Direct|Portal:.*)\]$/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
     const defaultInvoiceNum = `BULK-${baseUniName}-${dateStr}`;
 
+    let baseType: 'PERCENT' | 'FLAT' = partnerUniRecord?.baseCommissionType || 'PERCENT';
+    let baseVal = partnerUniRecord?.baseCommissionValue !== null && partnerUniRecord?.baseCommissionValue !== undefined
+      ? String(partnerUniRecord.baseCommissionValue)
+      : (partnerUniRecord?.commissionPercentage ? String(partnerUniRecord.commissionPercentage) : '10');
+
+    let bonusType: 'NONE' | 'PERCENT' | 'FLAT' = partnerUniRecord?.bonusType || 'NONE';
+    let bonusVal = partnerUniRecord?.bonusValue ? String(partnerUniRecord.bonusValue) : '';
+
+    const initialCount = matchingComms.length;
+    const activeSlab = slabsList.find((slab: any) => {
+      const min = parseInt(slab.minStudents) || 0;
+      const max = slab.maxStudents ? parseInt(slab.maxStudents) : Infinity;
+      return initialCount >= min && initialCount <= max;
+    });
+
+    if (activeSlab) {
+      baseType = activeSlab.commissionType;
+      baseVal = String(activeSlab.commissionValue || 0);
+    }
+
     setBulkInvoiceForm(prev => ({
       ...prev,
       invoiceNumber: defaultInvoiceNum,
       nprExchangeRate: defaultRate,
+      baseCommType: baseType,
+      baseCommValue: baseVal,
+      bonusType: bonusType,
+      bonusValue: bonusVal,
     }));
   };
 
@@ -230,21 +263,11 @@ export default function FinanceLedgerPage() {
       return count >= min && count <= max;
     });
 
-    let baseType = 'PERCENT';
-    let baseValue = 10.0;
+    let baseType = bulkInvoiceForm.baseCommType || 'PERCENT';
+    let baseValue = parseFloat(bulkInvoiceForm.baseCommValue) || 0;
 
-    if (activeSlab) {
-      baseType = activeSlab.commissionType;
-      baseValue = parseFloat(activeSlab.commissionValue) || 0;
-    } else if (partnerUniRecord) {
-      baseType = partnerUniRecord.baseCommissionType || 'PERCENT';
-      baseValue = partnerUniRecord.baseCommissionValue !== null 
-        ? parseFloat(partnerUniRecord.baseCommissionValue.toString()) 
-        : (partnerUniRecord.commissionPercentage || 10.0);
-    }
-
-    const bonusType = partnerUniRecord?.bonusType || 'NONE';
-    const bonusValue = partnerUniRecord?.bonusValue ? parseFloat(partnerUniRecord.bonusValue.toString()) : 0;
+    const bonusType = bulkInvoiceForm.bonusType || 'NONE';
+    const bonusValue = parseFloat(bulkInvoiceForm.bonusValue) || 0;
     const exchangeRate = parseFloat(bulkInvoiceForm.nprExchangeRate) || 133.0;
 
     const calcs = activeComms.map((comm) => {
@@ -1894,7 +1917,7 @@ export default function FinanceLedgerPage() {
 
             {/* University Selector & Config Box (Hidden in Print) */}
             <div className="p-6 border-b border-slate-800 bg-slate-950/20 space-y-4 print:hidden text-xs">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                   <label className="block text-[10px] text-slate-400 font-medium mb-1">Select Partner University *</label>
                   <select
@@ -1919,8 +1942,53 @@ export default function FinanceLedgerPage() {
                         type="text"
                         value={bulkInvoiceForm.invoiceNumber}
                         onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none"
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-emerald-400 font-bold mb-1">Base Commission (% or $)</label>
+                      <div className="flex space-x-1">
+                        <select
+                          value={bulkInvoiceForm.baseCommType}
+                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, baseCommType: e.target.value as any }))}
+                          className="px-2 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none w-20 cursor-pointer text-xs"
+                        >
+                          <option value="PERCENT">%</option>
+                          <option value="FLAT">Flat ($)</option>
+                        </select>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={bulkInvoiceForm.baseCommValue}
+                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, baseCommValue: e.target.value }))}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono font-bold text-emerald-400 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-indigo-300 font-bold mb-1">Bonus Structure (Optional)</label>
+                      <div className="flex space-x-1">
+                        <select
+                          value={bulkInvoiceForm.bonusType}
+                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, bonusType: e.target.value as any }))}
+                          className="px-2 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none w-24 cursor-pointer text-xs"
+                        >
+                          <option value="NONE">None</option>
+                          <option value="PERCENT">% Bonus</option>
+                          <option value="FLAT">Flat Bonus</option>
+                        </select>
+                        {bulkInvoiceForm.bonusType !== 'NONE' && (
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={bulkInvoiceForm.bonusValue}
+                            onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, bonusValue: e.target.value }))}
+                            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono font-bold text-indigo-400 text-xs"
+                          />
+                        )}
+                      </div>
                     </div>
 
                     <div>
@@ -1930,7 +1998,7 @@ export default function FinanceLedgerPage() {
                         step="0.0001"
                         value={bulkInvoiceForm.nprExchangeRate}
                         onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, nprExchangeRate: e.target.value }))}
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
                       />
                     </div>
                   </>
