@@ -60,7 +60,6 @@ export default function AdminSettingsPage() {
     bg: '#020a06',
     card: '#051810',
     accent: '#d4af37',
-    graph: '#10b981',
     text: '#ffffff',
   });
 
@@ -73,13 +72,12 @@ export default function AdminSettingsPage() {
     }
 
     if (themePalette === 'custom') {
-      const graphColor = colors.graph || colors.accent;
       document.documentElement.style.setProperty('--background', colors.bg);
       document.documentElement.style.setProperty('--foreground', colors.text);
       document.documentElement.style.setProperty('--card', colors.card);
       document.documentElement.style.setProperty('--primary', colors.accent);
-      document.documentElement.style.setProperty('--accent', graphColor);
-      document.documentElement.style.setProperty('--graph-color', graphColor);
+      document.documentElement.style.setProperty('--accent', colors.accent);
+      document.documentElement.style.setProperty('--graph-color', colors.accent);
 
       document.documentElement.style.setProperty('--slate-950', colors.bg);
       document.documentElement.style.setProperty('--slate-900', colors.card);
@@ -1528,7 +1526,7 @@ export default function AdminSettingsPage() {
                           <span className="text-[10px] text-indigo-400 font-mono italic">✨ Live Real-Time Preview Active</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                           
                           {/* Color 1: Background */}
                           <div className="space-y-1.5">
@@ -1617,36 +1615,7 @@ export default function AdminSettingsPage() {
                             </div>
                           </div>
 
-                          {/* Color 4: Icon & Graph Highlight */}
-                          <div className="space-y-1.5">
-                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                              Icon & Graph Accent
-                            </label>
-                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
-                              <input
-                                type="color"
-                                value={customThemeColors.graph || customThemeColors.accent}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, graph: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                              />
-                              <input
-                                type="text"
-                                value={customThemeColors.graph || customThemeColors.accent}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, graph: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Color 5: Text / Typography */}
+                          {/* Color 4: Text / Typography */}
                           <div className="space-y-1.5">
                             <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                               Text / Font Color
