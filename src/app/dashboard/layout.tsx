@@ -65,7 +65,7 @@ export default async function DashboardLayout({
   })();
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans print:block print:bg-white print:text-black">
+    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans print:block print:bg-[#020a06] print:text-slate-100">
       {/* Sidebar */}
       <aside className="w-72 border-r border-slate-800 bg-slate-900 flex flex-col justify-between shrink-0 print:hidden">
         <div>
@@ -202,7 +202,7 @@ export default async function DashboardLayout({
         </header>
 
         {/* Dashboard page children */}
-        <div className="p-8 pt-24 flex-1 bg-slate-950 overflow-y-auto print:p-0 print:bg-white">
+        <div className="p-8 pt-24 flex-1 bg-slate-950 overflow-y-auto print:p-0 print:bg-[#020a06]">
           {children}
         </div>
       </main>

@@ -2424,7 +2424,7 @@ export default function FinanceLedgerPage() {
 
       {/* Bulk Invoice Modal */}
       {isBulkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in print:bg-white print:p-0 print:absolute print:inset-0">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in print:p-0 print:absolute print:inset-0 ${isGeneratedInvoiceOpen ? "print:hidden" : "print:bg-white"}`}>
           <div className="w-full max-w-7xl bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:text-slate-950">
             
             {/* Control Header (Hidden in Print) */}
