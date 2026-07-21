@@ -2175,10 +2175,10 @@ export default function FinanceLedgerPage() {
       {/* Bulk Invoice Modal */}
       {isBulkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in print:bg-white print:p-0 print:absolute print:inset-0">
-          <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:text-slate-950">
+          <div className="w-full max-w-7xl bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:text-slate-950">
             
             {/* Control Header (Hidden in Print) */}
-            <div className="px-6 py-4 border-b border-slate-800/60 bg-slate-950/40 flex justify-between items-center print:hidden">
+            <div className="px-6 py-4 border-b border-slate-800/60 bg-slate-950/40 flex justify-between items-center print:hidden flex-none">
               <span className="text-xs font-bold text-slate-350 flex items-center">
                 <FileSpreadsheet className="w-4 h-4 mr-1 text-emerald-500" />
                 Bulk University Invoice Claims Generator
@@ -2193,311 +2193,311 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
 
-            {/* University Selector & Config Box (Hidden in Print) */}
-            <div className="p-6 border-b border-slate-800 bg-slate-950/20 space-y-4 print:hidden text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">1. Select Partner University *</label>
-                  <select
-                    value={selectedUni}
-                    onChange={(e) => handleUniChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none cursor-pointer text-xs"
-                  >
-                    <option value="">-- Choose University --</option>
-                    {Array.from(
-                      new Set(commissions.filter(c => c.status === 'PENDING').map(c => c.partnerUniversity))
-                    ).sort().map((uni, idx) => (
-                      <option key={idx} value={uni}>{uni}</option>
-                    ))}
-                  </select>
+            {/* Split Screen Container */}
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+              
+              {/* Left Column: Configuration Panel (Hidden in Print) */}
+              <div className="w-full lg:w-1/2 bg-slate-950/40 border-r border-slate-800/80 p-5 overflow-y-auto space-y-5 print:hidden text-xs select-none">
+                
+                {/* 1. Selector & Basic Config fields */}
+                <div className="space-y-3 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/80">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold mb-1 font-mono uppercase tracking-wider">1. Select Partner University *</label>
+                    <select
+                      value={selectedUni}
+                      onChange={(e) => handleUniChange(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none cursor-pointer text-xs"
+                    >
+                      <option value="">-- Choose University --</option>
+                      {Array.from(
+                        new Set(commissions.filter(c => c.status === 'PENDING').map(c => c.partnerUniversity))
+                      ).sort().map((uni, idx) => (
+                        <option key={idx} value={uni}>{uni}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedUni && (
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-emerald-400 font-bold mb-1 font-mono uppercase tracking-wider">2. Intake Batch Filter</label>
+                        <select
+                          value={intakeFilter}
+                          onChange={(e) => setIntakeFilter(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-950 border border-emerald-500/30 rounded-xl text-emerald-400 font-semibold focus:outline-none cursor-pointer text-xs font-mono"
+                        >
+                          <option value="">-- All Intakes Batch --</option>
+                          {Array.from(new Set(commissions.filter(c => c.partnerUniversity === selectedUni && c.status === 'PENDING').map(c => {
+                            const d = new Date(c.createdAt);
+                            const m = d.getMonth() + 1;
+                            const y = d.getFullYear();
+                            if (m >= 1 && m <= 3) return `Jan/Feb ${y} Intake`;
+                            if (m >= 4 && m <= 6) return `May/June ${y} Intake`;
+                            if (m >= 7 && m <= 9) return `July/Aug ${y} Intake`;
+                            return `Sept/Oct ${y} Intake`;
+                          }))).map((intakeName, idx) => (
+                            <option key={idx} value={intakeName}>{intakeName}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold mb-1 font-mono uppercase tracking-wider">3. Invoice / Claim Number</label>
+                        <input
+                          type="text"
+                          value={bulkInvoiceForm.invoiceNumber}
+                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold mb-1 font-mono uppercase tracking-wider">4. NRB Exchange Rate (NPR)</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={bulkInvoiceForm.nprExchangeRate}
+                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, nprExchangeRate: e.target.value }))}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                {/* 2. Volume Slabs Configuration & Live Highlight (Editable) */}
                 {selectedUni && (
-                  <>
-                    <div>
-                      <label className="block text-[10px] text-emerald-400 font-bold mb-1 font-mono">2. Intake Batch Filter</label>
-                      <select
-                        value={intakeFilter}
-                        onChange={(e) => setIntakeFilter(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-950 border border-emerald-500/30 rounded-xl text-emerald-400 font-semibold focus:outline-none cursor-pointer text-xs font-mono"
-                      >
-                        <option value="">-- All Intakes Batch --</option>
-                        {Array.from(new Set(commissions.filter(c => c.partnerUniversity === selectedUni && c.status === 'PENDING').map(c => {
-                          const d = new Date(c.createdAt);
-                          const m = d.getMonth() + 1;
-                          const y = d.getFullYear();
-                          if (m >= 1 && m <= 3) return `Jan/Feb ${y} Intake`;
-                          if (m >= 4 && m <= 6) return `May/June ${y} Intake`;
-                          if (m >= 7 && m <= 9) return `July/Aug ${y} Intake`;
-                          return `Sept/Oct ${y} Intake`;
-                        }))).map((intakeName, idx) => (
-                          <option key={idx} value={intakeName}>{intakeName}</option>
-                        ))}
-                      </select>
+                  <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-3">
+                    <div className="flex flex-wrap justify-between items-center gap-2 border-b border-[#0d3420] pb-2.5">
+                      <div>
+                        <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
+                          University Slab Configuration
+                        </span>
+                        <span className="text-[9px] text-slate-400">
+                          Edit slab thresholds or rates below.
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={addBulkSlabRow}
+                          className="px-2 py-0.5 bg-[#010a06] border border-[#0e3322] text-[8px] font-bold text-slate-350 font-mono rounded hover:bg-[#0d3420] hover:text-white transition-all cursor-pointer"
+                        >
+                          + Add
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveBulkSlabsToUniversity}
+                          disabled={isUpdatingSlabs}
+                          className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[8px] font-bold font-mono rounded transition-all cursor-pointer disabled:opacity-50 flex items-center space-x-1"
+                        >
+                          {isUpdatingSlabs && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
+                          <span>Save Slabs</span>
+                        </button>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">3. Invoice / Claim Number</label>
-                      <input
-                        type="text"
-                        value={bulkInvoiceForm.invoiceNumber}
-                        onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
-                      />
-                    </div>
+                    {slabSuccessMsg && (
+                      <div className="text-[9px] text-emerald-400 font-semibold bg-emerald-950/40 border border-emerald-500/30 p-2 rounded-xl">
+                        ✓ {slabSuccessMsg}
+                      </div>
+                    )}
 
-                    <div>
-                      <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">4. NRB Exchange Rate (NPR)</label>
-                      <input
-                        type="number"
-                        step="0.0001"
-                        value={bulkInvoiceForm.nprExchangeRate}
-                        onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, nprExchangeRate: e.target.value }))}
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
-                      />
+                    {bulkSlabs.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-4 text-slate-400 italic text-[10px] space-y-2">
+                        <span>No volume slabs configured. Standard base commission values will be used.</span>
+                        <button
+                          type="button"
+                          onClick={addBulkSlabRow}
+                          className="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 text-[9px] rounded font-mono cursor-pointer"
+                        >
+                          + Add First Slab
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3.5 max-h-[220px] overflow-y-auto pr-1">
+                        {bulkSlabs.map((slab: any, idx: number) => {
+                          const min = parseInt(slab.minStudents) || 1;
+                          const max = slab.maxStudents ? parseInt(slab.maxStudents) : null;
+                          const activeCount = bulkCalculations.length;
+                          const isActive = activeCount >= min && (!max || activeCount <= max);
+
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`p-3 rounded-xl border text-[11px] transition-all space-y-2 relative ${
+                                isActive 
+                                  ? 'bg-emerald-950/40 border-emerald-500/60 shadow-md shadow-emerald-500/5' 
+                                  : 'bg-[#010a06] border-[#0e3322]'
+                              }`}
+                            >
+                              <div className="flex justify-between items-center border-b border-slate-800/60 pb-1">
+                                <span className="font-mono text-[9px] text-slate-500">Slab #{idx + 1} {isActive && <span className="text-emerald-400 font-bold ml-1 font-sans">● Active</span>}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeBulkSlabRow(idx)}
+                                  className="text-rose-400 hover:text-rose-350 transition-all cursor-pointer"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 font-mono">
+                                <div>
+                                  <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Min Students</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    required
+                                    value={slab.minStudents}
+                                    onChange={(e) => updateBulkSlabRow(idx, 'minStudents', e.target.value)}
+                                    className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Max Students</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="Above"
+                                    value={slab.maxStudents || ''}
+                                    onChange={(e) => updateBulkSlabRow(idx, 'maxStudents', e.target.value)}
+                                    className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Comm Type</label>
+                                  <select
+                                    value={slab.commissionType}
+                                    onChange={(e) => updateBulkSlabRow(idx, 'commissionType', e.target.value)}
+                                    className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
+                                  >
+                                    <option value="PERCENT">% Share</option>
+                                    <option value="FLAT">Flat ($)</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-[8px] text-emerald-400 font-medium mb-0.5">Comm Value</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                    value={slab.commissionValue}
+                                    onChange={(e) => updateBulkSlabRow(idx, 'commissionValue', e.target.value)}
+                                    className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-emerald-400"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Type</label>
+                                  <select
+                                    value={slab.bonusType || 'NONE'}
+                                    onChange={(e) => updateBulkSlabRow(idx, 'bonusType', e.target.value)}
+                                    className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
+                                  >
+                                    <option value="NONE">None</option>
+                                    <option value="PERCENT">% Bonus</option>
+                                    <option value="FLAT">Flat Bonus</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Value</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    disabled={(slab.bonusType || 'NONE') === 'NONE'}
+                                    placeholder="-"
+                                    value={slab.bonusValue || ''}
+                                    onChange={(e) => updateBulkSlabRow(idx, 'bonusValue', e.target.value)}
+                                    className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-indigo-300 disabled:opacity-40"
+                                  />
+                                </div>
+                              </div>
+                              
+                              {(slab.bonusType || 'NONE') !== 'NONE' && (
+                                <div className="font-mono text-[9px] pt-1">
+                                  <label className="block text-[8px] text-purple-300 font-medium mb-0.5">Bonus Scope</label>
+                                  <select
+                                    value={slab.bonusCalcMode || 'PER_STUDENT'}
+                                    onChange={(e) => updateBulkSlabRow(idx, 'bonusCalcMode', e.target.value)}
+                                    className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[10px] focus:outline-none cursor-pointer"
+                                  >
+                                    <option value="PER_STUDENT">Per Student</option>
+                                    <option value="TOTAL_BATCH">Total Batch Lump-Sum</option>
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. Student Checklist Selection list */}
+                {selectedUni && (
+                  <div className="space-y-1.5">
+                    <span className="font-bold text-[10px] text-slate-400 uppercase tracking-wide block font-mono">
+                      Choose Students in Batch
+                    </span>
+                    <div className="border border-slate-800/85 rounded-2xl overflow-hidden max-h-[240px] overflow-y-auto">
+                      <table className="w-full text-left border-collapse text-xs bg-slate-950/20">
+                        <thead>
+                          <tr className="border-b border-slate-800 bg-slate-950/40 text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">
+                            <th className="px-3 py-2 w-10 text-center">Inc</th>
+                            <th className="px-3 py-2">Student</th>
+                            <th className="px-3 py-2 text-right">Comm</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/30">
+                          {commissions.filter(c => c.partnerUniversity === selectedUni && c.status === 'PENDING').map(c => {
+                            const isChecked = modalSelectedCommIds.includes(c.id);
+                            const calcItem = bulkCalculations.find(item => item.id === c.id);
+                            return (
+                              <tr key={c.id} className={`hover:bg-slate-850/20 transition-all ${!isChecked ? 'opacity-35' : ''}`}>
+                                <td className="px-3 py-2 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setModalSelectedCommIds(prev => [...prev, c.id]);
+                                      } else {
+                                        setModalSelectedCommIds(prev => prev.filter(id => id !== c.id));
+                                      }
+                                    }}
+                                    className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                                  />
+                                </td>
+                                <td className="px-3 py-2 font-semibold text-slate-200">
+                                  {c.applicant.name}
+                                  <span className="text-[9px] text-slate-500 block font-normal">{c.applicant.targetCourse || 'N/A'}</span>
+                                </td>
+                                <td className="px-3 py-2 text-right font-mono font-bold text-emerald-400">
+                                  {calcItem ? `${calcItem.currency} ${calcItem.commissionAmountForeign.toLocaleString()}` : ''}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
 
-              {/* Volume Slabs Configuration & Live Highlight (Editable) */}
-              {selectedUni && (
-                <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-3">
-                  <div className="flex flex-wrap justify-between items-center gap-2 border-b border-[#0d3420] pb-2.5">
-                    <div>
-                      <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
-                        University Slab System Configuration (Editable)
-                      </span>
-                      <span className="text-[9px] text-slate-400">
-                        Edit slab thresholds or rates below. Active slab highlights automatically based on {bulkCalculations.length} included student(s).
-                      </span>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        type="button"
-                        onClick={addBulkSlabRow}
-                        className="px-2.5 py-1 bg-[#010a06] border border-[#0e3322] text-[9px] font-bold text-slate-300 font-mono rounded-lg hover:bg-[#0d3420] hover:text-white transition-all cursor-pointer"
-                      >
-                        + Add Slab Row
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSaveBulkSlabsToUniversity}
-                        disabled={isUpdatingSlabs}
-                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold font-mono rounded-lg transition-all cursor-pointer disabled:opacity-50 flex items-center space-x-1"
-                      >
-                        {isUpdatingSlabs && <Loader2 className="w-3 h-3 animate-spin" />}
-                        <span>Save & Update Slabs</span>
-                      </button>
-                    </div>
+              {/* Right Column: Live Invoice Preview */}
+              <div className="w-full lg:w-1/2 p-6 space-y-6 overflow-y-auto print:overflow-visible print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100 min-h-0">
+                {!selectedUni ? (
+                  <div className="flex flex-col items-center justify-center py-40 text-slate-500">
+                    <FileSpreadsheet className="w-14 h-14 text-slate-700 animate-pulse mb-3" />
+                    <p className="text-xs font-medium">Please select a Partner University from the left dropdown to generate the official claim invoice.</p>
                   </div>
-
-                  {slabSuccessMsg && (
-                    <div className="text-[10px] text-emerald-400 font-semibold bg-emerald-950/40 border border-emerald-500/30 p-2 rounded-xl">
-                      ✓ {slabSuccessMsg}
-                    </div>
-                  )}
-
-                  {bulkSlabs.length === 0 ? (
-                    <div className="flex items-center justify-between py-2 text-slate-400 italic text-[11px]">
-                      <span>No volume slabs configured. Standard base/bonus commission values will be used.</span>
-                      <button
-                        type="button"
-                        onClick={addBulkSlabRow}
-                        className="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-lg font-mono"
-                      >
-                        + Add First Volume Slab
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                      {bulkSlabs.map((slab: any, idx: number) => {
-                        const min = parseInt(slab.minStudents) || 1;
-                        const max = slab.maxStudents ? parseInt(slab.maxStudents) : null;
-                        const activeCount = bulkCalculations.length;
-                        const isActive = activeCount >= min && (!max || activeCount <= max);
-
-                        return (
-                          <div 
-                            key={idx} 
-                            className={`flex items-center space-x-2 p-2 rounded-xl border text-xs transition-all ${
-                              isActive 
-                                ? 'bg-emerald-950/40 border-emerald-500 shadow-md shadow-emerald-500/10' 
-                                : 'bg-[#010a06] border-[#0e3322]'
-                            }`}
-                          >
-                            <div className="flex-1 grid grid-cols-1 sm:grid-cols-6 gap-2 font-mono">
-                              <div>
-                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Min Students</label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  required
-                                  value={slab.minStudents}
-                                  onChange={(e) => updateBulkSlabRow(idx, 'minStudents', e.target.value)}
-                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Max Students</label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  placeholder="Above"
-                                  value={slab.maxStudents || ''}
-                                  onChange={(e) => updateBulkSlabRow(idx, 'maxStudents', e.target.value)}
-                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Comm Type</label>
-                                <select
-                                  value={slab.commissionType}
-                                  onChange={(e) => updateBulkSlabRow(idx, 'commissionType', e.target.value)}
-                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
-                                >
-                                  <option value="PERCENT">Percentage (%)</option>
-                                  <option value="FLAT">Flat ($)</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-[8px] text-emerald-400 font-medium mb-0.5">Comm Value</label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  required
-                                  value={slab.commissionValue}
-                                  onChange={(e) => updateBulkSlabRow(idx, 'commissionValue', e.target.value)}
-                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-emerald-400"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Type</label>
-                                <select
-                                  value={slab.bonusType || 'NONE'}
-                                  onChange={(e) => updateBulkSlabRow(idx, 'bonusType', e.target.value)}
-                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
-                                >
-                                  <option value="NONE">None</option>
-                                  <option value="PERCENT">% Bonus</option>
-                                  <option value="FLAT">Flat Bonus ($)</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Value</label>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  disabled={(slab.bonusType || 'NONE') === 'NONE'}
-                                  placeholder={(slab.bonusType || 'NONE') === 'NONE' ? '-' : 'e.g. 1000'}
-                                  value={slab.bonusValue || ''}
-                                  onChange={(e) => updateBulkSlabRow(idx, 'bonusValue', e.target.value)}
-                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-indigo-300 disabled:opacity-40"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[8px] text-purple-300 font-medium mb-0.5">Bonus Scope</label>
-                                <select
-                                  value={slab.bonusCalcMode || 'PER_STUDENT'}
-                                  disabled={(slab.bonusType || 'NONE') === 'NONE'}
-                                  onChange={(e) => updateBulkSlabRow(idx, 'bonusCalcMode', e.target.value)}
-                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[10px] focus:outline-none cursor-pointer disabled:opacity-40"
-                                >
-                                  <option value="PER_STUDENT">Per Student</option>
-                                  <option value="TOTAL_BATCH">Total Batch Lump-Sum</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center space-x-1 shrink-0">
-                              {isActive && (
-                                <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 font-extrabold text-[8px] uppercase tracking-wider rounded-lg border border-emerald-500/30">
-                                  Active
-                                </span>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => removeBulkSlabRow(idx)}
-                                className="p-1.5 text-rose-400 hover:bg-rose-950/30 rounded-lg transition-all"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Student Checklist Selection list */}
-              {selectedUni && (
-                <div className="space-y-1.5">
-                  <span className="font-bold text-[10px] text-slate-450 uppercase tracking-wide block">
-                    Choose Students to Include in this Claim Batch
-                  </span>
-                  <div className="border border-slate-800/80 rounded-2xl overflow-hidden max-h-[160px] overflow-y-auto">
-                    <table className="w-full text-left border-collapse text-xs bg-slate-950/20">
-                      <thead>
-                        <tr className="border-b border-slate-800 bg-slate-950/40 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                          <th className="px-4 py-2 w-10 text-center">Include</th>
-                          <th className="px-4 py-2">Student Name</th>
-                          <th className="px-4 py-2">Course</th>
-                          <th className="px-4 py-2 text-right">Tuition Fee</th>
-                          <th className="px-4 py-2 text-right">Calculated Comm</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/30">
-                        {commissions.filter(c => c.partnerUniversity === selectedUni && c.status === 'PENDING').map(c => {
-                          const isChecked = modalSelectedCommIds.includes(c.id);
-                          const calcItem = bulkCalculations.find(item => item.id === c.id);
-                          return (
-                            <tr key={c.id} className={`hover:bg-slate-850/20 transition-all ${!isChecked ? 'opacity-35' : ''}`}>
-                              <td className="px-4 py-2 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setModalSelectedCommIds(prev => [...prev, c.id]);
-                                    } else {
-                                      setModalSelectedCommIds(prev => prev.filter(id => id !== c.id));
-                                    }
-                                  }}
-                                  className="rounded border-slate-800 bg-slate-950 text-indigo-650 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
-                                />
-                              </td>
-                              <td className="px-4 py-2 font-semibold text-slate-200">{c.applicant.name}</td>
-                              <td className="px-4 py-2 text-slate-400">{c.applicant.targetCourse || 'N/A'}</td>
-                              <td className="px-4 py-2 text-right font-mono text-slate-400">
-                                {calcItem ? `${calcItem.currency} ${calcItem.tuitionFee.toLocaleString()}` : ''}
-                              </td>
-                              <td className="px-4 py-2 text-right font-mono font-bold text-emerald-455">
-                                {calcItem ? `${calcItem.currency} ${calcItem.commissionAmountForeign.toLocaleString()}` : ''}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Official University Commission Claim Invoice View */}
-            <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100">
-              {!selectedUni ? (
-                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-                  <FileSpreadsheet className="w-14 h-14 text-slate-700 animate-pulse mb-3" />
-                  <p className="text-xs font-medium">Please select a Partner University from the dropdown to generate the official claim invoice.</p>
-                </div>
-              ) : (
-                <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans">
+                ) : (
+                  <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans">
                   
                   {/* Executive Header */}
                   <div className="flex flex-wrap justify-between items-start border-b border-slate-800 print:border-slate-300 pb-6 gap-4">
@@ -2517,201 +2517,210 @@ export default function FinanceLedgerPage() {
                         Official Commission Claim Invoice
                       </div>
                       <div className="text-xs text-slate-300 print:text-slate-800 font-mono font-bold mt-2">
-                        Invoice #: {bulkInvoiceForm.invoiceNumber}
+                        Invoice ID: <span className="text-white print:text-slate-950">{bulkInvoiceForm.invoiceNumber}</span>
                       </div>
-                      <div className="text-[10px] text-slate-400 print:text-slate-600 font-mono">
-                        Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recipient Identification & Batch Banner */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-slate-900/60 print:bg-slate-50 p-4 rounded-2xl border border-slate-800 print:border-slate-200 space-y-1">
-                      <span className="font-mono font-bold text-[9px] text-emerald-400 print:text-slate-500 uppercase tracking-wider block">
-                        {selectedUni.includes('[Portal:') ? 'BILL TO PORTAL REPRESENTATIVE' : 'BILL TO DIRECT PARTNER UNIVERSITY'}
-                      </span>
-                      <h3 className="font-extrabold text-slate-100 print:text-slate-900 text-base">
-                        {selectedUni}
-                      </h3>
-                      <p className="text-[11px] text-slate-400 print:text-slate-600">
-                        {selectedUni.includes('[Portal:') 
-                          ? `Official Agent Claim via ${selectedUni.match(/\[Portal:\s*(.*)\]/)?.[1] || 'Portal Representative'} Office` 
-                          : 'Direct Admissions & University Finance Department'}
+                      <p className="text-[9px] text-slate-400 print:text-slate-505">
+                        Date: {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
+                  </div>
 
-                    <div className="bg-slate-900/60 print:bg-slate-50 p-4 rounded-2xl border border-slate-800 print:border-slate-200 space-y-1 font-mono">
-                      <span className="font-bold text-[9px] text-indigo-400 print:text-slate-500 uppercase tracking-wider block">
-                        INTAKE & CLAIM DETAILS
-                      </span>
-                      <div className="text-xs text-slate-200 print:text-slate-900 font-semibold">
-                        Intake Batch: <span className="text-emerald-400 print:text-slate-900">{intakeFilter || 'All Intakes Batch'}</span>
+                  {/* University & Billing Info Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[11px] border-b border-slate-800 print:border-slate-300 pb-6 leading-relaxed">
+                    <div className="space-y-2">
+                      <span className="text-[9px] text-[#eab308] font-bold uppercase tracking-wider font-mono block">Billing From</span>
+                      <div className="bg-slate-950/40 print:bg-slate-50 p-3 rounded-2xl border border-slate-800/80 print:border-slate-200">
+                        <span className="font-extrabold text-slate-200 print:text-slate-955 block text-xs">Thinkcone Study Abroad Pvt. Ltd.</span>
+                        <span className="text-slate-400 print:text-slate-600 font-medium">
+                          Putalisadak-28, Kathmandu, Nepal<br/>
+                          PAN No: 609823412<br/>
+                          Authorized Person: Accounts Director
+                        </span>
                       </div>
-                      <div className="text-[11px] text-slate-400 print:text-slate-600">
-                        Enrolled Batch: {bulkCalculations.length} Verified Student Candidate(s)
-                      </div>
-                      <div className="text-[11px] text-slate-400 print:text-slate-600">
-                        Exchange Rate: 1 Foreign Unit = NRs. {parseFloat(bulkInvoiceForm.nprExchangeRate).toFixed(2)}
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[9px] text-[#eab308] font-bold uppercase tracking-wider font-mono block">Billing To (Partner Institution)</span>
+                      <div className="bg-slate-950/40 print:bg-slate-55 p-3 rounded-2xl border border-slate-800/80 print:border-slate-200">
+                        <span className="font-extrabold text-slate-200 print:text-slate-950 block text-xs">{selectedUni}</span>
+                        <span className="text-slate-400 print:text-slate-600 font-medium">
+                          Intake Filter: <span className="text-slate-300 print:text-slate-805 font-semibold">{intakeFilter || 'All Pending Intakes'}</span><br/>
+                          Total Verified Students: <span className="text-emerald-400 print:text-slate-900 font-bold">{bulkCalculations.length} Student(s)</span>
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Active Volume Slab Banner */}
+                  {/* Slabs breakdown details (If Active) */}
                   {bulkSlabs.length > 0 && (
-                    <div className="bg-[#031d11] print:bg-slate-100 border border-[#0e4427] print:border-slate-300 px-4 py-2.5 rounded-xl flex items-center justify-between text-xs font-mono">
+                    <div className="bg-[#03150d] print:bg-slate-50 border border-emerald-500/20 print:border-slate-300 p-3 rounded-2xl flex flex-wrap justify-between items-center gap-3 text-xs leading-none">
                       <div className="flex items-center space-x-2">
-                        <span className="text-emerald-400 print:text-slate-900 font-bold">🏆 Tier Slab Applied:</span>
-                        <span className="text-slate-200 print:text-slate-800 font-medium">
-                          {bulkCalculations.length} Included Student(s) matched Volume Tier
+                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        <span className="text-slate-300 print:text-slate-805 font-bold">
+                          Active Volume Slab Tier Applied:
                         </span>
                       </div>
-                      <span className="px-2 py-0.5 bg-emerald-500/20 print:bg-slate-200 text-emerald-400 print:text-slate-900 font-extrabold text-[9px] uppercase tracking-wider rounded">
-                        Auto-Calculated Claim
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        {(() => {
+                          const activeCount = bulkCalculations.length;
+                          const activeSlab = bulkSlabs.find((slab: any) => {
+                            const min = parseInt(slab.minStudents) || 1;
+                            const max = slab.maxStudents ? parseInt(slab.maxStudents) : null;
+                            return activeCount >= min && (!max || activeCount <= max);
+                          });
+
+                          if (!activeSlab) {
+                            return <span className="text-slate-400 font-mono">No active slab matching student volume. Base commissions used.</span>;
+                          }
+
+                          return (
+                            <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                              <span className="px-2.5 py-1 bg-emerald-950 print:bg-slate-200 border border-emerald-500/30 print:border-slate-400 text-emerald-400 print:text-slate-900 font-bold rounded-lg">
+                                Vol: {activeSlab.minStudents}{activeSlab.maxStudents ? `-${activeSlab.maxStudents}` : '+'} Students
+                              </span>
+                              <span className="px-2.5 py-1 bg-[#010a06] print:bg-slate-200 border border-[#0d3420] print:border-slate-400 text-[#eab308] print:text-slate-900 font-bold rounded-lg">
+                                Rate: {activeSlab.commissionType === 'PERCENT' ? `${activeSlab.commissionValue}%` : `$${activeSlab.commissionValue}`}
+                              </span>
+                              {activeSlab.bonusType !== 'NONE' && (
+                                <span className="px-2.5 py-1 bg-indigo-950 print:bg-slate-200 border border-indigo-500/30 print:border-slate-400 text-indigo-400 print:text-slate-900 font-bold rounded-lg">
+                                  Bonus: {activeSlab.bonusType === 'PERCENT' ? `${activeSlab.bonusValue}%` : `$${activeSlab.bonusValue}`} ({activeSlab.bonusCalcMode === 'PER_STUDENT' ? 'Per Student' : 'Batch Lump-Sum'})
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
                   )}
 
-                  {/* Itemized Candidates Table */}
-                  <div className="border border-slate-800 print:border-slate-300 rounded-2xl overflow-hidden">
-                    <table className="w-full text-left border-collapse text-xs print:text-slate-900">
+                  {/* Claim Details Table */}
+                  <div className="border border-slate-800 print:border-slate-350 rounded-2xl overflow-hidden text-[11px]">
+                    <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-800 print:border-slate-300 bg-slate-900 print:bg-slate-100 text-[9px] font-mono font-bold text-slate-400 print:text-slate-700 uppercase tracking-wider">
-                          <th className="px-4 py-3">#</th>
-                          <th className="px-4 py-3">Student Candidate</th>
-                          <th className="px-4 py-3">Program / Course</th>
+                        <tr className="border-b border-slate-800 print:border-slate-300 bg-slate-950/40 print:bg-slate-100 text-[10px] text-slate-400 print:text-slate-700 font-bold uppercase tracking-wider font-mono">
+                          <th className="px-4 py-3 w-8">#</th>
+                          <th className="px-4 py-3">Student & Course</th>
                           <th className="px-4 py-3 text-right">Tuition Fee</th>
-                          <th className="px-4 py-3 text-right">Base Comm</th>
-                          <th className="px-4 py-3 text-right">Bonus Comm</th>
-                          <th className="px-4 py-3 text-right">Total Claim</th>
+                          <th className="px-4 py-3 text-right">Commission Rate</th>
+                          <th className="px-4 py-3 text-right">Bonus Applied</th>
+                          <th className="px-4 py-3 text-right">Net Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 print:divide-slate-200">
-                        {bulkCalculations.map((c, idx) => (
-                          <tr key={c.id} className="hover:bg-slate-900/30 print:hover:bg-transparent">
-                            <td className="px-4 py-3 font-mono text-slate-500 print:text-slate-600">{idx + 1}</td>
-                            <td className="px-4 py-3 font-bold text-slate-100 print:text-slate-900">{c.applicantName}</td>
-                            <td className="px-4 py-3 text-slate-300 print:text-slate-700">{c.course}</td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">
-                              {c.currency} {c.tuitionFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <tbody className="divide-y divide-slate-850/30 print:divide-slate-200 text-slate-300 print:text-slate-800">
+                        {bulkCalculations.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-900/40 print:hover:bg-transparent">
+                            <td className="px-4 py-3 font-mono text-slate-500">{idx + 1}</td>
+                            <td className="px-4 py-3">
+                              <span className="font-bold text-slate-100 print:text-slate-950 block text-xs">{item.studentName}</span>
+                              <span className="text-[9px] text-slate-400 print:text-slate-500">{item.course}</span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">
-                              {c.currency} {c.baseCommForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <td className="px-4 py-3 text-right font-mono font-medium">
+                              {item.currency} {item.tuitionFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
-                            <td className="px-4 py-3 text-right font-mono text-indigo-300 print:text-slate-700">
-                              {c.bonusCommForeign > 0 
-                                ? `${c.currency} ${c.bonusCommForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                                : '-'}
+                            <td className="px-4 py-3 text-right font-mono">
+                              {item.isSlabApplied ? (
+                                <span className="text-[#eab308] print:text-slate-900 font-bold">{item.rateText} (Slab)</span>
+                              ) : (
+                                <span>{item.rateText} (Base)</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-indigo-400 print:text-slate-900 font-semibold">
+                              {item.bonusAmountForeign > 0 ? (
+                                <span>{item.currency} {item.bonusAmountForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                              ) : (
+                                <span className="text-slate-600 print:text-slate-400">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400 print:text-slate-900">
-                              {c.currency} {c.commissionAmountForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {item.currency} {item.commissionAmountForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                           </tr>
                         ))}
+
+                        {bulkCalculations.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-8 text-center text-slate-500 italic">
+                              No students selected on the left panel.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Summary & Bank Transfer Box */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800 print:border-slate-300">
-                    
-                    {/* Bank Wire Details */}
-                    {/* Bank Wire Details (Editable & Auto-Saved) */}
-                    <div className="bg-slate-900/40 print:bg-transparent border border-slate-800 print:border-none p-4 rounded-2xl space-y-2 text-xs font-mono">
-                      <div className="flex items-center justify-between border-b border-slate-800/80 print:border-none pb-1.5">
-                        <span className="font-bold text-[9px] text-emerald-400 print:text-slate-600 uppercase tracking-wider">
-                          BANK REMITTANCE & WIRE DETAILS (EDITABLE)
-                        </span>
-                        <span className="text-[9px] text-slate-500 print:hidden font-sans italic">⚡ Editable & Auto-Saved</span>
-                      </div>
-
-                      <div className="space-y-1 text-slate-200 print:text-slate-900">
-                        <div className="flex items-center space-x-1.5">
-                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Account Name:</span>
-                          <input
-                            type="text"
-                            value={bankDetails.accountName}
-                            onChange={(e) => handleBankDetailsChange('accountName', e.target.value)}
-                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-100 print:text-slate-900 font-bold focus:outline-none"
-                          />
+                  {/* Summary Totals & Exchange Rate Box */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className="bg-slate-950/40 print:bg-slate-50 border border-slate-800 print:border-slate-200 p-4 rounded-2xl space-y-2 leading-relaxed">
+                      <span className="font-bold text-[9px] text-[#eab308] uppercase tracking-wider block font-mono">Bank Remittance Instructions</span>
+                      <div className="space-y-1.5 text-slate-400 print:text-slate-600 font-mono text-[10px] leading-relaxed">
+                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                          <span>Bank Name:</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">Global IME Bank Ltd.</span>
                         </div>
-
-                        <div className="flex items-center space-x-1.5">
-                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Bank Name:</span>
-                          <input
-                            type="text"
-                            value={bankDetails.bankName}
-                            onChange={(e) => handleBankDetailsChange('bankName', e.target.value)}
-                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none"
-                          />
+                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                          <span>Branch:</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">Kantipath Branch, Kathmandu</span>
                         </div>
-
-                        <div className="flex items-center space-x-1.5">
-                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Account No:</span>
-                          <input
-                            type="text"
-                            value={bankDetails.accountNo}
-                            onChange={(e) => handleBankDetailsChange('accountNo', e.target.value)}
-                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none font-bold"
-                          />
+                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                          <span>Account Name:</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">Thinkcone Study Abroad Pvt. Ltd.</span>
                         </div>
-
-                        <div className="flex items-center space-x-1.5">
-                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">SWIFT / BIC Code:</span>
-                          <input
-                            type="text"
-                            value={bankDetails.swiftCode}
-                            onChange={(e) => handleBankDetailsChange('swiftCode', e.target.value)}
-                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none font-bold uppercase"
-                          />
+                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                          <span>Account No (NPR):</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">01010100XXXXXXX</span>
                         </div>
-
-                        <div className="flex items-center space-x-1.5">
-                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Branch:</span>
-                          <input
-                            type="text"
-                            value={bankDetails.branch}
-                            onChange={(e) => handleBankDetailsChange('branch', e.target.value)}
-                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none"
-                          />
+                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                          <span>Swift Code:</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">GBIMEKATMXX</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>PAN Registration:</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">609823412</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Grand Financial Totals */}
-                    <div className="space-y-2 text-xs font-mono">
-                      <div className="flex justify-between text-slate-400 print:text-slate-600">
-                        <span>Total Verified Students:</span>
-                        <span className="font-bold text-slate-100 print:text-slate-900">{bulkCalculations.length} Candidates</span>
-                      </div>
-                      <div className="flex justify-between text-slate-400 print:text-slate-600">
-                        <span>Base Foreign Commission:</span>
-                        <span className="font-bold text-slate-200 print:text-slate-900">
-                          {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.baseCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-indigo-300 print:text-slate-700">
-                        <span>Volume Bonus Total Claim:</span>
-                        <span className="font-bold text-indigo-300 print:text-slate-900">
-                          {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.bonusCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-t border-slate-800 print:border-slate-300 pt-2 text-slate-100 print:text-slate-900 font-bold text-sm">
-                        <span>GRAND TOTAL CLAIM (FOREIGN):</span>
-                        <span className="text-emerald-400 print:text-slate-900">
-                          {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-t border-slate-800/60 print:border-slate-200 pt-1.5 text-xs text-slate-400 print:text-slate-700 font-semibold">
-                        <span>NPR EQUIVALENT CLAIM:</span>
-                        <span className="text-emerald-400 print:text-slate-900 font-bold">
-                          NRs. {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountNpr, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
+                    <div className="bg-emerald-950/20 print:bg-slate-100 border border-emerald-500/20 print:border-slate-300 p-4 rounded-2xl space-y-3 font-mono">
+                      <span className="font-bold text-[9px] text-[#eab308] print:text-slate-855 uppercase tracking-wider block">Financial Summary Statement</span>
+                      <div className="space-y-2 text-[11px] leading-none">
+                        <div className="flex justify-between text-slate-350 print:text-slate-700">
+                          <span>Gross Base Commission:</span>
+                          <span>
+                            {bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + (item.commissionAmountForeign - item.bonusAmountForeign), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+
+                        {bulkCalculations.reduce((sum, item) => sum + item.bonusAmountForeign, 0) > 0 && (
+                          <div className="flex justify-between text-indigo-400 print:text-slate-700 font-bold">
+                            <span>Volume Reward Bonus:</span>
+                            <span>
+                              +{bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + item.bonusAmountForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between text-slate-300 print:text-slate-900 font-extrabold border-t border-slate-800 print:border-slate-300 pt-2 text-xs">
+                          <span>Total Claim Receivable:</span>
+                          <span className="text-white print:text-slate-950 font-black">
+                            {bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + item.commissionAmountForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+
+                        <div className="text-[10px] text-slate-450 print:text-slate-500 leading-normal border-t border-slate-800 print:border-slate-300 pt-2 space-y-1 font-mono">
+                          <div className="flex justify-between">
+                            <span>NRB Forex Exchange Rate:</span>
+                            <span className="text-slate-300 print:text-slate-900 font-semibold">1 {bulkCalculations[0]?.currency || 'USD'} = NPR {bulkInvoiceForm.nprExchangeRate || '0.00'}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px] text-emerald-400 print:text-slate-900 font-extrabold">
+                            <span>NPR Equiv. (Receivable):</span>
+                            <span>NPR { (bulkCalculations.reduce((sum, item) => sum + item.commissionAmountForeign, 0) * (parseFloat(bulkInvoiceForm.nprExchangeRate) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Signatory Footer */}
+                  {/* Signatures Footer */}
                   <div className="pt-8 border-t border-slate-800 print:border-slate-300 flex justify-between items-end text-xs text-slate-400 print:text-slate-600 font-mono">
                     <div className="space-y-1">
                       <div className="w-40 border-b border-slate-700 print:border-slate-400 pb-1 text-center font-bold text-slate-300 print:text-slate-900">
@@ -2721,7 +2730,7 @@ export default function FinanceLedgerPage() {
                     </div>
 
                     <div className="space-y-1 text-right">
-                      <div className="w-48 border-b border-slate-700 print:border-slate-400 pb-1 text-center font-bold text-slate-300 print:text-slate-900">
+                      <div className="w-48 border-b border-slate-700 print:border-slate-400 pb-1 text-center font-bold text-slate-300 print:text-slate-950">
                         Director of Relations
                       </div>
                       <div className="text-[10px] text-slate-500 print:text-slate-500">Authorized Official Stamp & Sign</div>
@@ -2731,7 +2740,7 @@ export default function FinanceLedgerPage() {
                 </div>
               )}
             </div>
-
+          </div>
             {/* Footer controls (Hidden in Print) */}
             {selectedUni && (
               <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 print:hidden text-xs">
