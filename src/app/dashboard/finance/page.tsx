@@ -55,6 +55,7 @@ export default function FinanceLedgerPage() {
 
   // Add Commission modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedAutofillUniId, setSelectedAutofillUniId] = useState('');
   const [applicants, setApplicants] = useState<any[]>([]);
   const [addForm, setAddForm] = useState({
     applicantId: '',
@@ -1052,6 +1053,7 @@ export default function FinanceLedgerPage() {
             <button
               onClick={() => {
                 setIsAddModalOpen(true);
+                setSelectedAutofillUniId('');
                 if (forexRates && forexRates.USD) {
                   setAddForm(prev => ({
                     ...prev,
@@ -1776,8 +1778,10 @@ export default function FinanceLedgerPage() {
               <div>
                 <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Autofill from Represented Program (Optional)</label>
                 <select
+                  value={selectedAutofillUniId}
                   onChange={(e) => {
                     const uniId = e.target.value;
+                    setSelectedAutofillUniId(uniId);
                     if (!uniId) return;
                     const chosen = universities.find(u => u.id === uniId);
                     if (chosen) {
@@ -1987,6 +1991,12 @@ export default function FinanceLedgerPage() {
                     
                     let agentPct = '0';
                     let branchPct = '0';
+                    let matchedUniId = '';
+                    let partnerUni = '';
+                    let curr = 'USD';
+                    let computedComm = '';
+                    let rate = '133.0';
+
                     if (applicant) {
                       agentPct = applicant.subAgentCommissionSplit !== null
                         ? String((applicant.subAgentCommissionSplit * 100).toFixed(1))
@@ -1999,12 +2009,38 @@ export default function FinanceLedgerPage() {
                         : applicant.branch?.branchCommissionSplit !== null && applicant.branch?.branchCommissionSplit !== undefined
                         ? String((applicant.branch.branchCommissionSplit * 100).toFixed(1))
                         : '0';
+
+                      partnerUni = applicant.targetUniversity || '';
+                      
+                      if (applicant.targetUniversity) {
+                        const match = universities.find(u => 
+                          u.name.toLowerCase() === applicant.targetUniversity.toLowerCase() &&
+                          (!applicant.targetCourse || u.course.toLowerCase() === applicant.targetCourse.toLowerCase())
+                        ) || universities.find(u => 
+                          u.name.toLowerCase() === applicant.targetUniversity.toLowerCase()
+                        );
+                        
+                        if (match) {
+                          matchedUniId = match.id;
+                          partnerUni = match.name;
+                          const parsed = parseFeeAndCurrency(match.tuitionFee);
+                          curr = parsed.currency;
+                          if (match.commissionPercentage && parsed.numericFee > 0) {
+                            computedComm = ((parsed.numericFee * match.commissionPercentage) / 100).toFixed(2);
+                          }
+                          rate = forexRates && forexRates[curr] ? String(forexRates[curr].toFixed(2)) : '133.0';
+                        }
+                      }
                     }
 
+                    setSelectedAutofillUniId(matchedUniId);
                     setAddForm(prev => ({
                       ...prev,
                       applicantId: selectedId,
-                      partnerUniversity: applicant?.targetUniversity || '',
+                      partnerUniversity: partnerUni,
+                      currency: curr,
+                      commissionAmountForeign: computedComm,
+                      nprExchangeRate: rate,
                       agentSplitPercent: agentPct,
                       branchSplitPercent: branchPct,
                     }));
@@ -2023,8 +2059,10 @@ export default function FinanceLedgerPage() {
               <div>
                 <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Autofill from Represented Program (Optional)</label>
                 <select
+                  value={selectedAutofillUniId}
                   onChange={(e) => {
                     const uniId = e.target.value;
+                    setSelectedAutofillUniId(uniId);
                     if (!uniId) return;
                     const chosen = universities.find(u => u.id === uniId);
                     if (chosen) {
