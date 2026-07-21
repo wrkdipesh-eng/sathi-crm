@@ -56,6 +56,13 @@ export default function FinanceLedgerPage() {
   // Add Commission modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedAutofillUniId, setSelectedAutofillUniId] = useState('');
+  const [addCommType, setAddCommType] = useState<'FLAT' | 'PERCENT'>('FLAT');
+  const [addCommPercent, setAddCommPercent] = useState('');
+  const [addTuitionFee, setAddTuitionFee] = useState('');
+
+  const [editCommType, setEditCommType] = useState<'FLAT' | 'PERCENT'>('FLAT');
+  const [editCommPercent, setEditCommPercent] = useState('');
+  const [editTuitionFee, setEditTuitionFee] = useState('');
   const [applicants, setApplicants] = useState<any[]>([]);
   const [addForm, setAddForm] = useState({
     applicantId: '',
@@ -717,6 +724,30 @@ export default function FinanceLedgerPage() {
     }));
   };
 
+  useEffect(() => {
+    if (addCommType === 'PERCENT') {
+      const pct = parseFloat(addCommPercent) || 0;
+      const fee = parseFloat(addTuitionFee) || 0;
+      const calc = pct && fee ? ((fee * pct) / 100).toFixed(2) : '';
+      setAddForm(prev => ({
+        ...prev,
+        commissionAmountForeign: calc,
+      }));
+    }
+  }, [addCommType, addCommPercent, addTuitionFee]);
+
+  useEffect(() => {
+    if (editCommType === 'PERCENT') {
+      const pct = parseFloat(editCommPercent) || 0;
+      const fee = parseFloat(editTuitionFee) || 0;
+      const calc = pct && fee ? ((fee * pct) / 100).toFixed(2) : '';
+      setEditForm(prev => ({
+        ...prev,
+        commissionAmountForeign: calc,
+      }));
+    }
+  }, [editCommType, editCommPercent, editTuitionFee]);
+
   const fetchApplicants = async () => {
     try {
       const res = await fetch('/api/applicants');
@@ -1135,6 +1166,9 @@ export default function FinanceLedgerPage() {
               onClick={() => {
                 setIsAddModalOpen(true);
                 setSelectedAutofillUniId('');
+                setAddCommType('FLAT');
+                setAddCommPercent('');
+                setAddTuitionFee('');
                 if (forexRates && forexRates.USD) {
                   setAddForm(prev => ({
                     ...prev,
@@ -1567,6 +1601,24 @@ export default function FinanceLedgerPage() {
                                 branchSplitPercent: branchPct > 0 ? branchPct.toFixed(1) : '0',
                                 branchAmountNpr: String(comm.branchAmountNpr),
                               });
+                              
+                              const matchedEditUni = universities.find(u => 
+                                u.name.toLowerCase() === comm.partnerUniversity.toLowerCase() &&
+                                (!comm.applicant.targetCourse || u.course.toLowerCase() === comm.applicant.targetCourse.toLowerCase())
+                              ) || universities.find(u => 
+                                u.name.toLowerCase() === comm.partnerUniversity.toLowerCase()
+                              );
+
+                              if (matchedEditUni && matchedEditUni.commissionPercentage) {
+                                const parsed = parseFeeAndCurrency(matchedEditUni.tuitionFee);
+                                setEditCommType('PERCENT');
+                                setEditCommPercent(String(matchedEditUni.commissionPercentage));
+                                setEditTuitionFee(String(parsed.numericFee));
+                              } else {
+                                setEditCommType('FLAT');
+                                setEditCommPercent('');
+                                setEditTuitionFee('');
+                              }
                               setEditModalOpen(true);
                             }}
                             className="p-1 rounded bg-slate-850 hover:bg-indigo-50 text-amber-600 border border-slate-800 cursor-pointer"
@@ -1901,16 +1953,79 @@ export default function FinanceLedgerPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-[10px] text-slate-400 font-medium mb-1">University Commission Type</label>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditCommType('FLAT')}
+                    className={`py-1.5 px-3 rounded-xl border text-xs font-semibold font-mono transition-all cursor-pointer select-none ${
+                      editCommType === 'FLAT'
+                        ? 'bg-indigo-600 border-indigo-500 text-white font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Flat Amount
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditCommType('PERCENT')}
+                    className={`py-1.5 px-3 rounded-xl border text-xs font-semibold font-mono transition-all cursor-pointer select-none ${
+                      editCommType === 'PERCENT'
+                        ? 'bg-indigo-600 border-indigo-500 text-white font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    % of Tuition
+                  </button>
+                </div>
+              </div>
+
+              {editCommType === 'PERCENT' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Commission Rate (%) *</label>
+                    <input
+                      type="number"
+                      required
+                      step="0.01"
+                      min="0.01"
+                      placeholder="e.g. 15"
+                      value={editCommPercent}
+                      onChange={(e) => setEditCommPercent(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Tuition Fee (Foreign) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      placeholder="e.g. 12000"
+                      value={editTuitionFee}
+                      onChange={(e) => setEditTuitionFee(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+              ) : null}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] text-slate-400 font-medium mb-1">University Commission Amount *</label>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1">
+                    {editCommType === 'PERCENT' ? 'Calculated Claim Amount *' : 'University Commission Amount *'}
+                  </label>
                   <input
                     type="number"
                     required
                     min="1"
+                    disabled={editCommType === 'PERCENT'}
                     value={editForm.commissionAmountForeign}
                     onChange={(e) => setEditForm(prev => ({ ...prev, commissionAmountForeign: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none"
+                    className={`w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none ${
+                      editCommType === 'PERCENT' ? 'opacity-70 bg-slate-900 cursor-not-allowed font-mono font-bold text-emerald-400' : ''
+                    }`}
                   />
                 </div>
 
@@ -2074,10 +2189,25 @@ export default function FinanceLedgerPage() {
                           const parsed = parseFeeAndCurrency(match.tuitionFee);
                           curr = parsed.currency;
                           if (match.commissionPercentage && parsed.numericFee > 0) {
+                            setAddCommType('PERCENT');
+                            setAddCommPercent(String(match.commissionPercentage));
+                            setAddTuitionFee(String(parsed.numericFee));
                             computedComm = ((parsed.numericFee * match.commissionPercentage) / 100).toFixed(2);
+                          } else {
+                            setAddCommType('FLAT');
+                            setAddCommPercent('');
+                            setAddTuitionFee('');
                           }
                           rate = forexRates && forexRates[curr] ? String(forexRates[curr].toFixed(2)) : '133.0';
+                        } else {
+                          setAddCommType('FLAT');
+                          setAddCommPercent('');
+                          setAddTuitionFee('');
                         }
+                      } else {
+                        setAddCommType('FLAT');
+                        setAddCommPercent('');
+                        setAddTuitionFee('');
                       }
                     }
 
@@ -2146,16 +2276,79 @@ export default function FinanceLedgerPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-[10px] text-slate-400 font-medium mb-1">University Commission Type</label>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setAddCommType('FLAT')}
+                    className={`py-1.5 px-3 rounded-xl border text-xs font-semibold font-mono transition-all cursor-pointer select-none ${
+                      addCommType === 'FLAT'
+                        ? 'bg-indigo-600 border-indigo-500 text-white font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Flat Amount
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddCommType('PERCENT')}
+                    className={`py-1.5 px-3 rounded-xl border text-xs font-semibold font-mono transition-all cursor-pointer select-none ${
+                      addCommType === 'PERCENT'
+                        ? 'bg-indigo-600 border-indigo-500 text-white font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    % of Tuition
+                  </button>
+                </div>
+              </div>
+
+              {addCommType === 'PERCENT' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Commission Rate (%) *</label>
+                    <input
+                      type="number"
+                      required
+                      step="0.01"
+                      min="0.01"
+                      placeholder="e.g. 15"
+                      value={addCommPercent}
+                      onChange={(e) => setAddCommPercent(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Tuition Fee (Foreign) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      placeholder="e.g. 12000"
+                      value={addTuitionFee}
+                      onChange={(e) => setAddTuitionFee(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+              ) : null}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] text-slate-400 font-medium mb-1">University Commission Amount *</label>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1">
+                    {addCommType === 'PERCENT' ? 'Calculated Claim Amount *' : 'University Commission Amount *'}
+                  </label>
                   <input
                     type="number"
                     required
                     min="1"
+                    disabled={addCommType === 'PERCENT'}
                     value={addForm.commissionAmountForeign}
                     onChange={(e) => setAddForm(prev => ({ ...prev, commissionAmountForeign: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none"
+                    className={`w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none ${
+                      addCommType === 'PERCENT' ? 'opacity-70 bg-slate-900 cursor-not-allowed font-mono font-bold text-emerald-400' : ''
+                    }`}
                   />
                 </div>
 
