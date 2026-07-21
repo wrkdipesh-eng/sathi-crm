@@ -79,6 +79,14 @@ export default function FinanceLedgerPage() {
     branch: 'Putalisadak Branch, Kathmandu, Nepal',
   });
 
+  const [companyDetails, setCompanyDetails] = useState({
+    name: 'Thinkcone Study Abroad',
+    address: 'Putalisadak, Kathmandu, Nepal',
+    panNo: '609823412',
+    email: 'finance@thinkcone.com.np',
+    phone: '+977-1-44XXXXX',
+  });
+
   useEffect(() => {
     const savedBank = localStorage.getItem('finance_bank_details');
     if (savedBank) {
@@ -86,6 +94,14 @@ export default function FinanceLedgerPage() {
         setBankDetails(JSON.parse(savedBank));
       } catch (e) {
         console.error("Failed to parse saved bank details", e);
+      }
+    }
+    const savedCompany = localStorage.getItem('finance_company_details');
+    if (savedCompany) {
+      try {
+        setCompanyDetails(JSON.parse(savedCompany));
+      } catch (e) {
+        console.error("Failed to parse saved company details", e);
       }
     }
   }, []);
@@ -116,6 +132,14 @@ export default function FinanceLedgerPage() {
     setBankDetails(prev => {
       const updated = { ...prev, [field]: value };
       localStorage.setItem('finance_bank_details', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleCompanyDetailsChange = (field: string, value: string) => {
+    setCompanyDetails(prev => {
+      const updated = { ...prev, [field]: value };
+      localStorage.setItem('finance_company_details', JSON.stringify(updated));
       return updated;
     });
   };
@@ -468,6 +492,7 @@ export default function FinanceLedgerPage() {
           bulkCalculations: [...bulkCalculations],
           bulkSlabs: [...bulkSlabs],
           bankDetails: { ...bankDetails },
+          companyDetails: { ...companyDetails },
         });
         setIsBulkModalOpen(false);
         setIsGeneratedInvoiceOpen(true);
@@ -2470,7 +2495,7 @@ export default function FinanceLedgerPage() {
                                         setModalSelectedCommIds(prev => prev.filter(id => id !== c.id));
                                       }
                                     }}
-                                    className="rounded border-slate-800 bg-slate-950 text-indigo-650 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                                    className="rounded border-slate-800 bg-slate-950 text-indigo-655 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
                                   />
                                 </td>
                                 <td className="px-3 py-2 font-semibold text-slate-200">
@@ -2544,6 +2569,64 @@ export default function FinanceLedgerPage() {
                     </div>
                   </div>
                 )}
+
+                {/* 5. Company Details Configuration (Editable) */}
+                {selectedUni && (
+                  <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-3">
+                    <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
+                      Edit Company Invoice Header
+                    </span>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Company Name</label>
+                        <input
+                          type="text"
+                          value={companyDetails.name}
+                          onChange={(e) => handleCompanyDetailsChange('name', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Address / Headquarters</label>
+                        <input
+                          type="text"
+                          value={companyDetails.address}
+                          onChange={(e) => handleCompanyDetailsChange('address', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">PAN / Reg No</label>
+                          <input
+                            type="text"
+                            value={companyDetails.panNo}
+                            onChange={(e) => handleCompanyDetailsChange('panNo', e.target.value)}
+                            className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Telephone</label>
+                          <input
+                            type="text"
+                            value={companyDetails.phone}
+                            onChange={(e) => handleCompanyDetailsChange('phone', e.target.value)}
+                            className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Email Address</label>
+                        <input
+                          type="text"
+                          value={companyDetails.email}
+                          onChange={(e) => handleCompanyDetailsChange('email', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right Column: Live Invoice Preview */}
@@ -2561,11 +2644,11 @@ export default function FinanceLedgerPage() {
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <GraduationCap className="w-7 h-7 text-emerald-500 print:text-slate-900" />
-                        <h2 className="text-2xl font-black tracking-tight text-white print:text-slate-900">Thinkcone Study Abroad</h2>
+                        <h2 className="text-2xl font-black tracking-tight text-white print:text-slate-900">{companyDetails.name}</h2>
                       </div>
                       <p className="text-[11px] text-slate-400 print:text-slate-600 leading-relaxed font-medium">
-                        Headquarters: Putalisadak, Kathmandu, Nepal<br/>
-                        PAN / Reg No: 609823412 | Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
+                        Headquarters: {companyDetails.address}<br/>
+                        PAN / Reg No: {companyDetails.panNo} | Email: {companyDetails.email} | Tel: {companyDetails.phone}
                       </p>
                     </div>
 
@@ -2586,11 +2669,11 @@ export default function FinanceLedgerPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[11px] border-b border-slate-800 print:border-slate-300 pb-6 leading-relaxed">
                     <div className="space-y-2">
                       <span className="text-[9px] text-[#eab308] font-bold uppercase tracking-wider font-mono block">Billing From</span>
-                      <div className="bg-slate-950/40 print:bg-slate-50 p-3 rounded-2xl border border-slate-800/80 print:border-slate-200">
-                        <span className="font-extrabold text-slate-200 print:text-slate-955 block text-xs">Thinkcone Study Abroad Pvt. Ltd.</span>
+                      <div className="bg-slate-950/40 print:bg-slate-55 p-3 rounded-2xl border border-slate-800/80 print:border-slate-200">
+                        <span className="font-extrabold text-slate-200 print:text-slate-955 block text-xs">{companyDetails.name}</span>
                         <span className="text-slate-400 print:text-slate-600 font-medium">
-                          Putalisadak-28, Kathmandu, Nepal<br/>
-                          PAN No: 609823412<br/>
+                          {companyDetails.address}<br/>
+                          PAN No: {companyDetails.panNo}<br/>
                           Authorized Person: Accounts Director
                         </span>
                       </div>
@@ -2881,11 +2964,11 @@ export default function FinanceLedgerPage() {
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
                       <GraduationCap className="w-7 h-7 text-emerald-500 print:text-slate-900" />
-                      <h2 className="text-2xl font-black tracking-tight text-white print:text-slate-900">Thinkcone Study Abroad</h2>
+                      <h2 className="text-2xl font-black tracking-tight text-white print:text-slate-900">{generatedInvoiceData.companyDetails?.name || 'Thinkcone Study Abroad'}</h2>
                     </div>
                     <p className="text-[11px] text-slate-400 print:text-slate-600 leading-relaxed font-medium">
-                      Headquarters: Putalisadak, Kathmandu, Nepal<br/>
-                      PAN / Reg No: 609823412 | Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
+                      Headquarters: {generatedInvoiceData.companyDetails?.address || 'Putalisadak, Kathmandu, Nepal'}<br/>
+                      PAN / Reg No: {generatedInvoiceData.companyDetails?.panNo || '609823412'} | Email: {generatedInvoiceData.companyDetails?.email || 'finance@thinkcone.com.np'} | Tel: {generatedInvoiceData.companyDetails?.phone || '+977-1-44XXXXX'}
                     </p>
                   </div>
 
@@ -2995,11 +3078,11 @@ export default function FinanceLedgerPage() {
                     <span className="font-bold text-[9px] text-slate-400 print:text-slate-600 uppercase tracking-wider block">
                       BANK REMITTANCE & WIRE DETAILS
                     </span>
-                    <div className="text-slate-200 print:text-slate-900 font-semibold">Account Name: Thinkcone Study Abroad Pvt. Ltd.</div>
-                    <div className="text-slate-400 print:text-slate-700">Bank Name: Standard Chartered Bank Nepal</div>
-                    <div className="text-slate-400 print:text-slate-700">Account No: 01-2384912-01 (NPR / Foreign Wire)</div>
-                    <div className="text-slate-400 print:text-slate-700">SWIFT / BIC Code: SCBLNPKT</div>
-                    <div className="text-slate-400 print:text-slate-700">Branch: Putalisadak Branch, Kathmandu, Nepal</div>
+                    <div className="text-slate-200 print:text-slate-900 font-semibold">Account Name: {generatedInvoiceData.bankDetails?.accountName || 'Thinkcone Study Abroad Pvt. Ltd.'}</div>
+                    <div className="text-slate-400 print:text-slate-700">Bank Name: {generatedInvoiceData.bankDetails?.bankName || 'Standard Chartered Bank Nepal'}</div>
+                    <div className="text-slate-400 print:text-slate-700">Account No: {generatedInvoiceData.bankDetails?.accountNo || '01-2384912-01'}</div>
+                    <div className="text-slate-400 print:text-slate-700">SWIFT / BIC Code: {generatedInvoiceData.bankDetails?.swiftCode || 'SCBLNPKT'}</div>
+                    <div className="text-slate-400 print:text-slate-700">Branch: {generatedInvoiceData.bankDetails?.branch || 'Putalisadak Branch, Kathmandu, Nepal'}</div>
                   </div>
 
                   <div className="space-y-2 text-xs font-mono">
