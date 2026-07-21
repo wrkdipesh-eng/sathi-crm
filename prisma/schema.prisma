@@ -100,6 +100,8 @@ model Applicant {
   targetCountry           String               // Australia, Canada, UK, USA, etc.
   targetCourse            String?
   targetUniversity        String?
+  representationType      String?              // DIRECT, PORTAL
+  portalName              String?
   source                  String               // WEB_FORM, WALK_IN, FACEBOOK_AD, SUB_AGENT
   pipelineStage           PipelineStage        @default(INQUIRY)
   daysInCurrentStage      Int                  @default(0)

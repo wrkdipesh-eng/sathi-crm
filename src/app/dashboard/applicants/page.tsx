@@ -77,6 +77,8 @@ export default function ApplicantsListPage() {
     targetCountry: '',
     targetCourse: '',
     targetUniversity: '',
+    representationType: 'DIRECT',
+    portalName: '',
     source: 'WALK_IN',
     branchId: '',
     counselorId: '',
@@ -252,7 +254,6 @@ export default function ApplicantsListPage() {
       }
 
       setIsModalOpen(false);
-      // Reset form
       setFormData({
         name: '',
         email: '',
@@ -263,6 +264,8 @@ export default function ApplicantsListPage() {
         targetCountry: 'Australia',
         targetCourse: '',
         targetUniversity: '',
+        representationType: 'DIRECT',
+        portalName: '',
         source: 'WALK_IN',
         branchId: currentUser?.branchId || '',
         counselorId: '',
@@ -948,11 +951,14 @@ export default function ApplicantsListPage() {
                         if (val && val !== 'CUSTOM') {
                           const selected = partnerUnis.find(u => u.id === val);
                           if (selected) {
+                            const repLabel = selected.type === 'PORTAL' ? ` [Portal: ${selected.portalName || 'N/A'}]` : ' [Direct]';
                             setFormData(prev => ({
                               ...prev,
                               targetCountry: selected.country,
                               targetCourse: selected.course,
-                              targetUniversity: selected.name
+                              targetUniversity: `${selected.name}${repLabel}`,
+                              representationType: selected.type,
+                              portalName: selected.portalName || ''
                             }));
                           }
                         }
@@ -962,7 +968,7 @@ export default function ApplicantsListPage() {
                       <option value="">-- Choose Partner University Listing --</option>
                       {partnerUnis.map((uni) => (
                         <option key={uni.id} value={uni.id}>
-                          {uni.name} ({uni.course} - {uni.country})
+                          {uni.name} ({uni.course} - {uni.country}) {uni.type === 'PORTAL' ? `[Portal: ${uni.portalName || 'N/A'}]` : '[Direct]'}
                         </option>
                       ))}
                       <option value="CUSTOM">Custom (Fill manual fields below)</option>
@@ -1010,6 +1016,37 @@ export default function ApplicantsListPage() {
                       onChange={handleInputChange}
                       placeholder="e.g. Macquarie University"
                       className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1">
+                      Representation Type
+                    </label>
+                    <select
+                      name="representationType"
+                      value={formData.representationType}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 text-xs focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="DIRECT">Direct Representation</option>
+                      <option value="PORTAL">Portal Representation</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="portalName">
+                      Portal Name
+                    </label>
+                    <input
+                      id="portalName"
+                      type="text"
+                      name="portalName"
+                      value={formData.portalName}
+                      onChange={handleInputChange}
+                      disabled={formData.representationType !== 'PORTAL'}
+                      placeholder={formData.representationType === 'PORTAL' ? "e.g. educo, applyboard" : "N/A (Direct)"}
+                      className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600 disabled:opacity-50 disabled:bg-slate-900"
                     />
                   </div>
                 </div>

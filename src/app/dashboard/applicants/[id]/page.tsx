@@ -94,6 +94,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [stageLoading, setStageLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editRepType, setEditRepType] = useState<string>('DIRECT');
 
   // New Note/Task Form State
   const [noteForm, setNoteForm] = useState({ type: 'NOTE', title: '', content: '', dueDate: '' });
@@ -122,6 +123,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
         throw new Error(data.error || 'Failed to load details');
       }
       setApplicant(data.applicant);
+      setEditRepType(data.applicant.representationType || 'DIRECT');
       
       // Auto-set defaults for commission form
       setCommissionForm(prev => ({
@@ -375,6 +377,8 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
       targetCountry: fd.get('targetCountry'),
       targetCourse: fd.get('targetCourse'),
       targetUniversity: fd.get('targetUniversity'),
+      representationType: fd.get('representationType'),
+      portalName: fd.get('representationType') === 'PORTAL' ? fd.get('portalName') : null,
       source: fd.get('source'),
       counselorId: fd.get('counselorId') || null,
       subAgentId: fd.get('subAgentId') || null,
@@ -1050,6 +1054,33 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5">Representation Type</label>
+                    <select
+                      name="representationType"
+                      value={editRepType}
+                      onChange={(e) => setEditRepType(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                    >
+                      <option value="DIRECT">Direct Representation</option>
+                      <option value="PORTAL">Portal Representation</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5">Portal Name</label>
+                    <input
+                      type="text"
+                      name="portalName"
+                      disabled={editRepType !== 'PORTAL'}
+                      key={`${applicant.id}-${editRepType}`}
+                      defaultValue={editRepType === 'PORTAL' ? (applicant.portalName || '') : ''}
+                      placeholder={editRepType === 'PORTAL' ? "e.g. educo, applyboard" : "N/A (Direct)"}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:bg-slate-900"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   {/* Settings */}
                   <div>
@@ -1472,10 +1503,11 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                     if (val && val !== 'CUSTOM') {
                       const selected = partnerUnis.find(u => u.id === val);
                       if (selected) {
+                        const repLabel = selected.type === 'PORTAL' ? ` [Portal: ${selected.portalName || 'N/A'}]` : ' [Direct]';
                         setAppForm({
                           targetCountry: selected.country,
                           targetCourse: selected.course,
-                          targetUniversity: selected.name
+                          targetUniversity: `${selected.name}${repLabel}`
                         });
                       }
                     }

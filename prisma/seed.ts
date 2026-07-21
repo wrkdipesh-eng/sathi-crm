@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, Role, PipelineStage, DocumentStatus, CommunicationType } from '@prisma/client';
+import { PrismaClient, Role, PipelineStage, DocumentStatus, CommunicationType, UniversityType } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcryptjs';
@@ -563,6 +563,143 @@ async function main() {
   }
 
   console.log('Seeded pipeline stage logs.');
+
+  // 10. Seed Represented Partner Universities (5 courses per configuration, 80 records total)
+  console.log('Seeding represented partner universities...');
+  const universities = [
+    // ==========================================
+    // MACQUARIE UNIVERSITY (Australia) - 3 Types (Same 5 Courses)
+    // ==========================================
+    // 1. Macquarie University [DIRECT]
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Information Technology', tuitionFee: 'AUD 38,000 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Master of Data Science', tuitionFee: 'AUD 41,000 / Year', intakes: 'Feb July', commissionPercentage: 10, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Commerce', tuitionFee: 'AUD 36,500 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Master of Business Administration', tuitionFee: 'AUD 44,000 / Year', intakes: 'Feb Term 2 Term 3', commissionPercentage: 12, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Engineering (Hons)', tuitionFee: 'AUD 40,000 / Year', intakes: 'Feb July', commissionPercentage: 10, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+
+    // 2. Macquarie University [PORTAL - educo] (Identical Courses)
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Information Technology', tuitionFee: 'AUD 38,000 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Master of Data Science', tuitionFee: 'AUD 41,000 / Year', intakes: 'Feb July', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Commerce', tuitionFee: 'AUD 36,500 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Master of Business Administration', tuitionFee: 'AUD 44,000 / Year', intakes: 'Feb Term 2 Term 3', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Engineering (Hons)', tuitionFee: 'AUD 40,000 / Year', intakes: 'Feb July', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+
+    // 3. Macquarie University [PORTAL - applyboard] (Identical Courses)
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Information Technology', tuitionFee: 'AUD 38,000 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Master of Data Science', tuitionFee: 'AUD 41,000 / Year', intakes: 'Feb July', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Commerce', tuitionFee: 'AUD 36,500 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Master of Business Administration', tuitionFee: 'AUD 44,000 / Year', intakes: 'Feb Term 2 Term 3', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Macquarie University', country: 'Australia', course: 'Bachelor of Engineering (Hons)', tuitionFee: 'AUD 40,000 / Year', intakes: 'Feb July', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+
+
+    // =====================================
+    // YORK UNIVERSITY (Canada) - 2 Types (Same 5 Courses)
+    // =====================================
+    // 4. York University [DIRECT]
+    { name: 'York University', country: 'Canada', course: 'Master of Business Administration', tuitionFee: 'CAD 28,000 / Year', intakes: 'Jan Sept', commissionPercentage: 15, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'Bachelor of Business Administration', tuitionFee: 'CAD 22,000 / Year', intakes: 'Jan Sept', commissionPercentage: 15, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'MSc in Computer Science', tuitionFee: 'CAD 26,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'Bachelor of Arts in Psychology', tuitionFee: 'CAD 19,500 / Year', intakes: 'Jan May Sept', commissionPercentage: 15, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'Master of Finance', tuitionFee: 'CAD 30,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+
+    // 5. York University [PORTAL - applyboard] (Identical Courses)
+    { name: 'York University', country: 'Canada', course: 'Master of Business Administration', tuitionFee: 'CAD 28,000 / Year', intakes: 'Jan Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'Bachelor of Business Administration', tuitionFee: 'CAD 22,000 / Year', intakes: 'Jan Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'MSc in Computer Science', tuitionFee: 'CAD 26,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'Bachelor of Arts in Psychology', tuitionFee: 'CAD 19,500 / Year', intakes: 'Jan May Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'York University', country: 'Canada', course: 'Master of Finance', tuitionFee: 'CAD 30,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+
+
+    // =========================================
+    // COVENTRY UNIVERSITY (UK) - 2 Types (Same 5 Courses)
+    // =========================================
+    // 6. Coventry University [DIRECT]
+    { name: 'Coventry University', country: 'UK', course: 'BA (Hons) Business Administration', tuitionFee: 'GBP 16,500 / Year', intakes: 'Jan May Sept', commissionPercentage: 12, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'MSc in Cyber Security', tuitionFee: 'GBP 18,200 / Year', intakes: 'Jan Sept', commissionPercentage: 12, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'BSc (Hons) Computer Science', tuitionFee: 'GBP 16,800 / Year', intakes: 'Jan May Sept', commissionPercentage: 12, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'Master of Public Health (MPH)', tuitionFee: 'GBP 17,500 / Year', intakes: 'Jan May Sept', commissionPercentage: 12, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'MBA in International Business', tuitionFee: 'GBP 19,800 / Year', intakes: 'Jan May Sept', commissionPercentage: 15, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+
+    // 7. Coventry University [PORTAL - educo] (Identical Courses)
+    { name: 'Coventry University', country: 'UK', course: 'BA (Hons) Business Administration', tuitionFee: 'GBP 16,500 / Year', intakes: 'Jan May Sept', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'MSc in Cyber Security', tuitionFee: 'GBP 18,200 / Year', intakes: 'Jan Sept', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'BSc (Hons) Computer Science', tuitionFee: 'GBP 16,800 / Year', intakes: 'Jan May Sept', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'Master of Public Health (MPH)', tuitionFee: 'GBP 17,500 / Year', intakes: 'Jan May Sept', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Coventry University', country: 'UK', course: 'MBA in International Business', tuitionFee: 'GBP 19,800 / Year', intakes: 'Jan May Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+
+
+    // ==============================================
+    // OTHER REPRESENTED UNIVERSITIES (No Overlap)
+    // ==============================================
+    // 8. UNSW Sydney (Australia) [DIRECT]
+    { name: 'UNSW Sydney', country: 'Australia', course: 'Master of Engineering Science', tuitionFee: 'AUD 48,000 / Year', intakes: 'Feb June Sept', commissionPercentage: 12.5, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'UNSW Sydney', country: 'Australia', course: 'Bachelor of Computer Science', tuitionFee: 'AUD 46,000 / Year', intakes: 'Feb June Sept', commissionPercentage: 12.5, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'UNSW Sydney', country: 'Australia', course: 'Master of Finance', tuitionFee: 'AUD 50,000 / Year', intakes: 'Feb Sept', commissionPercentage: 12.5, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'UNSW Sydney', country: 'Australia', course: 'Bachelor of Medical Studies', tuitionFee: 'AUD 78,000 / Year', intakes: 'Feb', commissionPercentage: 8, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'UNSW Sydney', country: 'Australia', course: 'Master of Science in Technology', tuitionFee: 'AUD 47,000 / Year', intakes: 'Feb June Sept', commissionPercentage: 12.5, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+
+    // 9. University of Texas at Arlington (USA) [DIRECT]
+    { name: 'University of Texas at Arlington', country: 'USA', course: 'Master of Science in Computer Science', tuitionFee: 'USD 22,000 / Year', intakes: 'Spring Fall', commissionPercentage: 8, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'University of Texas at Arlington', country: 'USA', course: 'BS in Information Systems', tuitionFee: 'USD 19,500 / Year', intakes: 'Spring Fall', commissionPercentage: 8, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'University of Texas at Arlington', country: 'USA', course: 'Master of Science in Information Systems', tuitionFee: 'USD 23,000 / Year', intakes: 'Spring Fall', commissionPercentage: 8, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'University of Texas at Arlington', country: 'USA', course: 'BS in Mechanical Engineering', tuitionFee: 'USD 20,500 / Year', intakes: 'Spring Fall', commissionPercentage: 8, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+    { name: 'University of Texas at Arlington', country: 'USA', course: 'Master of Business Administration (Healthcare)', tuitionFee: 'USD 26,000 / Year', intakes: 'Spring Fall', commissionPercentage: 10, type: UniversityType.DIRECT, portalName: null, organizationId: org.id },
+
+    // 10. Southern Cross University (Australia) [PORTAL - educo]
+    { name: 'Southern Cross University', country: 'Australia', course: 'Bachelor of Business', tuitionFee: 'AUD 29,000 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Southern Cross University', country: 'Australia', course: 'Master of Information Technology', tuitionFee: 'AUD 32,500 / Year', intakes: 'Feb July Nov', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Southern Cross University', country: 'Australia', course: 'Bachelor of Nursing', tuitionFee: 'AUD 30,000 / Year', intakes: 'Feb', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Southern Cross University', country: 'Australia', course: 'Master of Professional Accounting', tuitionFee: 'AUD 31,000 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Southern Cross University', country: 'Australia', course: 'Bachelor of Tourism and Hospitality Management', tuitionFee: 'AUD 28,500 / Year', intakes: 'Feb July Nov', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+
+    // 11. Duquesne University (USA) [PORTAL - educo]
+    { name: 'Duquesne University', country: 'USA', course: 'MS in Biotechnology', tuitionFee: 'USD 35,000 / Year', intakes: 'Fall Spring', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Duquesne University', country: 'USA', course: 'BS in Business Administration', tuitionFee: 'USD 42,000 / Year', intakes: 'Fall Spring', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Duquesne University', country: 'USA', course: 'MS in Analytics and Information Management', tuitionFee: 'USD 38,500 / Year', intakes: 'Fall Spring', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Duquesne University', country: 'USA', course: 'Global MBA', tuitionFee: 'USD 44,000 / Year', intakes: 'Fall', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Duquesne University', country: 'USA', course: 'BS in Computer Science', tuitionFee: 'USD 40,000 / Year', intakes: 'Fall Spring', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+
+    // 12. University of St. Thomas (USA) [PORTAL - educo]
+    { name: 'University of St. Thomas', country: 'USA', course: 'Master of Business Administration', tuitionFee: 'USD 38,000 / Year', intakes: 'Fall Spring', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'University of St. Thomas', country: 'USA', course: 'MS in Software Engineering', tuitionFee: 'USD 32,000 / Year', intakes: 'Fall Spring', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'University of St. Thomas', country: 'USA', course: 'BS in Computer Science', tuitionFee: 'USD 34,500 / Year', intakes: 'Fall Spring', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'University of St. Thomas', country: 'USA', course: 'Master of Science in Data Science', tuitionFee: 'USD 36,000 / Year', intakes: 'Fall Spring', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'University of St. Thomas', country: 'USA', course: 'Bachelor of Arts in Communication', tuitionFee: 'USD 30,000 / Year', intakes: 'Fall Spring', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+
+    // 13. Trent University (Canada) [PORTAL - educo]
+    { name: 'Trent University', country: 'Canada', course: 'Bachelor of Business Administration', tuitionFee: 'CAD 24,000 / Year', intakes: 'Jan Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Trent University', country: 'Canada', course: 'Master of Science in Forensic Science', tuitionFee: 'CAD 28,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Trent University', country: 'Canada', course: 'Bachelor of Computer Science', tuitionFee: 'CAD 25,000 / Year', intakes: 'Jan Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Trent University', country: 'Canada', course: 'Master of Management', tuitionFee: 'CAD 29,500 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+    { name: 'Trent University', country: 'Canada', course: 'BSc in Environmental and Resource Science', tuitionFee: 'CAD 23,800 / Year', intakes: 'Jan Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'educo', organizationId: org.id },
+
+    // 14. University of Waterloo (Canada) [PORTAL - applyboard]
+    { name: 'University of Waterloo', country: 'Canada', course: 'Master of Engineering', tuitionFee: 'CAD 32,000 / Year', intakes: 'Sept', commissionPercentage: 12.5, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'University of Waterloo', country: 'Canada', course: 'Bachelor of Computer Science', tuitionFee: 'CAD 42,000 / Year', intakes: 'Sept', commissionPercentage: 12.5, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'University of Waterloo', country: 'Canada', course: 'Master of Mathematics', tuitionFee: 'CAD 28,000 / Year', intakes: 'Jan May Sept', commissionPercentage: 12.5, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'University of Waterloo', country: 'Canada', course: 'Bachelor of Applied Science in Software Engineering', tuitionFee: 'CAD 45,000 / Year', intakes: 'Sept', commissionPercentage: 12.5, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'University of Waterloo', country: 'Canada', course: 'Master of Business, Entrepreneurship and Technology (MBET)', tuitionFee: 'CAD 36,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+
+    // 15. Arizona State University (USA) [PORTAL - applyboard]
+    { name: 'Arizona State University', country: 'USA', course: 'BS in Computer Science', tuitionFee: 'USD 34,000 / Year', intakes: 'Spring Fall', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Arizona State University', country: 'USA', course: 'Master of Computer Science (MCS)', tuitionFee: 'USD 38,000 / Year', intakes: 'Spring Fall', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Arizona State University', country: 'USA', course: 'BS in Business Data Analytics', tuitionFee: 'USD 32,500 / Year', intakes: 'Spring Fall', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Arizona State University', country: 'USA', course: 'Master of Science in Business Analytics (MSBA)', tuitionFee: 'USD 41,000 / Year', intakes: 'Fall', commissionPercentage: 12, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Arizona State University', country: 'USA', course: 'BS in Electrical Engineering', tuitionFee: 'USD 33,000 / Year', intakes: 'Spring Fall', commissionPercentage: 10, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+
+    // 16. Cardiff University (UK) [PORTAL - applyboard]
+    { name: 'Cardiff University', country: 'UK', course: 'MSc in Data Science', tuitionFee: 'GBP 24,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Cardiff University', country: 'UK', course: 'BSc in Computer Science', tuitionFee: 'GBP 20,500 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Cardiff University', country: 'UK', course: 'MSc in Finance', tuitionFee: 'GBP 23,000 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Cardiff University', country: 'UK', course: 'Bachelor of Laws (LLB)', tuitionFee: 'GBP 18,500 / Year', intakes: 'Sept', commissionPercentage: 15, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id },
+    { name: 'Cardiff University', country: 'UK', course: 'Master of Business Administration (MBA)', tuitionFee: 'GBP 26,000 / Year', intakes: 'Sept', commissionPercentage: 18, type: UniversityType.PORTAL, portalName: 'applyboard', organizationId: org.id }
+  ];
+
+  await prisma.partnerUniversity.createMany({
+    data: universities
+  });
+  console.log('Seeded represented partner universities with 5 courses each (supporting overlaps and identical courses).');
+
   console.log('Database seeding completed successfully!');
 }
 
