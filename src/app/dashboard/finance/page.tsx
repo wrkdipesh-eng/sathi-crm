@@ -89,6 +89,11 @@ export default function FinanceLedgerPage() {
     phone: '+977-1-44XXXXX',
   });
 
+  const [billingToDetails, setBillingToDetails] = useState({
+    institution: '',
+    address: '',
+  });
+
   useEffect(() => {
     const savedBank = localStorage.getItem('finance_bank_details');
     if (savedBank) {
@@ -189,6 +194,23 @@ export default function FinanceLedgerPage() {
   const handleUniChange = (uniName: string) => {
     setSelectedUni(uniName);
     setIntakeFilter('');
+    if (uniName) {
+      const isPortal = uniName.includes('[Portal:');
+      const matchPortal = uniName.match(/\[Portal:\s*(.*)\]/);
+      const defaultAddress = isPortal 
+        ? `Official Agent Claim via ${matchPortal ? matchPortal[1] : 'Portal Representative'} Office`
+        : 'Direct Admissions & University Finance Department';
+
+      setBillingToDetails({
+        institution: uniName,
+        address: defaultAddress,
+      });
+    } else {
+      setBillingToDetails({
+        institution: '',
+        address: '',
+      });
+    }
     const matchingComms = commissions.filter(c => 
       c.partnerUniversity === uniName && 
       c.status === 'PENDING'
@@ -500,6 +522,7 @@ export default function FinanceLedgerPage() {
           bulkSlabs: [...bulkSlabs],
           bankDetails: { ...bankDetails },
           companyDetails: { ...companyDetails },
+          billingToDetails: { ...billingToDetails },
         });
         setIsBulkModalOpen(false);
         setIsGeneratedInvoiceOpen(true);
@@ -2682,6 +2705,35 @@ export default function FinanceLedgerPage() {
                     </div>
                   </div>
                 )}
+
+                {/* 6. Billing To Details Configuration (Editable) */}
+                {selectedUni && (
+                  <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-3">
+                    <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
+                      Edit Recipient (Billing To) Details
+                    </span>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Partner Institution Name</label>
+                        <input
+                          type="text"
+                          value={billingToDetails.institution}
+                          onChange={(e) => setBillingToDetails(prev => ({ ...prev, institution: e.target.value }))}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Address / Department</label>
+                        <input
+                          type="text"
+                          value={billingToDetails.address}
+                          onChange={(e) => setBillingToDetails(prev => ({ ...prev, address: e.target.value }))}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right Column: Live Invoice Preview */}
@@ -2737,8 +2789,9 @@ export default function FinanceLedgerPage() {
                     <div className="space-y-2">
                       <span className="text-[9px] text-[#eab308] font-bold uppercase tracking-wider font-mono block">Billing To (Partner Institution)</span>
                       <div className="bg-slate-950/40 print:bg-slate-55 p-3 rounded-2xl border border-slate-800/80 print:border-slate-200">
-                        <span className="font-extrabold text-slate-200 print:text-slate-950 block text-xs">{selectedUni}</span>
+                        <span className="font-extrabold text-slate-200 print:text-slate-955 block text-xs">{billingToDetails.institution}</span>
                         <span className="text-slate-400 print:text-slate-600 font-medium">
+                          {billingToDetails.address}<br/>
                           Intake Filter: <span className="text-slate-300 print:text-slate-805 font-semibold">{intakeFilter || 'All Pending Intakes'}</span><br/>
                           Total Verified Students: <span className="text-emerald-400 print:text-slate-900 font-bold">{bulkCalculations.length} Student(s)</span>
                         </span>
@@ -3036,15 +3089,15 @@ export default function FinanceLedgerPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-slate-900/60 print:bg-slate-50 p-4 rounded-2xl border border-slate-800 print:border-slate-200 space-y-1">
                     <span className="font-mono font-bold text-[9px] text-emerald-400 print:text-slate-500 uppercase tracking-wider block">
-                      {generatedInvoiceData.selectedUni?.includes('[Portal:') ? 'BILL TO PORTAL REPRESENTATIVE' : 'BILL TO DIRECT PARTNER UNIVERSITY'}
+                      {generatedInvoiceData.billingToDetails?.institution?.includes('[Portal:') ? 'BILL TO PORTAL REPRESENTATIVE' : 'BILL TO DIRECT PARTNER UNIVERSITY'}
                     </span>
                     <h3 className="font-extrabold text-slate-100 print:text-slate-900 text-base">
-                      {generatedInvoiceData.selectedUni}
+                      {generatedInvoiceData.billingToDetails?.institution || generatedInvoiceData.selectedUni}
                     </h3>
                     <p className="text-[11px] text-slate-400 print:text-slate-600">
-                      {generatedInvoiceData.selectedUni?.includes('[Portal:') 
+                      {generatedInvoiceData.billingToDetails?.address || (generatedInvoiceData.selectedUni?.includes('[Portal:') 
                         ? `Official Agent Claim via ${generatedInvoiceData.selectedUni.match(/\[Portal:\s*(.*)\]/)?.[1] || 'Portal Representative'} Office` 
-                        : 'Direct Admissions & University Finance Department'}
+                        : 'Direct Admissions & University Finance Department')}
                     </p>
                   </div>
 
