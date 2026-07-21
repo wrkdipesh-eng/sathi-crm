@@ -1947,112 +1947,59 @@ export default function FinanceLedgerPage() {
 
             {/* University Selector & Config Box (Hidden in Print) */}
             <div className="p-6 border-b border-slate-800 bg-slate-950/20 space-y-4 print:hidden text-xs">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">1. Select Partner University *</label>
-                    <select
-                      value={selectedUni}
-                      onChange={(e) => handleUniChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none cursor-pointer text-xs"
-                    >
-                      <option value="">-- Choose University --</option>
-                      {Array.from(
-                        new Set(commissions.filter(c => c.status === 'PENDING').map(c => c.partnerUniversity))
-                      ).sort().map((uni, idx) => (
-                        <option key={idx} value={uni}>{uni}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedUni && (
-                    <>
-                      <div>
-                        <label className="block text-[10px] text-emerald-400 font-bold mb-1 font-mono">2. Intake Batch Filter</label>
-                        <select
-                          value={intakeFilter}
-                          onChange={(e) => setIntakeFilter(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-950 border border-emerald-500/30 rounded-xl text-emerald-400 font-semibold focus:outline-none cursor-pointer text-xs font-mono"
-                        >
-                          <option value="">-- All Intakes Batch --</option>
-                          {Array.from(new Set(commissions.filter(c => c.partnerUniversity === selectedUni && c.status === 'PENDING').map(c => {
-                            const d = new Date(c.createdAt);
-                            const m = d.getMonth() + 1;
-                            const y = d.getFullYear();
-                            if (m >= 1 && m <= 3) return `Jan/Feb ${y} Intake`;
-                            if (m >= 4 && m <= 6) return `May/June ${y} Intake`;
-                            if (m >= 7 && m <= 9) return `July/Aug ${y} Intake`;
-                            return `Sept/Oct ${y} Intake`;
-                          }))).map((intakeName, idx) => (
-                            <option key={idx} value={intakeName}>{intakeName}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">3. Invoice / Claim Number</label>
-                        <input
-                          type="text"
-                          value={bulkInvoiceForm.invoiceNumber}
-                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
-                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
-                        />
-                      </div>
-                    </>
-                  )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">1. Select Partner University *</label>
+                  <select
+                    value={selectedUni}
+                    onChange={(e) => handleUniChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value="">-- Choose University --</option>
+                    {Array.from(
+                      new Set(commissions.filter(c => c.status === 'PENDING').map(c => c.partnerUniversity))
+                    ).sort().map((uni, idx) => (
+                      <option key={idx} value={uni}>{uni}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {selectedUni && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-slate-800/40">
+                  <>
                     <div>
-                      <label className="block text-[10px] text-emerald-400 font-bold mb-1 font-mono">Base Commission Rate (% or $)</label>
-                      <div className="flex space-x-1.5">
-                        <select
-                          value={bulkInvoiceForm.baseCommType}
-                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, baseCommType: e.target.value as any }))}
-                          className="px-2.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none cursor-pointer text-xs font-semibold"
-                        >
-                          <option value="PERCENT">%</option>
-                          <option value="FLAT">Flat ($)</option>
-                        </select>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={bulkInvoiceForm.baseCommValue}
-                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, baseCommValue: e.target.value }))}
-                          className="w-full px-3 py-2 bg-slate-950 border border-emerald-500/40 rounded-xl text-emerald-400 focus:outline-none font-mono font-bold text-xs"
-                          placeholder="e.g. 10 or 3800"
-                        />
-                      </div>
+                      <label className="block text-[10px] text-emerald-400 font-bold mb-1 font-mono">2. Intake Batch Filter</label>
+                      <select
+                        value={intakeFilter}
+                        onChange={(e) => setIntakeFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-950 border border-emerald-500/30 rounded-xl text-emerald-400 font-semibold focus:outline-none cursor-pointer text-xs font-mono"
+                      >
+                        <option value="">-- All Intakes Batch --</option>
+                        {Array.from(new Set(commissions.filter(c => c.partnerUniversity === selectedUni && c.status === 'PENDING').map(c => {
+                          const d = new Date(c.createdAt);
+                          const m = d.getMonth() + 1;
+                          const y = d.getFullYear();
+                          if (m >= 1 && m <= 3) return `Jan/Feb ${y} Intake`;
+                          if (m >= 4 && m <= 6) return `May/June ${y} Intake`;
+                          if (m >= 7 && m <= 9) return `July/Aug ${y} Intake`;
+                          return `Sept/Oct ${y} Intake`;
+                        }))).map((intakeName, idx) => (
+                          <option key={idx} value={intakeName}>{intakeName}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-indigo-300 font-bold mb-1 font-mono">Bonus Structure (Optional)</label>
-                      <div className="flex space-x-1.5">
-                        <select
-                          value={bulkInvoiceForm.bonusType}
-                          onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, bonusType: e.target.value as any }))}
-                          className="px-2.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none cursor-pointer text-xs font-semibold"
-                        >
-                          <option value="NONE">None</option>
-                          <option value="PERCENT">% Bonus</option>
-                          <option value="FLAT">Flat Bonus</option>
-                        </select>
-                        {bulkInvoiceForm.bonusType !== 'NONE' && (
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={bulkInvoiceForm.bonusValue}
-                            onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, bonusValue: e.target.value }))}
-                            className="w-full px-3 py-2 bg-slate-950 border border-indigo-500/40 rounded-xl text-indigo-300 focus:outline-none font-mono font-bold text-xs"
-                            placeholder="e.g. 1000"
-                          />
-                        )}
-                      </div>
+                      <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">3. Invoice / Claim Number</label>
+                      <input
+                        type="text"
+                        value={bulkInvoiceForm.invoiceNumber}
+                        onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">NRB Exchange Rate (NPR)</label>
+                      <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">4. NRB Exchange Rate (NPR)</label>
                       <input
                         type="number"
                         step="0.0001"
@@ -2061,7 +2008,7 @@ export default function FinanceLedgerPage() {
                         className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono text-xs"
                       />
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
 
