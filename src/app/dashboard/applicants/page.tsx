@@ -734,21 +734,36 @@ export default function ApplicantsListPage() {
                           <span className="font-semibold text-slate-200 truncate block max-w-[200px]" title={app.targetCourse}>
                             {app.targetCourse || 'Undecided'}
                           </span>
-                          <div className="flex items-center space-x-1.5 mt-0.5">
+                          {app.targetUniversity && (
+                            <span className="text-slate-350 text-[11px] font-medium block truncate max-w-[200px] mt-0.5">
+                              {app.targetUniversity}
+                            </span>
+                          )}
+                          <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
                             <span className="px-1 py-0.2 bg-indigo-950/40 text-indigo-300 border border-indigo-900/30 text-[8px] rounded uppercase font-bold tracking-wide">
                               Primary
                             </span>
                             <span className="text-[10px] text-indigo-400 font-semibold">{app.targetCountry}</span>
+                            {app.representationType && (
+                              <span className="px-1.5 py-0.2 bg-slate-900 text-slate-400 border border-slate-800 text-[8px] rounded-full uppercase font-bold tracking-wide">
+                                {app.representationType === 'PORTAL' ? `Portal: ${app.portalName || 'N/A'}` : 'Direct'}
+                              </span>
+                            )}
                           </div>
                         </div>
                         
                         {/* Secondary Targets */}
                         {app.applications && app.applications.map((otherApp: any) => (
-                          <div key={otherApp.id} className="mt-2 pt-2 border-t border-slate-800/40">
+                          <div key={otherApp.id} className="mt-2.5 pt-2.5 border-t border-slate-800/40">
                             <span className="text-slate-300 text-[11px] truncate block max-w-[200px] font-medium" title={otherApp.targetCourse}>
                               {otherApp.targetCourse || 'Undecided'}
                             </span>
-                            <div className="flex items-center flex-wrap gap-1 mt-0.5 text-[10px]">
+                            {otherApp.targetUniversity && (
+                              <span className="text-slate-400 text-[10px] block truncate max-w-[200px] mt-0.5">
+                                {otherApp.targetUniversity}
+                              </span>
+                            )}
+                            <div className="flex items-center flex-wrap gap-1 mt-1 text-[10px]">
                               <span className="px-1 py-0.2 bg-slate-800 text-slate-400 border border-slate-700/60 text-[8px] rounded uppercase font-bold tracking-wide">
                                 Secondary
                               </span>
