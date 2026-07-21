@@ -3042,7 +3042,6 @@ export default function FinanceLedgerPage() {
                         <th className="px-4 py-3">Program / Course</th>
                         <th className="px-4 py-3 text-right">Tuition Fee</th>
                         <th className="px-4 py-3 text-right">Base Comm</th>
-                        <th className="px-4 py-3 text-right">Bonus Comm</th>
                         <th className="px-4 py-3 text-right">Total Claim</th>
                       </tr>
                     </thead>
@@ -3057,11 +3056,6 @@ export default function FinanceLedgerPage() {
                           </td>
                           <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">
                             {c.currency} {c.baseCommForeign?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </td>
-                          <td className="px-4 py-3 text-right font-mono text-indigo-300 print:text-slate-700">
-                            {c.bonusCommForeign > 0 
-                              ? `${c.currency} ${c.bonusCommForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                              : '-'}
                           </td>
                           <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400 print:text-slate-900">
                             {c.currency} {c.commissionAmountForeign?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
