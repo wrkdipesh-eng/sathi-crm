@@ -1801,43 +1801,7 @@ export default function FinanceLedgerPage() {
             </div>
 
             <form onSubmit={handleEditSubmit} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Autofill from Represented Program (Optional)</label>
-                <select
-                  value={selectedAutofillUniId}
-                  onChange={(e) => {
-                    const uniId = e.target.value;
-                    setSelectedAutofillUniId(uniId);
-                    if (!uniId) return;
-                    const chosen = universities.find(u => u.id === uniId);
-                    if (chosen) {
-                      const { currency, numericFee } = parseFeeAndCurrency(chosen.tuitionFee);
-                      let computedComm = '';
-                      if (chosen.commissionPercentage && numericFee > 0) {
-                        computedComm = ((numericFee * chosen.commissionPercentage) / 100).toFixed(2);
-                      }
-                      
-                      const rate = forexRates && forexRates[currency] ? String(forexRates[currency].toFixed(2)) : '';
 
-                      setEditForm(prev => ({
-                        ...prev,
-                        partnerUniversity: chosen.name,
-                        currency,
-                        commissionAmountForeign: computedComm,
-                        nprExchangeRate: rate,
-                      }));
-                    }
-                  }}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 focus:outline-none text-xs font-mono"
-                >
-                  <option value="">-- Select Represented Program --</option>
-                  {universities.map((uni) => (
-                    <option key={uni.id} value={uni.id}>
-                      {uni.name} - {uni.course} ({uni.country}) {uni.commissionPercentage ? `[${uni.commissionPercentage}% Comm]` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <label className="block text-[10px] text-slate-400 font-medium mb-1">Partner University / Institution *</label>
@@ -2082,43 +2046,7 @@ export default function FinanceLedgerPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[10px] text-indigo-400 font-medium mb-1 font-mono">Autofill from Represented Program (Optional)</label>
-                <select
-                  value={selectedAutofillUniId}
-                  onChange={(e) => {
-                    const uniId = e.target.value;
-                    setSelectedAutofillUniId(uniId);
-                    if (!uniId) return;
-                    const chosen = universities.find(u => u.id === uniId);
-                    if (chosen) {
-                      const { currency, numericFee } = parseFeeAndCurrency(chosen.tuitionFee);
-                      let computedComm = '';
-                      if (chosen.commissionPercentage && numericFee > 0) {
-                        computedComm = ((numericFee * chosen.commissionPercentage) / 100).toFixed(2);
-                      }
-                      
-                      const rate = forexRates && forexRates[currency] ? String(forexRates[currency].toFixed(2)) : '';
 
-                      setAddForm(prev => ({
-                        ...prev,
-                        partnerUniversity: chosen.name,
-                        currency,
-                        commissionAmountForeign: computedComm,
-                        nprExchangeRate: rate,
-                      }));
-                    }
-                  }}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 focus:outline-none text-xs font-mono"
-                >
-                  <option value="">-- Select Represented Program --</option>
-                  {universities.map((uni) => (
-                    <option key={uni.id} value={uni.id}>
-                      {uni.name} - {uni.course} ({uni.country}) {uni.commissionPercentage ? `[${uni.commissionPercentage}% Comm]` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <label className="block text-[10px] text-slate-400 font-medium mb-1 font-sans">Partner University / Institution *</label>
