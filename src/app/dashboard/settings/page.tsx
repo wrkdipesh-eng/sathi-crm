@@ -373,6 +373,41 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleEditDestination = async (dest: any) => {
+    const newName = prompt(`Enter new country name for ${dest.countryName}:`, dest.countryName);
+    if (!newName || newName.trim() === dest.countryName) return;
+
+    try {
+      const res = await fetch('/api/admin/destinations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: dest.id, countryName: newName.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update destination country');
+
+      await fetchDestinations();
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    }
+  };
+
+  const handleDeleteDestination = async (destId: string, countryName: string) => {
+    if (!confirm(`Are you sure you want to delete ${countryName} destination? All configured checklist document requirements for this country will be permanently deleted.`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/destinations/${destId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete destination country');
+
+      await fetchDestinations();
+    } catch (err: any) {
+      alert(err.message || 'An error occurred');
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -1004,13 +1039,29 @@ export default function AdminSettingsPage() {
                         <ClipboardList className="w-4 h-4 text-indigo-500" />
                         <span className="font-bold text-slate-200 text-xs">{dest.countryName} Checklist</span>
                       </div>
-                      <button
-                        onClick={() => openAddChecklist(dest.id)}
-                        className="py-1 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-slate-950 text-[10px] font-bold rounded-lg transition-all flex items-center space-x-1 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-slate-950" />
-                        <span>Add Doc</span>
-                      </button>
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          onClick={() => handleEditDestination(dest)}
+                          className="p-1 rounded bg-slate-850 border border-slate-800 text-indigo-400 hover:bg-indigo-900/30 cursor-pointer"
+                          title="Edit destination name"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDestination(dest.id, dest.countryName)}
+                          className="p-1 rounded bg-slate-850 border border-slate-800 text-rose-500 hover:bg-rose-950/30 cursor-pointer"
+                          title="Delete destination country"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => openAddChecklist(dest.id)}
+                          className="py-1 px-2 bg-indigo-600 hover:bg-indigo-700 text-slate-950 text-[10px] font-bold rounded-lg transition-all flex items-center space-x-1 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-slate-950" />
+                          <span>Add Doc</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-2">

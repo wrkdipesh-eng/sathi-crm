@@ -225,3 +225,39 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+// PATCH: Update an existing destination country name
+export async function PATCH(req: NextRequest) {
+  try {
+    const authUser = getAuthUser(req);
+    if (!checkDirector(authUser)) {
+      return NextResponse.json({ error: 'Forbidden: Director privileges required' }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { id, countryName } = body;
+
+    if (!id || !countryName) {
+      return NextResponse.json({ error: 'Missing destination id or countryName' }, { status: 400 });
+    }
+
+    // Verify destination belongs to user's organization
+    const dest = await prisma.destination.findUnique({
+      where: { id },
+    });
+
+    if (!dest || dest.organizationId !== authUser!.organizationId) {
+      return NextResponse.json({ error: 'Destination not found' }, { status: 404 });
+    }
+
+    const updated = await prisma.destination.update({
+      where: { id },
+      data: { countryName },
+    });
+
+    return NextResponse.json({ success: true, destination: updated });
+  } catch (error: any) {
+    console.error('Update destination country name error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
