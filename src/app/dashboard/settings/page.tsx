@@ -56,9 +56,60 @@ export default function AdminSettingsPage() {
     themePalette: 'dark-emerald',
   });
 
+  const [customThemeColors, setCustomThemeColors] = useState({
+    bg: '#020a06',
+    card: '#051810',
+    accent: '#eab308',
+    text: '#ffffff',
+  });
+
+  const applyThemeColors = (themePalette: string, colors = customThemeColors) => {
+    document.documentElement.setAttribute('data-theme', themePalette);
+    if (themePalette === 'light-executive') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
+
+    if (themePalette === 'custom') {
+      document.documentElement.style.setProperty('--background', colors.bg);
+      document.documentElement.style.setProperty('--foreground', colors.text);
+      document.documentElement.style.setProperty('--card', colors.card);
+      document.documentElement.style.setProperty('--primary', colors.accent);
+      document.documentElement.style.setProperty('--accent', colors.accent);
+      document.documentElement.style.setProperty('--slate-950', colors.bg);
+      document.documentElement.style.setProperty('--slate-900', colors.card);
+      document.documentElement.style.setProperty('--slate-850', colors.card);
+      document.documentElement.style.setProperty('--slate-800', colors.accent + '40');
+      document.documentElement.style.setProperty('--slate-100', colors.text);
+      document.documentElement.style.setProperty('--slate-50', colors.text);
+    } else {
+      document.documentElement.style.removeProperty('--background');
+      document.documentElement.style.removeProperty('--foreground');
+      document.documentElement.style.removeProperty('--card');
+      document.documentElement.style.removeProperty('--primary');
+      document.documentElement.style.removeProperty('--accent');
+      document.documentElement.style.removeProperty('--slate-950');
+      document.documentElement.style.removeProperty('--slate-900');
+      document.documentElement.style.removeProperty('--slate-850');
+      document.documentElement.style.removeProperty('--slate-800');
+      document.documentElement.style.removeProperty('--slate-100');
+      document.documentElement.style.removeProperty('--slate-50');
+    }
+  };
+
   useEffect(() => {
     const savedTheme = localStorage.getItem('organization_theme_palette') || 'dark-emerald';
+    const savedCustom = localStorage.getItem('organization_custom_theme_colors');
+    let colorsObj = customThemeColors;
+    if (savedCustom) {
+      try {
+        colorsObj = JSON.parse(savedCustom);
+        setCustomThemeColors(colorsObj);
+      } catch (e) {}
+    }
     setOrgForm(prev => ({ ...prev, themePalette: savedTheme }));
+    applyThemeColors(savedTheme, colorsObj);
   }, []);
   const [isSavingOrg, setIsSavingOrg] = useState(false);
   const [orgError, setOrgError] = useState<string | null>(null);
@@ -602,12 +653,8 @@ export default function AdminSettingsPage() {
 
     try {
       localStorage.setItem('organization_theme_palette', orgForm.themePalette);
-      document.documentElement.setAttribute('data-theme', orgForm.themePalette);
-      if (orgForm.themePalette === 'light-executive') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.add('dark');
-      }
+      localStorage.setItem('organization_custom_theme_colors', JSON.stringify(customThemeColors));
+      applyThemeColors(orgForm.themePalette, customThemeColors);
 
       const res = await fetch('/api/admin/organization', {
         method: 'PATCH',
@@ -1409,8 +1456,7 @@ export default function AdminSettingsPage() {
                         type="button"
                         onClick={() => {
                           setOrgForm(prev => ({ ...prev, themePalette: 'light-executive' }));
-                          document.documentElement.setAttribute('data-theme', 'light-executive');
-                          document.documentElement.classList.remove('dark');
+                          applyThemeColors('light-executive');
                         }}
                         className={`p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-3 ${
                           orgForm.themePalette === 'light-executive'
@@ -1433,28 +1479,193 @@ export default function AdminSettingsPage() {
                         <span className="text-[10px] text-slate-400 block font-medium">Clean Executive Light Theme</span>
                       </button>
 
+                      {/* Theme Option 5: Custom Theme Color Picker */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrgForm(prev => ({ ...prev, themePalette: 'custom' }));
+                          applyThemeColors('custom', customThemeColors);
+                        }}
+                        className={`p-4 rounded-2xl border text-left transition-all cursor-pointer space-y-3 ${
+                          orgForm.themePalette === 'custom'
+                            ? 'bg-slate-900 border-indigo-500 ring-2 ring-indigo-500/30 shadow-lg shadow-indigo-500/10'
+                            : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-100 flex items-center">
+                            <Palette className="w-3.5 h-3.5 mr-1 text-indigo-400" />
+                            Custom Brand Colors
+                          </span>
+                          {orgForm.themePalette === 'custom' && (
+                            <CheckCircle className="w-4 h-4 text-indigo-400" />
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-5 h-5 rounded-full border border-slate-700 shadow-sm" style={{ backgroundColor: customThemeColors.bg }} title="Background" />
+                          <span className="w-5 h-5 rounded-full border border-slate-700 shadow-sm" style={{ backgroundColor: customThemeColors.card }} title="Card Surface" />
+                          <span className="w-5 h-5 rounded-full border border-slate-700 shadow-sm" style={{ backgroundColor: customThemeColors.accent }} title="Accent" />
+                          <span className="w-5 h-5 rounded-full border border-slate-700 shadow-sm" style={{ backgroundColor: customThemeColors.text }} title="Text" />
+                        </div>
+                        <span className="text-[10px] text-slate-400 block font-medium">Pick Custom Brand Colors (Real-Time Live)</span>
+                      </button>
+
                     </div>
+
+                    {/* Custom Color Picker Panel */}
+                    {orgForm.themePalette === 'custom' && (
+                      <div className="p-5 bg-slate-950/80 border border-indigo-500/30 rounded-2xl space-y-4 animate-fade-in">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                          <div className="flex items-center space-x-2">
+                            <Palette className="w-4 h-4 text-indigo-400" />
+                            <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Custom Color Palette Editor</h4>
+                          </div>
+                          <span className="text-[10px] text-indigo-400 font-mono italic">✨ Live Real-Time Preview Active</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                          
+                          {/* Color 1: Background */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                              Background Color
+                            </label>
+                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
+                              <input
+                                type="color"
+                                value={customThemeColors.bg}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, bg: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                              />
+                              <input
+                                type="text"
+                                value={customThemeColors.bg}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, bg: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Color 2: Card / Container */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                              Card / Container Surface
+                            </label>
+                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
+                              <input
+                                type="color"
+                                value={customThemeColors.card}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, card: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                              />
+                              <input
+                                type="text"
+                                value={customThemeColors.card}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, card: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Color 3: Primary Accent */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                              Primary Accent / Highlights
+                            </label>
+                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
+                              <input
+                                type="color"
+                                value={customThemeColors.accent}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, accent: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                              />
+                              <input
+                                type="text"
+                                value={customThemeColors.accent}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, accent: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Color 4: Text / Typography */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                              Text / Font Color
+                            </label>
+                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
+                              <input
+                                type="color"
+                                value={customThemeColors.text}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, text: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                              />
+                              <input
+                                type="text"
+                                value={customThemeColors.text}
+                                onChange={(e) => {
+                                  const updated = { ...customThemeColors, text: e.target.value };
+                                  setCustomThemeColors(updated);
+                                  applyThemeColors('custom', updated);
+                                }}
+                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
+                              />
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    )}
+
                   </div>
 
-                <div className="flex justify-end pt-4 border-t border-slate-800">
-                  <button
-                    type="submit"
-                    disabled={isSavingOrg}
-                    className="py-2 px-5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer shadow-md shadow-indigo-600/10"
-                  >
-                    {isSavingOrg ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                        <span>Updating Branding...</span>
-                      </>
-                    ) : (
-                      <span>Save Branding Settings</span>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+                  <div className="flex justify-end pt-4 border-t border-slate-800">
+                    <button
+                      type="submit"
+                      disabled={isSavingOrg}
+                      className="py-2 px-5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer shadow-md shadow-indigo-600/10"
+                    >
+                      {isSavingOrg ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                          <span>Updating Branding...</span>
+                        </>
+                      ) : (
+                        <span>Save Branding Settings</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
 
         </div>
       </div>

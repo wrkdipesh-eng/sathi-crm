@@ -40,6 +40,24 @@ export default function RootLayout({
                 } else {
                   document.documentElement.classList.add('dark');
                 }
+
+                if (savedTheme === 'custom') {
+                  const rawCustom = localStorage.getItem('organization_custom_theme_colors');
+                  if (rawCustom) {
+                    const c = JSON.parse(rawCustom);
+                    document.documentElement.style.setProperty('--background', c.bg);
+                    document.documentElement.style.setProperty('--foreground', c.text);
+                    document.documentElement.style.setProperty('--card', c.card);
+                    document.documentElement.style.setProperty('--primary', c.accent);
+                    document.documentElement.style.setProperty('--accent', c.accent);
+                    document.documentElement.style.setProperty('--slate-950', c.bg);
+                    document.documentElement.style.setProperty('--slate-900', c.card);
+                    document.documentElement.style.setProperty('--slate-850', c.card);
+                    document.documentElement.style.setProperty('--slate-800', c.accent + '40');
+                    document.documentElement.style.setProperty('--slate-100', c.text);
+                    document.documentElement.style.setProperty('--slate-50', c.text);
+                  }
+                }
               } catch (_) {}
             `,
           }}
