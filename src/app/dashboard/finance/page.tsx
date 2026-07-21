@@ -1030,7 +1030,7 @@ export default function FinanceLedgerPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isGeneratedInvoiceOpen ? "print:hidden" : ""}`}>
       
       {/* Page Header */}
       <div className="space-y-4">
@@ -3023,8 +3023,8 @@ export default function FinanceLedgerPage() {
 
       {/* Generated Official Invoice Modal View */}
       {isGeneratedInvoiceOpen && generatedInvoiceData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in print:bg-white print:p-0 print:absolute print:inset-0">
-          <div className="w-full max-w-5xl bg-[#020a06] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:border-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in print:bg-white print:p-0 print:block print:static">
+          <div className="w-full max-w-5xl bg-[#020a06] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:border-none print:block">
             
             {/* Action Top Bar (Hidden in Print) */}
             <div className="px-6 py-4 border-b border-[#0d3420] bg-slate-950/60 flex justify-between items-center print:hidden">

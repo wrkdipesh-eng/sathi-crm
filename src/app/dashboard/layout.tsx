@@ -65,9 +65,9 @@ export default async function DashboardLayout({
   })();
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans print:block print:bg-white print:text-black">
       {/* Sidebar */}
-      <aside className="w-72 border-r border-slate-800 bg-slate-900 flex flex-col justify-between shrink-0">
+      <aside className="w-72 border-r border-slate-800 bg-slate-900 flex flex-col justify-between shrink-0 print:hidden">
         <div>
           {/* Logo / Org Header */}
           <div className="h-20 flex items-center px-4 border-b border-slate-800 space-x-3">
@@ -182,9 +182,9 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative print:block print:overflow-visible print:p-0">
         {/* Top Header */}
-        <header className="absolute top-0 left-0 right-0 h-16 border-b border-slate-800/80 bg-slate-900/55 flex items-center justify-between px-8 z-40 backdrop-blur-md">
+        <header className="absolute top-0 left-0 right-0 h-16 border-b border-slate-800/80 bg-slate-900/55 flex items-center justify-between px-8 z-40 backdrop-blur-md print:hidden">
           <div className="flex items-center space-x-2">
             <span className="text-sm font-semibold text-slate-300">Nepal Operations</span>
             <span className="text-xs text-slate-500">•</span>
@@ -202,7 +202,7 @@ export default async function DashboardLayout({
         </header>
 
         {/* Dashboard page children */}
-        <div className="p-8 pt-24 flex-1 bg-slate-950 overflow-y-auto">
+        <div className="p-8 pt-24 flex-1 bg-slate-950 overflow-y-auto print:p-0 print:bg-white">
           {children}
         </div>
       </main>
