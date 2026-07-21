@@ -2873,22 +2873,22 @@ export default function FinanceLedgerPage() {
                         <div className="flex justify-between text-slate-350 print:text-slate-700">
                           <span>Gross Base Commission:</span>
                           <span>
-                            {bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + (item.commissionAmountForeign - item.bonusAmountForeign), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + item.baseCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
 
-                        {bulkCalculations.reduce((sum, item) => sum + item.bonusAmountForeign, 0) > 0 && (
+                        {bulkCalculations.reduce((sum, item) => sum + item.bonusCommForeign, 0) > 0 && (
                           <div className="flex justify-between text-indigo-400 print:text-slate-700 font-bold">
-                            <span>Volume Reward Bonus:</span>
+                            <span>Bonus Total Claim:</span>
                             <span>
-                              +{bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + item.bonusAmountForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              +{bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + item.bonusCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
                         )}
 
                         <div className="flex justify-between text-slate-300 print:text-slate-900 font-extrabold border-t border-slate-800 print:border-slate-300 pt-2 text-xs">
                           <span>Total Claim Receivable:</span>
-                          <span className="text-white print:text-slate-950 font-black">
+                          <span className="text-white print:text-slate-955 font-black">
                             {bulkCalculations[0]?.currency || 'USD'} {bulkCalculations.reduce((sum, item) => sum + item.commissionAmountForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
@@ -3138,7 +3138,7 @@ export default function FinanceLedgerPage() {
                       </span>
                     </div>
                     <div className="flex justify-between text-indigo-300 print:text-slate-700">
-                      <span>Volume Bonus Total Claim:</span>
+                      <span>Bonus Total Claim:</span>
                       <span className="font-bold text-indigo-300 print:text-slate-900">
                         {generatedInvoiceData.bulkCalculations?.[0]?.currency} {generatedInvoiceData.bulkCalculations?.reduce((sum: number, c: any) => sum + c.bonusCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
