@@ -69,6 +69,26 @@ export default function FinanceLedgerPage() {
   });
   const [isSavingAdd, setIsSavingAdd] = useState(false);
 
+  // Bank Remittance States
+  const [bankDetails, setBankDetails] = useState({
+    accountName: 'Thinkcone Study Abroad Pvt. Ltd.',
+    bankName: 'Standard Chartered Bank Nepal',
+    accountNo: '01-2384912-01 (NPR / Foreign Wire)',
+    swiftCode: 'SCBLNPKT',
+    branch: 'Putalisadak Branch, Kathmandu, Nepal',
+  });
+
+  useEffect(() => {
+    const savedBank = localStorage.getItem('finance_bank_details');
+    if (savedBank) {
+      try {
+        setBankDetails(JSON.parse(savedBank));
+      } catch (e) {
+        console.error("Failed to parse saved bank details", e);
+      }
+    }
+  }, []);
+
   // Bulk Invoice States
   const [selectedUni, setSelectedUni] = useState('');
   const [intakeFilter, setIntakeFilter] = useState('');
@@ -90,6 +110,14 @@ export default function FinanceLedgerPage() {
   const [bulkSlabs, setBulkSlabs] = useState<any[]>([]);
   const [isUpdatingSlabs, setIsUpdatingSlabs] = useState(false);
   const [slabSuccessMsg, setSlabSuccessMsg] = useState<string | null>(null);
+
+  const handleBankDetailsChange = (field: string, value: string) => {
+    setBankDetails(prev => {
+      const updated = { ...prev, [field]: value };
+      localStorage.setItem('finance_bank_details', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // University Management States
   const [isUniModalOpen, setIsUniModalOpen] = useState(false);
@@ -2372,15 +2400,66 @@ export default function FinanceLedgerPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800 print:border-slate-300">
                     
                     {/* Bank Wire Details */}
-                    <div className="bg-slate-900/40 print:bg-slate-50 border border-slate-800 print:border-slate-200 p-4 rounded-2xl space-y-1.5 text-xs font-mono">
-                      <span className="font-bold text-[9px] text-slate-400 print:text-slate-600 uppercase tracking-wider block">
-                        BANK REMITTANCE & WIRE DETAILS
-                      </span>
-                      <div className="text-slate-200 print:text-slate-900 font-semibold">Account Name: Thinkcone Study Abroad Pvt. Ltd.</div>
-                      <div className="text-slate-400 print:text-slate-700">Bank Name: Standard Chartered Bank Nepal</div>
-                      <div className="text-slate-400 print:text-slate-700">Account No: 01-2384912-01 (NPR / Foreign Wire)</div>
-                      <div className="text-slate-400 print:text-slate-700">SWIFT / BIC Code: SCBLNPKT</div>
-                      <div className="text-slate-400 print:text-slate-700">Branch: Putalisadak Branch, Kathmandu, Nepal</div>
+                    {/* Bank Wire Details (Editable & Auto-Saved) */}
+                    <div className="bg-slate-900/40 print:bg-transparent border border-slate-800 print:border-none p-4 rounded-2xl space-y-2 text-xs font-mono">
+                      <div className="flex items-center justify-between border-b border-slate-800/80 print:border-none pb-1.5">
+                        <span className="font-bold text-[9px] text-emerald-400 print:text-slate-600 uppercase tracking-wider">
+                          BANK REMITTANCE & WIRE DETAILS (EDITABLE)
+                        </span>
+                        <span className="text-[9px] text-slate-500 print:hidden font-sans italic">⚡ Editable & Auto-Saved</span>
+                      </div>
+
+                      <div className="space-y-1 text-slate-200 print:text-slate-900">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Account Name:</span>
+                          <input
+                            type="text"
+                            value={bankDetails.accountName}
+                            onChange={(e) => handleBankDetailsChange('accountName', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-100 print:text-slate-900 font-bold focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Bank Name:</span>
+                          <input
+                            type="text"
+                            value={bankDetails.bankName}
+                            onChange={(e) => handleBankDetailsChange('bankName', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Account No:</span>
+                          <input
+                            type="text"
+                            value={bankDetails.accountNo}
+                            onChange={(e) => handleBankDetailsChange('accountNo', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none font-bold"
+                          />
+                        </div>
+
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">SWIFT / BIC Code:</span>
+                          <input
+                            type="text"
+                            value={bankDetails.swiftCode}
+                            onChange={(e) => handleBankDetailsChange('swiftCode', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none font-bold uppercase"
+                          />
+                        </div>
+
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-slate-400 print:text-slate-600 shrink-0 font-medium">Branch:</span>
+                          <input
+                            type="text"
+                            value={bankDetails.branch}
+                            onChange={(e) => handleBankDetailsChange('branch', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-800 focus:border-emerald-500/50 print:border-none print:bg-transparent print:p-0 rounded-lg px-2 py-0.5 text-slate-200 print:text-slate-800 focus:outline-none"
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     {/* Grand Financial Totals */}
