@@ -1069,22 +1069,20 @@ export default function FinanceLedgerPage() {
             margin: 10mm 15mm;
           }
           html, body, main, #__next, [data-reactroot] {
-            background: white !important;
-            color: black !important;
+            background: #020a06 !important;
+            color: #f1f5f9 !important;
             width: 100% !important;
             height: auto !important;
             min-height: 0 !important;
             overflow: visible !important;
             margin: 0 !important;
             padding: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          .print-sheet, .print-sheet * {
-            color: black !important;
-            background-color: transparent !important;
-            background-image: none !important;
-            border-color: #e2e8f0 !important;
-            text-shadow: none !important;
-            box-shadow: none !important;
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .print-sheet {
             display: block !important;
@@ -1092,31 +1090,8 @@ export default function FinanceLedgerPage() {
             max-width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            border: none !important;
             box-shadow: none !important;
-            border-radius: 0 !important;
             overflow: visible !important;
-          }
-          .text-white, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400, .text-slate-500 {
-            color: black !important;
-          }
-          .text-emerald-400, .text-emerald-500, .text-emerald-600 {
-            color: #047857 !important;
-          }
-          .text-indigo-400, .text-indigo-500 {
-            color: #4f46e5 !important;
-          }
-          .bg-emerald-950\\/20, .bg-[#03150d] {
-            background-color: #f0fdf4 !important;
-            border-color: #bbf7d0 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .bg-slate-950\\/40, .bg-slate-900\\/60 {
-            background-color: #f8fafc !important;
-            border-color: #e2e8f0 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
           }
         }
       `}} />
@@ -2919,14 +2894,14 @@ export default function FinanceLedgerPage() {
               </div>
 
               {/* Right Column: Live Invoice Preview */}
-              <div className="w-full lg:w-[60%] p-6 space-y-6 overflow-y-auto print:overflow-visible print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100 min-h-0">
+              <div className="w-full lg:w-[60%] p-6 space-y-6 overflow-y-auto print:overflow-visible print:p-8 print:text-slate-100 bg-[#020a06] print:bg-[#020a06] text-slate-100 min-h-0">
                 {!selectedUni ? (
                   <div className="flex flex-col items-center justify-center py-40 text-slate-500">
                     <FileSpreadsheet className="w-14 h-14 text-slate-700 animate-pulse mb-3" />
                     <p className="text-xs font-medium">Please select a Partner University from the left dropdown to generate the official claim invoice.</p>
                   </div>
                 ) : (
-                  <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans print-sheet">
+                  <div className="max-w-4xl mx-auto bg-slate-950 print:bg-slate-950 border border-slate-800 print:border-slate-800 rounded-3xl p-8 print:p-8 shadow-2xl space-y-6 font-sans print-sheet">
                   
                   {/* Executive Header */}
                   <div className="flex flex-wrap justify-between items-start border-b border-slate-800 print:border-slate-300 pb-6 gap-4">
@@ -3206,7 +3181,7 @@ export default function FinanceLedgerPage() {
       {/* Generated Official Invoice Modal View */}
       {isGeneratedInvoiceOpen && generatedInvoiceData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in print:bg-white print:p-0 print:block print:static">
-          <div className="w-full max-w-5xl bg-[#020a06] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:border-none print:block">
+          <div className="w-full max-w-5xl bg-[#020a06] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-3xl print:w-full print:max-h-none print:bg-[#020a06] print:border-[#0d3420] print:block">
             
             {/* Action Top Bar (Hidden in Print) */}
             <div className="px-6 py-4 border-b border-[#0d3420] bg-slate-950/60 flex justify-between items-center print:hidden">
@@ -3238,8 +3213,8 @@ export default function FinanceLedgerPage() {
             </div>
 
             {/* Well-Structured Executive Invoice Sheet */}
-            <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100">
-              <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans print-sheet">
+            <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-8 print:text-slate-100 bg-[#020a06] print:bg-[#020a06] text-slate-100">
+              <div className="max-w-4xl mx-auto bg-slate-950 print:bg-slate-950 border border-slate-800 print:border-slate-800 rounded-3xl p-8 print:p-8 shadow-2xl space-y-6 font-sans print-sheet">
                 
                 {/* Executive Branding Header */}
                 <div className="flex flex-wrap justify-between items-start border-b border-slate-800 print:border-slate-300 pb-6 gap-4">
