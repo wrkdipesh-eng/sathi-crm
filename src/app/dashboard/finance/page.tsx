@@ -1031,6 +1031,64 @@ export default function FinanceLedgerPage() {
 
   return (
     <div className={`space-y-6 ${isGeneratedInvoiceOpen ? "print:hidden" : ""}`}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 10mm 15mm;
+          }
+          html, body, main, #__next, [data-reactroot] {
+            background: white !important;
+            color: black !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .print-sheet, .print-sheet * {
+            color: black !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            border-color: #e2e8f0 !important;
+            text-shadow: none !important;
+            box-shadow: none !important;
+          }
+          .print-sheet {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+          }
+          .text-white, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400, .text-slate-500 {
+            color: black !important;
+          }
+          .text-emerald-400, .text-emerald-500, .text-emerald-600 {
+            color: #047857 !important;
+          }
+          .text-indigo-400, .text-indigo-500 {
+            color: #4f46e5 !important;
+          }
+          .bg-emerald-950\\/20, .bg-[#03150d] {
+            background-color: #f0fdf4 !important;
+            border-color: #bbf7d0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .bg-slate-950\\/40, .bg-slate-900\\/60 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}} />
       
       {/* Page Header */}
       <div className="space-y-4">
@@ -2675,7 +2733,7 @@ export default function FinanceLedgerPage() {
                     <p className="text-xs font-medium">Please select a Partner University from the left dropdown to generate the official claim invoice.</p>
                   </div>
                 ) : (
-                  <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans">
+                  <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans print-sheet">
                   
                   {/* Executive Header */}
                   <div className="flex flex-wrap justify-between items-start border-b border-slate-800 print:border-slate-300 pb-6 gap-4">
@@ -2988,7 +3046,7 @@ export default function FinanceLedgerPage() {
 
             {/* Well-Structured Executive Invoice Sheet */}
             <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100">
-              <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans">
+              <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans print-sheet">
                 
                 {/* Executive Branding Header */}
                 <div className="flex flex-wrap justify-between items-start border-b border-slate-800 print:border-slate-300 pb-6 gap-4">
