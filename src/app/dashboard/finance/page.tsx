@@ -82,7 +82,8 @@ export default function FinanceLedgerPage() {
   const [companyDetails, setCompanyDetails] = useState({
     name: 'Thinkcone Study Abroad',
     address: 'Putalisadak, Kathmandu, Nepal',
-    panNo: '609823412',
+    panVat: '609823412',
+    regNo: '168349/073/074',
     email: 'finance@thinkcone.com.np',
     phone: '+977-1-44XXXXX',
   });
@@ -2597,14 +2598,25 @@ export default function FinanceLedgerPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">PAN / Reg No</label>
+                          <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">PAN / VAT No</label>
                           <input
                             type="text"
-                            value={companyDetails.panNo}
-                            onChange={(e) => handleCompanyDetailsChange('panNo', e.target.value)}
+                            value={companyDetails.panVat || ""}
+                            onChange={(e) => handleCompanyDetailsChange('panVat', e.target.value)}
                             className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
                           />
                         </div>
+                        <div>
+                          <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Reg No</label>
+                          <input
+                            type="text"
+                            value={companyDetails.regNo || ""}
+                            onChange={(e) => handleCompanyDetailsChange('regNo', e.target.value)}
+                            className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Telephone</label>
                           <input
@@ -2614,15 +2626,15 @@ export default function FinanceLedgerPage() {
                             className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
                           />
                         </div>
-                      </div>
-                      <div>
-                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Email Address</label>
-                        <input
-                          type="text"
-                          value={companyDetails.email}
-                          onChange={(e) => handleCompanyDetailsChange('email', e.target.value)}
-                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
-                        />
+                        <div>
+                          <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Email Address</label>
+                          <input
+                            type="text"
+                            value={companyDetails.email}
+                            onChange={(e) => handleCompanyDetailsChange('email', e.target.value)}
+                            className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2648,7 +2660,7 @@ export default function FinanceLedgerPage() {
                       </div>
                       <p className="text-[11px] text-slate-400 print:text-slate-600 leading-relaxed font-medium">
                         Headquarters: {companyDetails.address}<br/>
-                        PAN / Reg No: {companyDetails.panNo} | Email: {companyDetails.email} | Tel: {companyDetails.phone}
+                        PAN/VAT: {companyDetails.panVat} | Reg No: {companyDetails.regNo} | Email: {companyDetails.email} | Tel: {companyDetails.phone}
                       </p>
                     </div>
 
@@ -2673,7 +2685,7 @@ export default function FinanceLedgerPage() {
                         <span className="font-extrabold text-slate-200 print:text-slate-955 block text-xs">{companyDetails.name}</span>
                         <span className="text-slate-400 print:text-slate-600 font-medium">
                           {companyDetails.address}<br/>
-                          PAN No: {companyDetails.panNo}<br/>
+                          PAN/VAT No: {companyDetails.panVat} | Reg No: {companyDetails.regNo}<br/>
                           Authorized Person: Accounts Director
                         </span>
                       </div>
@@ -2968,7 +2980,7 @@ export default function FinanceLedgerPage() {
                     </div>
                     <p className="text-[11px] text-slate-400 print:text-slate-600 leading-relaxed font-medium">
                       Headquarters: {generatedInvoiceData.companyDetails?.address || 'Putalisadak, Kathmandu, Nepal'}<br/>
-                      PAN / Reg No: {generatedInvoiceData.companyDetails?.panNo || '609823412'} | Email: {generatedInvoiceData.companyDetails?.email || 'finance@thinkcone.com.np'} | Tel: {generatedInvoiceData.companyDetails?.phone || '+977-1-44XXXXX'}
+                      PAN/VAT: {generatedInvoiceData.companyDetails?.panVat || '609823412'} | Reg No: {generatedInvoiceData.companyDetails?.regNo || '168349/073/074'} | Email: {generatedInvoiceData.companyDetails?.email || 'finance@thinkcone.com.np'} | Tel: {generatedInvoiceData.companyDetails?.phone || '+977-1-44XXXXX'}
                     </p>
                   </div>
 
