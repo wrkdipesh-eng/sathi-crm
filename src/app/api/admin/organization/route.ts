@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
         tagline: true,
         logoUrl: true,
         logoIcon: true,
+        faviconUrl: true,
+        titleTag: true,
       },
     });
 
@@ -46,7 +48,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, tagline, logoUrl, logoIcon } = body;
+    const { name, tagline, logoUrl, logoIcon, faviconUrl, titleTag } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: 'Organization Name is required' }, { status: 400 });
@@ -59,6 +61,8 @@ export async function PATCH(req: NextRequest) {
         tagline: tagline ? tagline.trim() : null,
         logoUrl: logoUrl ? logoUrl.trim() : null,
         logoIcon: logoIcon ? logoIcon.trim() : null,
+        faviconUrl: faviconUrl ? faviconUrl.trim() : null,
+        titleTag: titleTag ? titleTag.trim() : null,
       },
     });
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import BrandingSyncer from "@/components/BrandingSyncer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,21 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
+                const savedFavicon = localStorage.getItem('organization_favicon_url');
+                if (savedFavicon) {
+                  let link = document.querySelector("link[rel*='icon']");
+                  if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    document.head.appendChild(link);
+                  }
+                  link.href = savedFavicon;
+                }
+                const savedTitle = localStorage.getItem('organization_title_tag');
+                if (savedTitle) {
+                  document.title = savedTitle;
+                }
+
                 const savedTheme = localStorage.getItem('organization_theme_palette') || 'dark-emerald';
                 document.documentElement.setAttribute('data-theme', savedTheme);
                 if (savedTheme === 'light-executive') {
@@ -64,7 +80,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <BrandingSyncer />
+        {children}
+      </body>
     </html>
   );
 }
+

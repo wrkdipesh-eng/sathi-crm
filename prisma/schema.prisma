@@ -49,6 +49,8 @@ model Organization {
   tagline             String?
   logoUrl             String?
   logoIcon            String?
+  faviconUrl          String?
+  titleTag            String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   branches            Branch[]

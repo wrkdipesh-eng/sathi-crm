@@ -54,6 +54,8 @@ export default function AdminSettingsPage() {
     logoUrl: '',
     logoIcon: 'Globe',
     themePalette: 'dark-emerald',
+    faviconUrl: '',
+    titleTag: '',
   });
 
   const [customThemeColors, setCustomThemeColors] = useState({
@@ -252,6 +254,8 @@ export default function AdminSettingsPage() {
             tagline: data.organization.tagline || '',
             logoUrl: data.organization.logoUrl || '',
             logoIcon: data.organization.logoIcon || 'Globe',
+            faviconUrl: data.organization.faviconUrl || '',
+            titleTag: data.organization.titleTag || '',
           }));
         }
       }
@@ -692,6 +696,8 @@ export default function AdminSettingsPage() {
     try {
       localStorage.setItem('organization_theme_palette', orgForm.themePalette);
       localStorage.setItem('organization_custom_theme_colors', JSON.stringify(customThemeColors));
+      localStorage.setItem('organization_favicon_url', orgForm.faviconUrl);
+      localStorage.setItem('organization_title_tag', orgForm.titleTag);
       applyThemeColors(orgForm.themePalette, customThemeColors);
 
       const res = await fetch('/api/admin/organization', {
@@ -1366,6 +1372,36 @@ export default function AdminSettingsPage() {
                         className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       />
                       <span className="text-[9px] text-slate-500 mt-1 block">Paste an image link or base64 data URI here (PNG, JPG, SVG supported).</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-semibold mb-1.5 uppercase tracking-wider" htmlFor="orgFaviconUrl">
+                        Custom Favicon Image URL
+                      </label>
+                      <input
+                        id="orgFaviconUrl"
+                        type="url"
+                        placeholder="e.g. https://example.com/favicon.ico"
+                        value={orgForm.faviconUrl}
+                        onChange={(e) => setOrgForm({ ...orgForm, faviconUrl: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <span className="text-[9px] text-slate-500 mt-1 block">Paste an image link for the browser tab favicon (ICO, PNG or SVG format).</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-semibold mb-1.5 uppercase tracking-wider" htmlFor="orgTitleTag">
+                        Browser Tab Title Tag
+                      </label>
+                      <input
+                        id="orgTitleTag"
+                        type="text"
+                        placeholder="e.g. Kavya Global Network | CRM"
+                        value={orgForm.titleTag}
+                        onChange={(e) => setOrgForm({ ...orgForm, titleTag: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <span className="text-[9px] text-slate-500 mt-1 block">Specify the text that appears on the browser tab title.</span>
                     </div>
                   </div>
 
