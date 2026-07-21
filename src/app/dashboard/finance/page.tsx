@@ -977,36 +977,41 @@ export default function FinanceLedgerPage() {
     <div className="space-y-6">
       
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100 font-sans">Commissions & Ledger Management</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Track incoming University & Student claims (Receivables) and outgoing Sub-Agent & Branch splits (Payables).
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-slate-350 to-slate-200 bg-clip-text text-transparent font-sans">
+            Commissions & Ledger Management
+          </h1>
+          <p className="text-xs text-slate-400 mt-1 font-medium max-w-2xl leading-relaxed">
+            Real-time financial command center. Track incoming University & Student claims (Receivables) and manage outgoing Sub-Agent & Branch Referral splits (Payables).
           </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4 shrink-0">
+        <div className="flex flex-wrap items-center gap-3.5 shrink-0">
           {/* Small Exchange Rates Info panel */}
           {forexRates && (
-            <div className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-[10px] shadow-sm select-none shrink-0">
-              <span className="font-bold text-slate-500 uppercase tracking-wider">NRB Exchange Rate:</span>
+            <div className="flex items-center space-x-3 bg-slate-950/60 border border-slate-800/80 rounded-2xl px-4 py-2 text-[10px] shadow-lg shadow-black/10 select-none shrink-0 backdrop-blur-sm">
+              <span className="font-bold text-slate-500 uppercase tracking-widest flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                Live Forex (NRB):
+              </span>
               <div className="flex items-center space-x-3 font-mono">
-                <span className="text-slate-350"><span className="text-indigo-400 font-semibold">USD</span> Rs. {forexRates.USD?.toFixed(2)}</span>
-                <span className="text-slate-700">|</span>
-                <span className="text-slate-350"><span className="text-indigo-400 font-semibold">AUD</span> Rs. {forexRates.AUD?.toFixed(2)}</span>
-                <span className="text-slate-700">|</span>
-                <span className="text-slate-350"><span className="text-indigo-400 font-semibold">CAD</span> Rs. {forexRates.CAD?.toFixed(2)}</span>
-                <span className="text-slate-700">|</span>
-                <span className="text-slate-350"><span className="text-indigo-400 font-semibold">GBP</span> Rs. {forexRates.GBP?.toFixed(2)}</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇺🇸 USD</span> Rs. {forexRates.USD?.toFixed(2)}</span>
+                <span className="text-slate-800">|</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇦🇺 AUD</span> Rs. {forexRates.AUD?.toFixed(2)}</span>
+                <span className="text-slate-800">|</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇨🇦 CAD</span> Rs. {forexRates.CAD?.toFixed(2)}</span>
+                <span className="text-slate-800">|</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇬🇧 GBP</span> Rs. {forexRates.GBP?.toFixed(2)}</span>
               </div>
             </div>
           )}
 
           <button
             onClick={() => handleOpenBulkInvoiceModal()}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-semibold shadow-md transition-all cursor-pointer select-none"
+            className="flex items-center space-x-2 px-4.5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/10 hover:shadow-emerald-500/25 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer select-none active:translate-y-0"
           >
-            <FileSpreadsheet className="w-4 h-4" />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-100" />
             <span>Bulk Invoice Generator</span>
           </button>
 
@@ -1020,203 +1025,239 @@ export default function FinanceLedgerPage() {
                 }));
               }
             }}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white rounded-2xl text-xs font-semibold shadow-md transition-all cursor-pointer select-none"
+            className="flex items-center space-x-2 px-4.5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-indigo-650/10 hover:shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer select-none active:translate-y-0"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-indigo-100" />
             <span>Add Commission</span>
           </button>
         </div>
       </div>
 
       {/* 2-Part Category Navigation Tabs: Receivables vs Payables */}
-      <div className="bg-slate-900 border border-slate-800 p-2 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="bg-slate-950/40 border border-slate-850 p-1.5 rounded-3xl flex flex-wrap items-center justify-between gap-3 shadow-xl backdrop-blur-md">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setFinanceTab('ALL')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-2 ${
+            className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-300 cursor-pointer flex items-center space-x-2 ${
               financeTab === 'ALL'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                : 'bg-slate-950 text-slate-400 hover:text-slate-200 hover:bg-slate-850'
+                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
             }`}
           >
             <span>📑 All Financial Ledgers</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-300 font-mono">
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${financeTab === 'ALL' ? 'bg-indigo-950 text-indigo-300' : 'bg-slate-900 text-slate-500'}`}>
               {commissions.length}
             </span>
           </button>
 
           <button
             onClick={() => setFinanceTab('RECEIVABLES')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-2 ${
+            className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-300 cursor-pointer flex items-center space-x-2 ${
               financeTab === 'RECEIVABLES'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                : 'bg-slate-950 text-slate-400 hover:text-slate-200 hover:bg-slate-850'
+                ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-600/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
             }`}
           >
             <span>📥 Part 1: Invoice Receivables (Incoming)</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-950 text-emerald-400 font-mono font-bold">
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${financeTab === 'RECEIVABLES' ? 'bg-emerald-950 text-emerald-300' : 'bg-slate-900 text-slate-500'}`}>
               Rs. {totalNpr.toLocaleString()}
             </span>
           </button>
 
           <button
             onClick={() => setFinanceTab('PAYABLES')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-2 ${
+            className={`px-4.5 py-2.5 rounded-2xl text-xs font-extrabold transition-all duration-300 cursor-pointer flex items-center space-x-2 ${
               financeTab === 'PAYABLES'
-                ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
-                : 'bg-slate-950 text-slate-400 hover:text-slate-200 hover:bg-slate-850'
+                ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-600/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
             }`}
           >
-            <span>📤 Part 2: Invoice Payables (Outgoing Splits)</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-950 text-amber-400 font-mono font-bold">
+            <span>📤 Part 2: Invoice Payables (Outgoing)</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${financeTab === 'PAYABLES' ? 'bg-amber-950 text-amber-300' : 'bg-slate-900 text-slate-500'}`}>
               Rs. {totalPayableNpr.toLocaleString()}
             </span>
           </button>
         </div>
 
-        <div className="text-[11px] text-slate-400 font-mono px-2 hidden lg:block">
-          {financeTab === 'RECEIVABLES' && 'Money Owed to Consultancy by Partner Universities & Portals'}
-          {financeTab === 'PAYABLES' && 'Money Owed by Consultancy to Sub-Agents & Branch Offices'}
-          {financeTab === 'ALL' && 'Complete Dual Financial Ledger & Cashflow Overview'}
+        <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider px-3 hidden lg:block select-none">
+          {financeTab === 'RECEIVABLES' && '📥 Owed by Universities & Portals'}
+          {financeTab === 'PAYABLES' && '📤 Owed to Sub-Agents & Branches'}
+          {financeTab === 'ALL' && '📑 Dual Ledger Ledger sheets'}
         </div>
       </div>
 
       {/* Dynamic Metrics Cards (Adapts based on Receivables vs Payables tab) */}
       {financeTab === 'RECEIVABLES' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Total Booked Receivables</span>
-              <DollarSign className="w-5 h-5 text-emerald-500" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-emerald-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Booked Receivables</span>
+              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform">
+                <DollarSign className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-slate-100 font-mono">Rs. {totalNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Incoming claims from Partner Universities & Portals</span>
+              <h3 className="text-2xl font-black text-slate-100 font-mono tracking-tight">Rs. {totalNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Total incoming university commission volume</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Pending Receivables</span>
-              <Clock className="w-5 h-5 text-amber-500" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-amber-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pending Claims</span>
+              <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400 group-hover:scale-110 transition-transform">
+                <Clock className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-amber-400 font-mono">Rs. {pendingReceivableNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Claimed invoices awaiting university payout</span>
+              <h3 className="text-2xl font-black text-amber-400 font-mono tracking-tight">Rs. {pendingReceivableNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Pending payments awaiting university collection</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Collected / Received</span>
-              <CheckCircle className="w-5 h-5 text-emerald-500" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-emerald-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Collected Receivables</span>
+              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover:scale-110 transition-transform">
+                <CheckCircle className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-emerald-500 font-mono">Rs. {collectedReceivableNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Successfully collected payments from universities</span>
+              <h3 className="text-2xl font-black text-emerald-500 font-mono tracking-tight">Rs. {collectedReceivableNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Successfully cleared claims from university partners</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Net HQ Revenue</span>
-              <TrendingUp className="w-5 h-5 text-indigo-500" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-indigo-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Net HQ Revenue</span>
+              <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 group-hover:scale-110 transition-transform">
+                <TrendingUp className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-indigo-400 font-mono">Rs. {totalHqNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">HQ Net Share after sub-agent & branch payouts</span>
+              <h3 className="text-2xl font-black text-indigo-400 font-mono tracking-tight">Rs. {totalHqNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">HQ share retained after sub-agent/branch payout</span>
             </div>
           </div>
         </div>
       ) : financeTab === 'PAYABLES' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Total Outgoing Payables</span>
-              <ArrowUpRight className="w-5 h-5 text-amber-500" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-amber-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Outgoing Payables</span>
+              <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400 group-hover:scale-110 transition-transform">
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-slate-100 font-mono">Rs. {totalPayableNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Combined Sub-Agent & Branch commission payouts</span>
+              <h3 className="text-2xl font-black text-slate-100 font-mono tracking-tight">Rs. {totalPayableNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Total external payables (Sub-Agent + Branch shares)</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Sub-Agent Splits Owed</span>
-              <DollarSign className="w-5 h-5 text-amber-500" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-amber-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sub-Agent Splits</span>
+              <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500 group-hover:scale-110 transition-transform">
+                <DollarSign className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-amber-400 font-mono">Rs. {totalAgentNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Referral commission splits owed to sub-agents</span>
+              <h3 className="text-2xl font-black text-amber-400 font-mono tracking-tight">Rs. {totalAgentNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Referral commission splits owed to sub-agents</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-sky-400 uppercase tracking-wider">Branch Office Share</span>
-              <MapPin className="w-5 h-5 text-sky-500" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-sky-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-full blur-2xl group-hover:bg-sky-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Branch Office Share</span>
+              <div className="p-2 bg-sky-500/10 rounded-xl text-sky-455 group-hover:scale-110 transition-transform">
+                <MapPin className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-sky-400 font-mono">Rs. {totalBranchNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Revenue split credited to regional branches</span>
+              <h3 className="text-2xl font-black text-sky-400 font-mono tracking-tight">Rs. {totalBranchNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Intra-network splits credited to local branches</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Settled Disbursements</span>
-              <CheckCircle className="w-5 h-5 text-emerald-500" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-emerald-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Settled Disbursements</span>
+              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform">
+                <CheckCircle className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-emerald-400 font-mono">Rs. {settledPayableNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Paid & settled payouts to sub-agents / branches</span>
+              <h3 className="text-2xl font-black text-emerald-400 font-mono tracking-tight">Rs. {settledPayableNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Successfully disbursed & finalized splits</span>
             </div>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Booked Commissions</span>
-              <DollarSign className="w-5 h-5 text-indigo-600" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-indigo-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Booked Commissions</span>
+              <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 group-hover:scale-110 transition-transform">
+                <DollarSign className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-slate-100 font-mono">Rs. {totalNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Equivalent across AUD / CAD / USD / GBP placements</span>
+              <h3 className="text-2xl font-black text-slate-100 font-mono tracking-tight">Rs. {totalNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Accumulated across foreign placements</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net HQ Revenue</span>
-              <TrendingUp className="w-5 h-5 text-emerald-600" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-emerald-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Net HQ Revenue</span>
+              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform">
+                <TrendingUp className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-emerald-600 font-mono">Rs. {totalHqNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">HQ share after sub-agent & branch office splits</span>
+              <h3 className="text-2xl font-black text-emerald-500 font-mono tracking-tight">Rs. {totalHqNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Company net revenue share retained</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Branch Share Contribution</span>
-              <MapPin className="w-5 h-5 text-sky-600" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-sky-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-full blur-2xl group-hover:bg-sky-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Branch Contributions</span>
+              <div className="p-2 bg-sky-500/10 rounded-xl text-sky-455 group-hover:scale-110 transition-transform">
+                <MapPin className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-sky-500 font-mono">Rs. {totalBranchNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Total revenue split earned by branches</span>
+              <h3 className="text-2xl font-black text-sky-400 font-mono tracking-tight">Rs. {totalBranchNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Total revenue split earned by branches</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sub-Agent Splits Payout</span>
-              <ArrowUpRight className="w-5 h-5 text-amber-600" />
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800/80 shadow-md hover:border-amber-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500" />
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sub-Agent Splits</span>
+              <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400 group-hover:scale-110 transition-transform">
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-amber-600 font-mono">Rs. {totalAgentNpr.toLocaleString()}</h3>
-              <span className="text-[10px] text-slate-500 block mt-1">Owed or paid to regional sub-agents</span>
+              <h3 className="text-2xl font-black text-amber-400 font-mono tracking-tight">Rs. {totalAgentNpr.toLocaleString()}</h3>
+              <span className="text-[10px] text-slate-500 font-medium block mt-1">Total split payments owed to sub-agents</span>
             </div>
           </div>
         </div>
@@ -1279,52 +1320,52 @@ export default function FinanceLedgerPage() {
           <div className="overflow-x-auto text-xs">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="px-6 py-4">Type</th>
-                  <th className="px-6 py-4">Placed Applicant</th>
-                  <th className="px-6 py-4">Partner University</th>
-                  <th className="px-6 py-4">University Commission Amount</th>
-                  <th className="px-6 py-4">NPR Exchange Rate</th>
-                  <th className="px-6 py-4">Total NPR Equivalent</th>
-                  {currentUser?.role !== 'SUB_AGENT' && <th className="px-6 py-4">Agent split (NPR)</th>}
-                  {currentUser?.role !== 'SUB_AGENT' && <th className="px-6 py-4">Branch split (NPR)</th>}
-                  <th className="px-6 py-4">HQ Net (NPR)</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-center">Actions</th>
+                <tr className="bg-slate-950/80 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <th className="px-6 py-4 select-none">Type</th>
+                  <th className="px-6 py-4 select-none">Placed Applicant</th>
+                  <th className="px-6 py-4 select-none">Partner University</th>
+                  <th className="px-6 py-4 select-none">University Commission</th>
+                  <th className="px-6 py-4 select-none">NPR Forex Rate</th>
+                  <th className="px-6 py-4 select-none">Total NPR Equivalent</th>
+                  {currentUser?.role !== 'SUB_AGENT' && <th className="px-6 py-4 select-none">Agent Split (NPR)</th>}
+                  {currentUser?.role !== 'SUB_AGENT' && <th className="px-6 py-4 select-none">Branch Split (NPR)</th>}
+                  <th className="px-6 py-4 select-none">HQ Net Share</th>
+                  <th className="px-6 py-4 select-none text-center">Status</th>
+                  <th className="px-6 py-4 text-center select-none">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50 text-slate-300">
+              <tbody className="divide-y divide-slate-800/40 text-slate-300">
                 {filteredCommissions.map((comm) => {
                   const hasPayableSplit = comm.subAgentAmountNpr > 0 || (comm.branchAmountNpr && comm.branchAmountNpr > 0);
                   return (
-                    <tr key={comm.id} className="hover:bg-slate-850/50 transition-all">
+                    <tr key={comm.id} className="hover:bg-slate-850/30 transition-all duration-200 group">
                       <td className="px-6 py-4 font-mono">
                         {financeTab === 'PAYABLES' || (financeTab === 'ALL' && hasPayableSplit) ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-950/80 border border-amber-500/30 text-amber-400">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-950/40 border border-amber-500/20 text-amber-400">
                             📤 PAYABLE
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-950/80 border border-emerald-500/30 text-emerald-400">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-950/40 border border-emerald-500/20 text-emerald-400">
                             📥 RECEIVABLE
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 font-semibold text-slate-200">
-                        <Link href={`/dashboard/applicants/${comm.applicant.id}`} className="hover:text-indigo-600 hover:underline">
+                      <td className="px-6 py-4 font-semibold text-slate-200 group-hover:text-indigo-400 transition-colors">
+                        <Link href={`/dashboard/applicants/${comm.applicant.id}`} className="hover:underline">
                           {comm.applicant.name}
                         </Link>
-                        <span className="text-[9px] text-slate-500 block mt-0.5">Branch: {comm.applicant.branch?.name}</span>
+                        <span className="text-[9px] text-slate-500 block mt-0.5 font-medium">Branch: {comm.applicant.branch?.name}</span>
                       </td>
-                      <td className="px-6 py-4 font-medium">{comm.partnerUniversity}</td>
-                      <td className="px-6 py-4 font-mono">{comm.currency} {comm.commissionAmountForeign.toLocaleString()}</td>
-                      <td className="px-6 py-4 font-mono text-indigo-600">@ {comm.nprExchangeRate.toFixed(2)}</td>
-                      <td className="px-6 py-4 font-mono font-bold text-slate-200">Rs. {comm.commissionAmountNpr.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-medium text-slate-300">{comm.partnerUniversity}</td>
+                      <td className="px-6 py-4 font-mono font-semibold text-slate-200">{comm.currency} {comm.commissionAmountForeign.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-mono text-indigo-400">@ {comm.nprExchangeRate.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-mono font-bold text-slate-100 bg-slate-950/20 px-3 py-1 rounded-lg inline-block my-2">Rs. {comm.commissionAmountNpr.toLocaleString()}</td>
                       {currentUser?.role !== 'SUB_AGENT' && (
-                         <td className="px-6 py-4 font-mono text-amber-600">
+                         <td className="px-6 py-4 font-mono text-amber-400">
                            {comm.subAgentAmountNpr > 0 ? (
                              <div className="space-y-1">
-                               <div>Rs. {comm.subAgentAmountNpr.toLocaleString()}</div>
-                               <span className={`inline-block text-[8px] leading-none px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                               <div className="font-bold">Rs. {comm.subAgentAmountNpr.toLocaleString()}</div>
+                               <span className={`inline-block text-[8px] leading-none px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider ${
                                  comm.status === 'PAID_TO_SUBAGENT'
                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                    : 'bg-amber-50 text-amber-600 border border-amber-100/50'
@@ -1332,28 +1373,28 @@ export default function FinanceLedgerPage() {
                                  {comm.status === 'PAID_TO_SUBAGENT' ? '✓ Disbursed' : '⋯ Pending'}
                                </span>
                              </div>
-                           ) : '-'}
+                           ) : <span className="text-slate-600 font-mono">-</span>}
                          </td>
                        )}
                        {currentUser?.role !== 'SUB_AGENT' && (
-                         <td className="px-6 py-4 font-mono text-sky-650">
+                         <td className="px-6 py-4 font-mono text-sky-400">
                            {comm.branchAmountNpr > 0 ? (
                              <div className="space-y-1">
-                               <div>Rs. {comm.branchAmountNpr.toLocaleString()}</div>
-                               <span className={`inline-block text-[8px] leading-none px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                               <div className="font-bold">Rs. {comm.branchAmountNpr.toLocaleString()}</div>
+                               <span className={`inline-block text-[8px] leading-none px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider ${
                                  comm.status !== 'PENDING'
                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                   : 'bg-sky-50 text-sky-600 border border-sky-100/50'
+                                   : 'bg-sky-50 text-sky-655 border border-sky-100/50'
                                }`}>
                                  {comm.status !== 'PENDING' ? '✓ Credited' : '⋯ Pending'}
                                </span>
                              </div>
-                           ) : '-'}
+                           ) : <span className="text-slate-600 font-mono">-</span>}
                          </td>
                        )}
-                      <td className="px-6 py-4 font-mono text-emerald-600">Rs. {comm.hqAmountNpr.toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                      <td className="px-6 py-4 font-mono font-bold text-emerald-400">Rs. {comm.hqAmountNpr.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
                           comm.status === 'RECEIVED'
                             ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                             : comm.status === 'PAID_TO_SUBAGENT'
@@ -1361,20 +1402,20 @@ export default function FinanceLedgerPage() {
                             : 'bg-yellow-50 text-yellow-600 border border-yellow-100'
                         }`}>
                            {comm.status === 'RECEIVED'
-                             ? 'Received (From University)'
+                             ? 'Received'
                              : comm.status === 'PAID_TO_SUBAGENT'
-                             ? 'Fully Settled (Disbursed)'
-                             : 'Receivable (Pending)'}
+                             ? 'Fully Settled'
+                             : 'Receivable'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <div className="flex flex-col items-center justify-center space-y-1">
+                        <div className="flex items-center justify-center space-x-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => {
                               setSelectedCommission({ ...comm, applicantName: comm.applicant.name, branchName: comm.applicant.branch?.name });
                               setInvoiceMode('UNIVERSITY');
                             }}
-                            className="p-1 rounded bg-slate-850 hover:bg-indigo-50 text-indigo-600 border border-slate-800 cursor-pointer"
+                            className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-indigo-400 hover:text-indigo-300 hover:border-indigo-500 transition-colors cursor-pointer"
                             title="Generate printable invoice"
                           >
                             <Printer className="w-3.5 h-3.5" />
