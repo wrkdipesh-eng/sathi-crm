@@ -977,18 +977,19 @@ export default function FinanceLedgerPage() {
     <div className="space-y-6">
       
       {/* Page Header */}
-      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-5">
-        <div>
+      <div className="space-y-4">
+        {/* Row 1: Title & Subtitle */}
+        <div className="border-b border-slate-800/40 pb-4">
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-slate-350 to-slate-200 bg-clip-text text-transparent font-sans">
             Commissions & Ledger Management
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-medium max-w-2xl leading-relaxed">
+          <p className="text-xs text-slate-400 mt-1 font-medium leading-relaxed">
             Real-time financial command center. Track incoming University & Student claims (Receivables) and manage outgoing Sub-Agent & Branch Referral splits (Payables).
           </p>
         </div>
-        
-        <div className="flex flex-wrap items-center gap-3.5 shrink-0">
-          {/* Small Exchange Rates Info panel */}
+
+        {/* Row 2: Live Forex Rates & Actions */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {forexRates && (
             <div className="flex items-center space-x-3 bg-slate-950/60 border border-slate-800/80 rounded-2xl px-4 py-2 text-[10px] shadow-lg shadow-black/10 select-none shrink-0 backdrop-blur-sm">
               <span className="font-bold text-slate-500 uppercase tracking-widest flex items-center">
@@ -1007,29 +1008,31 @@ export default function FinanceLedgerPage() {
             </div>
           )}
 
-          <button
-            onClick={() => handleOpenBulkInvoiceModal()}
-            className="flex items-center space-x-2 px-4.5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/10 hover:shadow-emerald-500/25 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer select-none active:translate-y-0"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-100" />
-            <span>Bulk Invoice Generator</span>
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => handleOpenBulkInvoiceModal()}
+              className="flex items-center space-x-2 px-4.5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-emerald-600/10 hover:shadow-emerald-500/25 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer select-none active:translate-y-0"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-100" />
+              <span>Bulk Invoice Generator</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setIsAddModalOpen(true);
-              if (forexRates && forexRates.USD) {
-                setAddForm(prev => ({
-                  ...prev,
-                  nprExchangeRate: String(forexRates.USD.toFixed(2))
-                }));
-              }
-            }}
-            className="flex items-center space-x-2 px-4.5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-indigo-650/10 hover:shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer select-none active:translate-y-0"
-          >
-            <Plus className="w-4 h-4 text-indigo-100" />
-            <span>Add Commission</span>
-          </button>
+            <button
+              onClick={() => {
+                setIsAddModalOpen(true);
+                if (forexRates && forexRates.USD) {
+                  setAddForm(prev => ({
+                    ...prev,
+                    nprExchangeRate: String(forexRates.USD.toFixed(2))
+                  }));
+                }
+              }}
+              className="flex items-center space-x-2 px-4.5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-indigo-650/10 hover:shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer select-none active:translate-y-0"
+            >
+              <Plus className="w-4 h-4 text-indigo-100" />
+              <span>Add Commission</span>
+            </button>
+          </div>
         </div>
       </div>
 
