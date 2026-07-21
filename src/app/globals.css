@@ -224,18 +224,18 @@
   --color-slate-900: var(--slate-900);
   --color-slate-950: var(--slate-950);
 
-  /* Golden Touch: Override Indigos with premium Golds */
-  --color-indigo-50: #fbf9ec;
-  --color-indigo-100: #f6f0cd;
-  --color-indigo-200: #eedda1;
-  --color-indigo-300: #f3d06d;
-  --color-indigo-400: #e5c158;
-  --color-indigo-500: #cda12c;
-  --color-indigo-600: #d4af37; /* Gold */
-  --color-indigo-700: #ab7921;
-  --color-indigo-800: #71491a;
-  --color-indigo-900: #5d3b19;
-  --color-indigo-950: #351f0c;
+  /* Dynamic Touch: Override Indigos dynamically with --primary */
+  --color-indigo-50: color-mix(in srgb, var(--primary) 10%, transparent);
+  --color-indigo-100: color-mix(in srgb, var(--primary) 20%, transparent);
+  --color-indigo-200: color-mix(in srgb, var(--primary) 30%, transparent);
+  --color-indigo-300: color-mix(in srgb, var(--primary) 50%, transparent);
+  --color-indigo-400: color-mix(in srgb, var(--primary) 75%, transparent);
+  --color-indigo-500: var(--primary);
+  --color-indigo-600: var(--primary);
+  --color-indigo-700: color-mix(in srgb, var(--primary) 85%, black);
+  --color-indigo-800: color-mix(in srgb, var(--primary) 70%, black);
+  --color-indigo-900: color-mix(in srgb, var(--primary) 50%, black);
+  --color-indigo-950: color-mix(in srgb, var(--primary) 30%, black);
 }
 
 body {
@@ -263,25 +263,25 @@ body {
   background: var(--primary);
 }
 
-/* Premium Gold Accent overrides for elements with bg-indigo-600 */
+/* Dynamic Accent overrides for elements with bg-indigo-600 */
 .bg-indigo-600 {
-  color: #020a06 !important; /* Deep forest black text */
+  color: var(--background, #020a06) !important;
 }
 .bg-indigo-600 svg {
-  stroke: #020a06 !important;
+  stroke: var(--background, #020a06) !important;
 }
 .bg-indigo-600:hover {
-  background-color: #eedda1 !important; /* Soft golden tint on hover */
+  background-color: color-mix(in srgb, var(--primary) 85%, white) !important;
 }
 .bg-indigo-600:hover svg {
-  stroke: #020a06 !important;
+  stroke: var(--background, #020a06) !important;
 }
 
-/* Premium Gold Pill Badge styling for role tags/highlights */
+/* Premium Pill Badge styling for role tags/highlights */
 .bg-indigo-50 {
-  color: #c5972c !important; /* Premium gold/bronze text */
-  border-color: #eedda1 !important;
-  background-color: rgba(212, 175, 55, 0.1) !important;
+  color: var(--primary) !important;
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
+  background-color: color-mix(in srgb, var(--primary) 10%, transparent) !important;
 }
 
 /* Custom Premium Glassmorphism */
