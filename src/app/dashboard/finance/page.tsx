@@ -898,33 +898,6 @@ export default function FinanceLedgerPage() {
 
           <button
             onClick={() => {
-              setEditingUni(null);
-              setUniForm({
-                name: '',
-                country: '',
-                course: '',
-                tuitionFee: '',
-                intakes: '',
-                commissionPercentage: '',
-                type: 'DIRECT',
-                portalName: '',
-                baseCommissionType: 'PERCENT',
-                baseCommissionValue: '',
-                bonusType: 'NONE',
-                bonusValue: '',
-                slabs: []
-              });
-              setUniError(null);
-              setIsUniModalOpen(true);
-            }}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-2xl text-xs font-semibold shadow-md transition-all cursor-pointer select-none"
-          >
-            <GraduationCap className="w-4 h-4 text-emerald-500" />
-            <span>Add Partner University</span>
-          </button>
-
-          <button
-            onClick={() => {
               setIsAddModalOpen(true);
               if (forexRates && forexRates.USD) {
                 setAddForm(prev => ({
