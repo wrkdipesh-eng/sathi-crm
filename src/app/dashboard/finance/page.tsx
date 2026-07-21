@@ -187,7 +187,7 @@ export default function FinanceLedgerPage() {
         : (parseInt(prev[prev.length - 1].maxStudents) || 1) + 1;
       return [
         ...prev,
-        { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '', bonusType: 'NONE', bonusValue: '' }
+        { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '', bonusType: 'NONE', bonusValue: '', bonusCalcMode: 'PER_STUDENT' }
       ];
     });
   };
@@ -220,6 +220,7 @@ export default function FinanceLedgerPage() {
       commissionValue: parseFloat(slab.commissionValue) || 0,
       bonusType: slab.bonusType || 'NONE',
       bonusValue: slab.bonusValue ? parseFloat(slab.bonusValue) : 0,
+      bonusCalcMode: slab.bonusCalcMode || 'PER_STUDENT',
     }));
 
     try {
@@ -316,10 +317,15 @@ export default function FinanceLedgerPage() {
       }
 
       let bonusCommForeign = 0;
+      const bonusMode = activeSlab?.bonusCalcMode || 'PER_STUDENT';
       if (bonusType === 'PERCENT') {
         bonusCommForeign = numericFee * (bonusValue / 100);
       } else if (bonusType === 'FLAT') {
-        bonusCommForeign = bonusValue;
+        if (bonusMode === 'TOTAL_BATCH') {
+          bonusCommForeign = count > 0 ? (bonusValue / count) : 0;
+        } else {
+          bonusCommForeign = bonusValue;
+        }
       }
 
       const totalForeign = baseCommForeign + bonusCommForeign;
@@ -394,6 +400,7 @@ export default function FinanceLedgerPage() {
             commissionValue: parseFloat(slab.commissionValue) || 0,
             bonusType: slab.bonusType || 'NONE',
             bonusValue: slab.bonusValue ? parseFloat(slab.bonusValue) : 0,
+            bonusCalcMode: slab.bonusCalcMode || 'PER_STUDENT',
           }));
           await fetch(`/api/admin/universities/${partnerUniRecord.id}`, {
             method: 'PATCH',
@@ -2150,6 +2157,18 @@ export default function FinanceLedgerPage() {
                                   className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-indigo-300 disabled:opacity-40"
                                 />
                               </div>
+                              <div>
+                                <label className="block text-[8px] text-purple-300 font-medium mb-0.5">Bonus Scope</label>
+                                <select
+                                  value={slab.bonusCalcMode || 'PER_STUDENT'}
+                                  disabled={(slab.bonusType || 'NONE') === 'NONE'}
+                                  onChange={(e) => updateBulkSlabRow(idx, 'bonusCalcMode', e.target.value)}
+                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[10px] focus:outline-none cursor-pointer disabled:opacity-40"
+                                >
+                                  <option value="PER_STUDENT">Per Student</option>
+                                  <option value="TOTAL_BATCH">Total Batch Lump-Sum</option>
+                                </select>
+                              </div>
                             </div>
 
                             <div className="flex items-center space-x-1 shrink-0">
@@ -2229,96 +2248,195 @@ export default function FinanceLedgerPage() {
               )}
             </div>
 
-            {/* Invoice Sheet View */}
-            <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-0 print:text-slate-900 bg-slate-900/10 print:bg-white">
+            {/* Official University Commission Claim Invoice View */}
+            <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100">
               {!selectedUni ? (
-                <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-                  <FileSpreadsheet className="w-12 h-12 text-slate-700 animate-pulse mb-3" />
-                  <p className="text-xs font-medium">Please select a Partner University from the dropdown to generate the invoice sheet.</p>
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                  <FileSpreadsheet className="w-14 h-14 text-slate-700 animate-pulse mb-3" />
+                  <p className="text-xs font-medium">Please select a Partner University from the dropdown to generate the official claim invoice.</p>
                 </div>
               ) : (
-                <>
-                  {/* Print Header */}
-                  <div className="flex justify-between items-start border-b border-slate-800/20 print:border-slate-300 pb-6">
-                    <div>
-                      <h2 className="text-xl font-bold tracking-tight text-slate-100 print:text-slate-900 font-sans">Thinkcone Study Abroad</h2>
-                      <p className="text-[10px] text-slate-500 print:text-slate-600 mt-1">
-                        Kathmandu HQ, Putalisadak, Nepal<br/>
-                        Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
+                <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans">
+                  
+                  {/* Executive Header */}
+                  <div className="flex flex-wrap justify-between items-start border-b border-slate-800 print:border-slate-300 pb-6 gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <GraduationCap className="w-7 h-7 text-emerald-500 print:text-slate-900" />
+                        <h2 className="text-2xl font-black tracking-tight text-white print:text-slate-900">Thinkcone Study Abroad</h2>
+                      </div>
+                      <p className="text-[11px] text-slate-400 print:text-slate-600 leading-relaxed font-medium">
+                        Headquarters: Putalisadak, Kathmandu, Nepal<br/>
+                        PAN / Reg No: 609823412 | Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className="px-2.5 py-1 bg-slate-800 print:bg-slate-100 text-slate-300 print:text-slate-700 font-bold text-[9px] uppercase tracking-wider rounded">
-                        Bulk Commission Claim Invoice
-                      </span>
-                      <div className="text-xs text-slate-400 print:text-slate-600 mt-2 font-mono">Invoice #: {bulkInvoiceForm.invoiceNumber}</div>
-                      <div className="text-[10px] text-slate-500 print:text-slate-600 mt-0.5">Date: {new Date().toLocaleDateString()}</div>
+
+                    <div className="text-right space-y-1">
+                      <div className="inline-block px-3 py-1 bg-emerald-950/80 print:bg-slate-100 border border-emerald-500/30 print:border-slate-300 text-emerald-400 print:text-slate-900 font-extrabold text-[10px] uppercase tracking-widest rounded-lg">
+                        Official Commission Claim Invoice
+                      </div>
+                      <div className="text-xs text-slate-300 print:text-slate-800 font-mono font-bold mt-2">
+                        Invoice #: {bulkInvoiceForm.invoiceNumber}
+                      </div>
+                      <div className="text-[10px] text-slate-400 print:text-slate-600 font-mono">
+                        Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Recipient Details */}
-                  <div className="bg-slate-950/40 print:bg-slate-50 p-4 rounded-2xl border border-slate-800/40 print:border-slate-200 text-xs">
-                    <div>
-                      <span className="font-bold text-[10px] text-slate-500 print:text-slate-400 uppercase tracking-wide block">Bill To Partner University</span>
-                      <span className="font-bold text-slate-200 print:text-slate-900 text-sm block mt-1">
+                  {/* Recipient Identification & Batch Banner */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-slate-900/60 print:bg-slate-50 p-4 rounded-2xl border border-slate-800 print:border-slate-200 space-y-1">
+                      <span className="font-mono font-bold text-[9px] text-emerald-400 print:text-slate-500 uppercase tracking-wider block">
+                        {selectedUni.includes('[Portal:') ? 'BILL TO PORTAL REPRESENTATIVE' : 'BILL TO DIRECT PARTNER UNIVERSITY'}
+                      </span>
+                      <h3 className="font-extrabold text-slate-100 print:text-slate-900 text-base">
                         {selectedUni}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 print:text-slate-600">
+                        {selectedUni.includes('[Portal:') 
+                          ? `Official Agent Claim via ${selectedUni.match(/\[Portal:\s*(.*)\]/)?.[1] || 'Portal Representative'} Office` 
+                          : 'Direct Admissions & University Finance Department'}
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-900/60 print:bg-slate-50 p-4 rounded-2xl border border-slate-800 print:border-slate-200 space-y-1 font-mono">
+                      <span className="font-bold text-[9px] text-indigo-400 print:text-slate-500 uppercase tracking-wider block">
+                        INTAKE & CLAIM DETAILS
                       </span>
-                      <span className="text-slate-500 mt-0.5 block">Bulk International Recruitment Commissions Claim</span>
+                      <div className="text-xs text-slate-200 print:text-slate-900 font-semibold">
+                        Intake Batch: <span className="text-emerald-400 print:text-slate-900">{intakeFilter || 'All Intakes Batch'}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 print:text-slate-600">
+                        Enrolled Batch: {bulkCalculations.length} Verified Student Candidate(s)
+                      </div>
+                      <div className="text-[11px] text-slate-400 print:text-slate-600">
+                        Exchange Rate: 1 Foreign Unit = NRs. {parseFloat(bulkInvoiceForm.nprExchangeRate).toFixed(2)}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Items Table */}
-                  <div className="overflow-x-auto">
+                  {/* Active Volume Slab Banner */}
+                  {bulkSlabs.length > 0 && (
+                    <div className="bg-[#031d11] print:bg-slate-100 border border-[#0e4427] print:border-slate-300 px-4 py-2.5 rounded-xl flex items-center justify-between text-xs font-mono">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-emerald-400 print:text-slate-900 font-bold">🏆 Tier Slab Applied:</span>
+                        <span className="text-slate-200 print:text-slate-800 font-medium">
+                          {bulkCalculations.length} Included Student(s) matched Volume Tier
+                        </span>
+                      </div>
+                      <span className="px-2 py-0.5 bg-emerald-500/20 print:bg-slate-200 text-emerald-400 print:text-slate-900 font-extrabold text-[9px] uppercase tracking-wider rounded">
+                        Auto-Calculated Claim
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Itemized Candidates Table */}
+                  <div className="border border-slate-800 print:border-slate-300 rounded-2xl overflow-hidden">
                     <table className="w-full text-left border-collapse text-xs print:text-slate-900">
                       <thead>
-                        <tr className="border-b border-slate-800 print:border-slate-350 bg-slate-950/20 print:bg-slate-50 text-[10px] font-bold text-slate-400 print:text-slate-600 uppercase tracking-wider">
-                          <th className="px-4 py-3">Student Name</th>
-                          <th className="px-4 py-3">Target Course</th>
+                        <tr className="border-b border-slate-800 print:border-slate-300 bg-slate-900 print:bg-slate-100 text-[9px] font-mono font-bold text-slate-400 print:text-slate-700 uppercase tracking-wider">
+                          <th className="px-4 py-3">#</th>
+                          <th className="px-4 py-3">Student Candidate</th>
+                          <th className="px-4 py-3">Program / Course</th>
                           <th className="px-4 py-3 text-right">Tuition Fee</th>
                           <th className="px-4 py-3 text-right">Base Comm</th>
                           <th className="px-4 py-3 text-right">Bonus Comm</th>
                           <th className="px-4 py-3 text-right">Total Claim</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/40 print:divide-slate-200">
-                        {bulkCalculations.map((c) => (
-                          <tr key={c.id}>
-                            <td className="px-4 py-3 font-semibold text-slate-200 print:text-slate-900">{c.applicantName}</td>
-                            <td className="px-4 py-3 text-slate-400 print:text-slate-700">{c.course}</td>
-                            <td className="px-4 py-3 text-right font-mono">{c.currency} {c.tuitionFee.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">{c.currency} {c.baseCommForeign.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">{c.currency} {c.bonusCommForeign.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-right font-mono font-bold text-indigo-400 print:text-slate-900">{c.currency} {c.commissionAmountForeign.toLocaleString()}</td>
+                      <tbody className="divide-y divide-slate-800/60 print:divide-slate-200">
+                        {bulkCalculations.map((c, idx) => (
+                          <tr key={c.id} className="hover:bg-slate-900/30 print:hover:bg-transparent">
+                            <td className="px-4 py-3 font-mono text-slate-500 print:text-slate-600">{idx + 1}</td>
+                            <td className="px-4 py-3 font-bold text-slate-100 print:text-slate-900">{c.applicantName}</td>
+                            <td className="px-4 py-3 text-slate-300 print:text-slate-700">{c.course}</td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">
+                              {c.currency} {c.tuitionFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">
+                              {c.currency} {c.baseCommForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-indigo-300 print:text-slate-700">
+                              {c.bonusCommForeign > 0 
+                                ? `${c.currency} ${c.bonusCommForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                                : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400 print:text-slate-900">
+                              {c.currency} {c.commissionAmountForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Calculation Summary Details */}
-                  <div className="pt-4 border-t border-slate-800 print:border-slate-300 flex flex-col items-end space-y-2 text-xs">
-                    <div className="flex justify-between w-64 text-slate-400 print:text-slate-600">
-                      <span>Number of Students:</span>
-                      <span className="font-bold text-slate-200 print:text-slate-900">{bulkCalculations.length}</span>
-                    </div>
-                    <div className="flex justify-between w-64 text-slate-400 print:text-slate-600">
-                      <span>Grand Total (Foreign):</span>
-                      <span className="font-bold text-slate-200 print:text-slate-900 font-mono">
-                        {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountForeign, 0).toLocaleString()}
+                  {/* Summary & Bank Transfer Box */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800 print:border-slate-300">
+                    
+                    {/* Bank Wire Details */}
+                    <div className="bg-slate-900/40 print:bg-slate-50 border border-slate-800 print:border-slate-200 p-4 rounded-2xl space-y-1.5 text-xs font-mono">
+                      <span className="font-bold text-[9px] text-slate-400 print:text-slate-600 uppercase tracking-wider block">
+                        BANK REMITTANCE & WIRE DETAILS
                       </span>
+                      <div className="text-slate-200 print:text-slate-900 font-semibold">Account Name: Thinkcone Study Abroad Pvt. Ltd.</div>
+                      <div className="text-slate-400 print:text-slate-700">Bank Name: Standard Chartered Bank Nepal</div>
+                      <div className="text-slate-400 print:text-slate-700">Account No: 01-2384912-01 (NPR / Foreign Wire)</div>
+                      <div className="text-slate-400 print:text-slate-700">SWIFT / BIC Code: SCBLNPKT</div>
+                      <div className="text-slate-400 print:text-slate-700">Branch: Putalisadak Branch, Kathmandu, Nepal</div>
                     </div>
-                    <div className="flex justify-between w-64 text-slate-400 print:text-slate-600 font-mono">
-                      <span>NPR Exchange Rate:</span>
-                      <span>@ Rs. {parseFloat(bulkInvoiceForm.nprExchangeRate).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between w-64 border-t border-slate-800/80 print:border-slate-200 pt-2 text-slate-100 print:text-slate-900 font-semibold text-sm">
-                      <span>Total NPR Claim:</span>
-                      <span className="font-bold font-mono text-emerald-500 print:text-slate-900">
-                        Rs. {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountNpr, 0).toLocaleString()}
-                      </span>
+
+                    {/* Grand Financial Totals */}
+                    <div className="space-y-2 text-xs font-mono">
+                      <div className="flex justify-between text-slate-400 print:text-slate-600">
+                        <span>Total Verified Students:</span>
+                        <span className="font-bold text-slate-100 print:text-slate-900">{bulkCalculations.length} Candidates</span>
+                      </div>
+                      <div className="flex justify-between text-slate-400 print:text-slate-600">
+                        <span>Base Foreign Commission:</span>
+                        <span className="font-bold text-slate-200 print:text-slate-900">
+                          {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.baseCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-indigo-300 print:text-slate-700">
+                        <span>Volume Bonus Total Claim:</span>
+                        <span className="font-bold text-indigo-300 print:text-slate-900">
+                          {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.bonusCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-800 print:border-slate-300 pt-2 text-slate-100 print:text-slate-900 font-bold text-sm">
+                        <span>GRAND TOTAL CLAIM (FOREIGN):</span>
+                        <span className="text-emerald-400 print:text-slate-900">
+                          {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-slate-800/60 print:border-slate-200 pt-1.5 text-xs text-slate-400 print:text-slate-700 font-semibold">
+                        <span>NPR EQUIVALENT CLAIM:</span>
+                        <span className="text-emerald-400 print:text-slate-900 font-bold">
+                          NRs. {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountNpr, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </>
+
+                  {/* Signatory Footer */}
+                  <div className="pt-8 border-t border-slate-800 print:border-slate-300 flex justify-between items-end text-xs text-slate-400 print:text-slate-600 font-mono">
+                    <div className="space-y-1">
+                      <div className="w-40 border-b border-slate-700 print:border-slate-400 pb-1 text-center font-bold text-slate-300 print:text-slate-900">
+                        Finance Ledger Dept
+                      </div>
+                      <div className="text-[10px] text-slate-500 print:text-slate-500">Prepared & Verified By</div>
+                    </div>
+
+                    <div className="space-y-1 text-right">
+                      <div className="w-48 border-b border-slate-700 print:border-slate-400 pb-1 text-center font-bold text-slate-300 print:text-slate-900">
+                        Director of Relations
+                      </div>
+                      <div className="text-[10px] text-slate-500 print:text-slate-500">Authorized Official Stamp & Sign</div>
+                    </div>
+                  </div>
+
+                </div>
               )}
             </div>
 
