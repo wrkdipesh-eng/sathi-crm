@@ -3236,24 +3236,6 @@ export default function FinanceLedgerPage() {
               <div className="text-slate-400 font-mono text-[11px]">
                 Status: <span className="text-emerald-400 font-bold uppercase">{generatedInvoiceData.bulkInvoiceForm?.status}</span>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsGeneratedInvoiceOpen(false)}
-                  className="py-2 px-5 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl transition-all cursor-pointer"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="py-2 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-mono rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 shadow-lg shadow-emerald-600/20"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Print Invoice / Save PDF</span>
-                </button>
-              </div>
             </div>
 
           </div>
