@@ -20,7 +20,8 @@ import {
   Edit,
   Trash2,
   Plus,
-  GraduationCap
+  GraduationCap,
+  FileCheck
 } from 'lucide-react';
 
 export default function FinanceLedgerPage() {
@@ -73,6 +74,8 @@ export default function FinanceLedgerPage() {
   const [intakeFilter, setIntakeFilter] = useState('');
   const [modalSelectedCommIds, setModalSelectedCommIds] = useState<string[]>([]);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isGeneratedInvoiceOpen, setIsGeneratedInvoiceOpen] = useState(false);
+  const [generatedInvoiceData, setGeneratedInvoiceData] = useState<any>(null);
   const [bulkInvoiceForm, setBulkInvoiceForm] = useState({
     invoiceNumber: '',
     nprExchangeRate: '133.0',
@@ -429,13 +432,20 @@ export default function FinanceLedgerPage() {
 
       const data = await res.json();
       if (res.ok) {
-        alert('Bulk invoice generated and saved successfully!');
+        setGeneratedInvoiceData({
+          selectedUni,
+          intakeFilter,
+          bulkInvoiceForm: { ...bulkInvoiceForm },
+          bulkCalculations: [...bulkCalculations],
+          bulkSlabs: [...bulkSlabs],
+        });
         setIsBulkModalOpen(false);
+        setIsGeneratedInvoiceOpen(true);
         setModalSelectedCommIds([]);
         fetchUniversities();
         fetchCommissions();
       } else {
-        alert(data.error || 'Failed to save bulk invoice.');
+        alert(data.error || 'Failed to generate bulk invoice.');
       }
     } catch (err) {
       console.error(err);
@@ -1931,19 +1941,6 @@ export default function FinanceLedgerPage() {
               </span>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => {
-                    if (!selectedUni) {
-                      alert('Please select a university first');
-                      return;
-                    }
-                    window.print();
-                  }}
-                  className="flex items-center space-x-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-all cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print Claim / Save PDF</span>
-                </button>
-                <button
                   onClick={() => setIsBulkModalOpen(false)}
                   className="p-1.5 hover:bg-slate-800 text-slate-500 rounded-lg transition-all cursor-pointer"
                 >
@@ -2470,11 +2467,256 @@ export default function FinanceLedgerPage() {
                     className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center space-x-1"
                   >
                     {bulkSaveLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>Save Invoice & Update Status</span>
+                    <span>Generate Invoice</span>
                   </button>
                 </div>
               </div>
             )}
+
+          </div>
+        </div>
+      )}
+
+      {/* Generated Official Invoice Modal View */}
+      {isGeneratedInvoiceOpen && generatedInvoiceData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in print:bg-white print:p-0 print:absolute print:inset-0">
+          <div className="w-full max-w-5xl bg-[#020a06] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:border-none">
+            
+            {/* Action Top Bar (Hidden in Print) */}
+            <div className="px-6 py-4 border-b border-[#0d3420] bg-slate-950/60 flex justify-between items-center print:hidden">
+              <div className="flex items-center space-x-2">
+                <FileCheck className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <h3 className="font-bold text-sm text-slate-100 font-mono">Generated University Commission Claim Invoice</h3>
+                  <p className="text-[10px] text-slate-400">Official Claim Invoice ready for transmission to Direct University or Portal Representative.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center space-x-1.5 py-1.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold font-mono rounded-xl transition-all cursor-pointer shadow-lg shadow-emerald-600/20"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Invoice / Save PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsGeneratedInvoiceOpen(false)}
+                  className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Well-Structured Executive Invoice Sheet */}
+            <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100">
+              <div className="max-w-4xl mx-auto bg-slate-950 print:bg-white border border-slate-800 print:border-none rounded-3xl p-8 print:p-0 shadow-2xl space-y-6 font-sans">
+                
+                {/* Executive Branding Header */}
+                <div className="flex flex-wrap justify-between items-start border-b border-slate-800 print:border-slate-300 pb-6 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <GraduationCap className="w-7 h-7 text-emerald-500 print:text-slate-900" />
+                      <h2 className="text-2xl font-black tracking-tight text-white print:text-slate-900">Thinkcone Study Abroad</h2>
+                    </div>
+                    <p className="text-[11px] text-slate-400 print:text-slate-600 leading-relaxed font-medium">
+                      Headquarters: Putalisadak, Kathmandu, Nepal<br/>
+                      PAN / Reg No: 609823412 | Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
+                    </p>
+                  </div>
+
+                  <div className="text-right space-y-1">
+                    <div className="inline-block px-3 py-1 bg-emerald-950/80 print:bg-slate-100 border border-emerald-500/30 print:border-slate-300 text-emerald-400 print:text-slate-900 font-extrabold text-[10px] uppercase tracking-widest rounded-lg">
+                      Official Commission Claim Invoice
+                    </div>
+                    <div className="text-xs text-slate-300 print:text-slate-800 font-mono font-bold mt-2">
+                      Invoice #: {generatedInvoiceData.bulkInvoiceForm?.invoiceNumber}
+                    </div>
+                    <div className="text-[10px] text-slate-400 print:text-slate-600 font-mono">
+                      Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recipient Details & Intake Banner */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-slate-900/60 print:bg-slate-50 p-4 rounded-2xl border border-slate-800 print:border-slate-200 space-y-1">
+                    <span className="font-mono font-bold text-[9px] text-emerald-400 print:text-slate-500 uppercase tracking-wider block">
+                      {generatedInvoiceData.selectedUni?.includes('[Portal:') ? 'BILL TO PORTAL REPRESENTATIVE' : 'BILL TO DIRECT PARTNER UNIVERSITY'}
+                    </span>
+                    <h3 className="font-extrabold text-slate-100 print:text-slate-900 text-base">
+                      {generatedInvoiceData.selectedUni}
+                    </h3>
+                    <p className="text-[11px] text-slate-400 print:text-slate-600">
+                      {generatedInvoiceData.selectedUni?.includes('[Portal:') 
+                        ? `Official Agent Claim via ${generatedInvoiceData.selectedUni.match(/\[Portal:\s*(.*)\]/)?.[1] || 'Portal Representative'} Office` 
+                        : 'Direct Admissions & University Finance Department'}
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-900/60 print:bg-slate-50 p-4 rounded-2xl border border-slate-800 print:border-slate-200 space-y-1 font-mono">
+                    <span className="font-bold text-[9px] text-indigo-400 print:text-slate-500 uppercase tracking-wider block">
+                      INTAKE & CLAIM DETAILS
+                    </span>
+                    <div className="text-xs text-slate-200 print:text-slate-900 font-semibold">
+                      Intake Batch: <span className="text-emerald-400 print:text-slate-900">{generatedInvoiceData.intakeFilter || 'All Intakes Batch'}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 print:text-slate-600">
+                      Enrolled Batch: {generatedInvoiceData.bulkCalculations?.length} Verified Student Candidate(s)
+                    </div>
+                    <div className="text-[11px] text-slate-400 print:text-slate-600">
+                      Exchange Rate: 1 Foreign Unit = NRs. {parseFloat(generatedInvoiceData.bulkInvoiceForm?.nprExchangeRate || '133').toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Slab Banner */}
+                {generatedInvoiceData.bulkSlabs?.length > 0 && (
+                  <div className="bg-[#031d11] print:bg-slate-100 border border-[#0e4427] print:border-slate-300 px-4 py-2.5 rounded-xl flex items-center justify-between text-xs font-mono">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-emerald-400 print:text-slate-900 font-bold">🏆 Volume Tier Slab Applied:</span>
+                      <span className="text-slate-200 print:text-slate-800 font-medium">
+                        {generatedInvoiceData.bulkCalculations?.length} Included Student(s) matched Volume Tier
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 bg-emerald-500/20 print:bg-slate-200 text-emerald-400 print:text-slate-900 font-extrabold text-[9px] uppercase tracking-wider rounded">
+                      Auto-Calculated & Verified
+                    </span>
+                  </div>
+                )}
+
+                {/* Itemized Candidate Table */}
+                <div className="border border-slate-800 print:border-slate-300 rounded-2xl overflow-hidden">
+                  <table className="w-full text-left border-collapse text-xs print:text-slate-900">
+                    <thead>
+                      <tr className="border-b border-slate-800 print:border-slate-300 bg-slate-900 print:bg-slate-100 text-[9px] font-mono font-bold text-slate-400 print:text-slate-700 uppercase tracking-wider">
+                        <th className="px-4 py-3">#</th>
+                        <th className="px-4 py-3">Student Candidate</th>
+                        <th className="px-4 py-3">Program / Course</th>
+                        <th className="px-4 py-3 text-right">Tuition Fee</th>
+                        <th className="px-4 py-3 text-right">Base Comm</th>
+                        <th className="px-4 py-3 text-right">Bonus Comm</th>
+                        <th className="px-4 py-3 text-right">Total Claim</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 print:divide-slate-200">
+                      {generatedInvoiceData.bulkCalculations?.map((c: any, idx: number) => (
+                        <tr key={c.id || idx} className="hover:bg-slate-900/30 print:hover:bg-transparent">
+                          <td className="px-4 py-3 font-mono text-slate-500 print:text-slate-600">{idx + 1}</td>
+                          <td className="px-4 py-3 font-bold text-slate-100 print:text-slate-900">{c.applicantName}</td>
+                          <td className="px-4 py-3 text-slate-300 print:text-slate-700">{c.course}</td>
+                          <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">
+                            {c.currency} {c.tuitionFee?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">
+                            {c.currency} {c.baseCommForeign?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-indigo-300 print:text-slate-700">
+                            {c.bonusCommForeign > 0 
+                              ? `${c.currency} ${c.bonusCommForeign.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                              : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400 print:text-slate-900">
+                            {c.currency} {c.commissionAmountForeign?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Summary & Bank Wire Box */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800 print:border-slate-300">
+                  <div className="bg-slate-900/40 print:bg-slate-50 border border-slate-800 print:border-slate-200 p-4 rounded-2xl space-y-1.5 text-xs font-mono">
+                    <span className="font-bold text-[9px] text-slate-400 print:text-slate-600 uppercase tracking-wider block">
+                      BANK REMITTANCE & WIRE DETAILS
+                    </span>
+                    <div className="text-slate-200 print:text-slate-900 font-semibold">Account Name: Thinkcone Study Abroad Pvt. Ltd.</div>
+                    <div className="text-slate-400 print:text-slate-700">Bank Name: Standard Chartered Bank Nepal</div>
+                    <div className="text-slate-400 print:text-slate-700">Account No: 01-2384912-01 (NPR / Foreign Wire)</div>
+                    <div className="text-slate-400 print:text-slate-700">SWIFT / BIC Code: SCBLNPKT</div>
+                    <div className="text-slate-400 print:text-slate-700">Branch: Putalisadak Branch, Kathmandu, Nepal</div>
+                  </div>
+
+                  <div className="space-y-2 text-xs font-mono">
+                    <div className="flex justify-between text-slate-400 print:text-slate-600">
+                      <span>Total Verified Students:</span>
+                      <span className="font-bold text-slate-100 print:text-slate-900">{generatedInvoiceData.bulkCalculations?.length} Candidates</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400 print:text-slate-600">
+                      <span>Base Foreign Commission:</span>
+                      <span className="font-bold text-slate-200 print:text-slate-900">
+                        {generatedInvoiceData.bulkCalculations?.[0]?.currency} {generatedInvoiceData.bulkCalculations?.reduce((sum: number, c: any) => sum + c.baseCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-indigo-300 print:text-slate-700">
+                      <span>Volume Bonus Total Claim:</span>
+                      <span className="font-bold text-indigo-300 print:text-slate-900">
+                        {generatedInvoiceData.bulkCalculations?.[0]?.currency} {generatedInvoiceData.bulkCalculations?.reduce((sum: number, c: any) => sum + c.bonusCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-800 print:border-slate-300 pt-2 text-slate-100 print:text-slate-900 font-bold text-sm">
+                      <span>GRAND TOTAL CLAIM (FOREIGN):</span>
+                      <span className="text-emerald-400 print:text-slate-900">
+                        {generatedInvoiceData.bulkCalculations?.[0]?.currency} {generatedInvoiceData.bulkCalculations?.reduce((sum: number, c: any) => sum + c.commissionAmountForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-800/60 print:border-slate-200 pt-1.5 text-xs text-slate-400 print:text-slate-700 font-semibold">
+                      <span>NPR EQUIVALENT CLAIM:</span>
+                      <span className="text-emerald-400 print:text-slate-900 font-bold">
+                        NRs. {generatedInvoiceData.bulkCalculations?.reduce((sum: number, c: any) => sum + c.commissionAmountNpr, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Signatory Footer */}
+                <div className="pt-8 border-t border-slate-800 print:border-slate-300 flex justify-between items-end text-xs text-slate-400 print:text-slate-600 font-mono">
+                  <div className="space-y-1">
+                    <div className="w-40 border-b border-slate-700 print:border-slate-400 pb-1 text-center font-bold text-slate-300 print:text-slate-900">
+                      Finance Ledger Dept
+                    </div>
+                    <div className="text-[10px] text-slate-500 print:text-slate-500">Prepared & Verified By</div>
+                  </div>
+
+                  <div className="space-y-1 text-right">
+                    <div className="w-48 border-b border-slate-700 print:border-slate-400 pb-1 text-center font-bold text-slate-300 print:text-slate-900">
+                      Director of Relations
+                    </div>
+                    <div className="text-[10px] text-slate-500 print:text-slate-500">Authorized Official Stamp & Sign</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Bottom Footer (Hidden in Print) */}
+            <div className="px-6 py-4 border-t border-[#0d3420] bg-slate-950/80 flex justify-between items-center print:hidden text-xs">
+              <div className="text-slate-400 font-mono text-[11px]">
+                Status: <span className="text-emerald-400 font-bold uppercase">{generatedInvoiceData.bulkInvoiceForm?.status}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsGeneratedInvoiceOpen(false)}
+                  className="py-2 px-5 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="py-2 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold font-mono rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 shadow-lg shadow-emerald-600/20"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Invoice / Save PDF</span>
+                </button>
+              </div>
+            </div>
 
           </div>
         </div>
