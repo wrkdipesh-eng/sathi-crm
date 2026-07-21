@@ -187,7 +187,7 @@ export default function FinanceLedgerPage() {
         : (parseInt(prev[prev.length - 1].maxStudents) || 1) + 1;
       return [
         ...prev,
-        { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '' }
+        { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '', bonusType: 'NONE', bonusValue: '' }
       ];
     });
   };
@@ -218,6 +218,8 @@ export default function FinanceLedgerPage() {
       maxStudents: slab.maxStudents ? parseInt(slab.maxStudents) : null,
       commissionType: slab.commissionType,
       commissionValue: parseFloat(slab.commissionValue) || 0,
+      bonusType: slab.bonusType || 'NONE',
+      bonusValue: slab.bonusValue ? parseFloat(slab.bonusValue) : 0,
     }));
 
     try {
@@ -283,9 +285,17 @@ export default function FinanceLedgerPage() {
 
     let baseType = bulkInvoiceForm.baseCommType || 'PERCENT';
     let baseValue = parseFloat(bulkInvoiceForm.baseCommValue) || 0;
+    let bonusType = bulkInvoiceForm.bonusType || 'NONE';
+    let bonusValue = parseFloat(bulkInvoiceForm.bonusValue) || 0;
 
-    const bonusType = bulkInvoiceForm.bonusType || 'NONE';
-    const bonusValue = parseFloat(bulkInvoiceForm.bonusValue) || 0;
+    if (activeSlab) {
+      baseType = activeSlab.commissionType;
+      baseValue = parseFloat(activeSlab.commissionValue) || 0;
+      if (activeSlab.bonusType) {
+        bonusType = activeSlab.bonusType;
+        bonusValue = parseFloat(activeSlab.bonusValue) || 0;
+      }
+    }
     const exchangeRate = parseFloat(bulkInvoiceForm.nprExchangeRate) || 133.0;
 
     const calcs = activeComms.map((comm) => {
@@ -382,6 +392,8 @@ export default function FinanceLedgerPage() {
             maxStudents: slab.maxStudents ? parseInt(slab.maxStudents) : null,
             commissionType: slab.commissionType,
             commissionValue: parseFloat(slab.commissionValue) || 0,
+            bonusType: slab.bonusType || 'NONE',
+            bonusValue: slab.bonusValue ? parseFloat(slab.bonusValue) : 0,
           }));
           await fetch(`/api/admin/universities/${partnerUniRecord.id}`, {
             method: 'PATCH',
@@ -2120,7 +2132,7 @@ export default function FinanceLedgerPage() {
                                 : 'bg-[#010a06] border-[#0e3322]'
                             }`}
                           >
-                            <div className="flex-1 grid grid-cols-4 gap-2 font-mono">
+                            <div className="flex-1 grid grid-cols-1 sm:grid-cols-6 gap-2 font-mono">
                               <div>
                                 <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Min Students</label>
                                 <input
@@ -2155,7 +2167,7 @@ export default function FinanceLedgerPage() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Comm Value</label>
+                                <label className="block text-[8px] text-emerald-400 font-medium mb-0.5">Comm Value</label>
                                 <input
                                   type="number"
                                   step="0.01"
@@ -2164,6 +2176,31 @@ export default function FinanceLedgerPage() {
                                   value={slab.commissionValue}
                                   onChange={(e) => updateBulkSlabRow(idx, 'commissionValue', e.target.value)}
                                   className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-emerald-400"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Type</label>
+                                <select
+                                  value={slab.bonusType || 'NONE'}
+                                  onChange={(e) => updateBulkSlabRow(idx, 'bonusType', e.target.value)}
+                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
+                                >
+                                  <option value="NONE">None</option>
+                                  <option value="PERCENT">% Bonus</option>
+                                  <option value="FLAT">Flat Bonus ($)</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Value</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  disabled={(slab.bonusType || 'NONE') === 'NONE'}
+                                  placeholder={(slab.bonusType || 'NONE') === 'NONE' ? '-' : 'e.g. 1000'}
+                                  value={slab.bonusValue || ''}
+                                  onChange={(e) => updateBulkSlabRow(idx, 'bonusValue', e.target.value)}
+                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-indigo-300 disabled:opacity-40"
                                 />
                               </div>
                             </div>

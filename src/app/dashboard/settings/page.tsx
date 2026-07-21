@@ -354,7 +354,7 @@ export default function AdminSettingsPage() {
         ...prev,
         slabs: [
           ...prev.slabs,
-          { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '' }
+          { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '', bonusType: 'NONE', bonusValue: '' }
         ]
       };
     });
@@ -393,6 +393,8 @@ export default function AdminSettingsPage() {
       maxStudents: slab.maxStudents ? parseInt(slab.maxStudents) : null,
       commissionType: slab.commissionType,
       commissionValue: parseFloat(slab.commissionValue) || 0,
+      bonusType: slab.bonusType || 'NONE',
+      bonusValue: slab.bonusValue ? parseFloat(slab.bonusValue) : 0,
     }));
 
     const payload = {
@@ -1649,7 +1651,7 @@ export default function AdminSettingsPage() {
                   <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                     {uniForm.slabs.map((slab, index) => (
                       <div key={index} className="flex items-center space-x-2 bg-[#010a06] p-2.5 rounded-xl border border-[#0e3322] text-xs">
-                        <div className="flex-1 grid grid-cols-4 gap-2">
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-6 gap-2 font-mono">
                           <div>
                             <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Min Students</label>
                             <input
@@ -1658,7 +1660,7 @@ export default function AdminSettingsPage() {
                               required
                               value={slab.minStudents}
                               onChange={(e) => updateSlabRow(index, 'minStudents', e.target.value)}
-                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-mono"
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
                             />
                           </div>
                           <div>
@@ -1669,7 +1671,7 @@ export default function AdminSettingsPage() {
                               placeholder="Blank for above"
                               value={slab.maxStudents || ''}
                               onChange={(e) => updateSlabRow(index, 'maxStudents', e.target.value)}
-                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-mono"
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
                             />
                           </div>
                           <div>
@@ -1684,7 +1686,7 @@ export default function AdminSettingsPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Value</label>
+                            <label className="block text-[8px] text-emerald-400 font-medium mb-0.5">Value</label>
                             <input
                               type="number"
                               step="0.01"
@@ -1692,7 +1694,32 @@ export default function AdminSettingsPage() {
                               required
                               value={slab.commissionValue}
                               onChange={(e) => updateSlabRow(index, 'commissionValue', e.target.value)}
-                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-mono"
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-emerald-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Type</label>
+                            <select
+                              value={slab.bonusType || 'NONE'}
+                              onChange={(e) => updateSlabRow(index, 'bonusType', e.target.value)}
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
+                            >
+                              <option value="NONE">None</option>
+                              <option value="PERCENT">% Bonus</option>
+                              <option value="FLAT">Flat Bonus ($)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[8px] text-indigo-300 font-medium mb-0.5">Bonus Value</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              disabled={(slab.bonusType || 'NONE') === 'NONE'}
+                              placeholder={(slab.bonusType || 'NONE') === 'NONE' ? '-' : 'e.g. 1000'}
+                              value={slab.bonusValue || ''}
+                              onChange={(e) => updateSlabRow(index, 'bonusValue', e.target.value)}
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-indigo-300 disabled:opacity-40"
                             />
                           </div>
                         </div>
