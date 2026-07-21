@@ -79,6 +79,9 @@ export default function FinanceLedgerPage() {
   });
   const [bulkCalculations, setBulkCalculations] = useState<any[]>([]);
   const [bulkSaveLoading, setBulkSaveLoading] = useState(false);
+  const [bulkSlabs, setBulkSlabs] = useState<any[]>([]);
+  const [isUpdatingSlabs, setIsUpdatingSlabs] = useState(false);
+  const [slabSuccessMsg, setSlabSuccessMsg] = useState<string | null>(null);
 
   // University Management States
   const [isUniModalOpen, setIsUniModalOpen] = useState(false);
@@ -104,6 +107,8 @@ export default function FinanceLedgerPage() {
   const handleOpenBulkInvoiceModal = () => {
     setSelectedUni('');
     setModalSelectedCommIds([]);
+    setBulkSlabs([]);
+    setSlabSuccessMsg(null);
     setBulkInvoiceForm({
       invoiceNumber: '',
       nprExchangeRate: '133.0',
@@ -122,6 +127,10 @@ export default function FinanceLedgerPage() {
     const ids = matchingComms.map(c => c.id);
     setModalSelectedCommIds(ids);
 
+    const cleanUniName = uniName.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
+    const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanUniName.toLowerCase());
+    setBulkSlabs(Array.isArray(partnerUniRecord?.slabs) ? partnerUniRecord.slabs : []);
+
     const firstComm = matchingComms[0];
     const defaultRate = firstComm?.nprExchangeRate ? String(firstComm.nprExchangeRate) : '133.0';
     const dateStr = new Date().toISOString().split('T')[0];
@@ -133,6 +142,68 @@ export default function FinanceLedgerPage() {
       invoiceNumber: defaultInvoiceNum,
       nprExchangeRate: defaultRate,
     }));
+  };
+
+  const addBulkSlabRow = () => {
+    setBulkSlabs(prev => {
+      const nextMin = prev.length === 0 
+        ? 1 
+        : (parseInt(prev[prev.length - 1].maxStudents) || 1) + 1;
+      return [
+        ...prev,
+        { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '' }
+      ];
+    });
+  };
+
+  const updateBulkSlabRow = (index: number, field: string, value: any) => {
+    setBulkSlabs(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const removeBulkSlabRow = (index: number) => {
+    setBulkSlabs(prev => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleSaveBulkSlabsToUniversity = async () => {
+    if (!selectedUni) return;
+    const cleanUniName = selectedUni.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
+    const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanUniName.toLowerCase());
+    if (!partnerUniRecord) return;
+
+    setIsUpdatingSlabs(true);
+    setSlabSuccessMsg(null);
+
+    const formattedSlabs = bulkSlabs.map((slab: any) => ({
+      minStudents: parseInt(slab.minStudents) || 1,
+      maxStudents: slab.maxStudents ? parseInt(slab.maxStudents) : null,
+      commissionType: slab.commissionType,
+      commissionValue: parseFloat(slab.commissionValue) || 0,
+    }));
+
+    try {
+      const res = await fetch(`/api/admin/universities/${partnerUniRecord.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slabs: formattedSlabs }),
+      });
+
+      if (res.ok) {
+        setSlabSuccessMsg("University slabs updated successfully!");
+        fetchUniversities();
+        setTimeout(() => setSlabSuccessMsg(null), 3000);
+      } else {
+        alert("Failed to update university slabs");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error saving slabs to university.");
+    } finally {
+      setIsUpdatingSlabs(false);
+    }
   };
 
   useEffect(() => {
@@ -150,7 +221,7 @@ export default function FinanceLedgerPage() {
 
     const cleanSelectedUniName = selectedUni.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
     const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanSelectedUniName.toLowerCase());
-    const slabsList = Array.isArray(partnerUniRecord?.slabs) ? (partnerUniRecord.slabs as any[]) : [];
+    const slabsList = bulkSlabs;
     
     // Find active slab based on count
     const activeSlab = slabsList.find(slab => {
@@ -252,7 +323,7 @@ export default function FinanceLedgerPage() {
     });
 
     setBulkCalculations(calcs);
-  }, [bulkInvoiceForm, isBulkModalOpen, selectedUni, modalSelectedCommIds, commissions, universities, branches]);
+  }, [bulkInvoiceForm, isBulkModalOpen, selectedUni, modalSelectedCommIds, commissions, universities, branches, bulkSlabs]);
 
   const handleSaveBulkInvoice = async () => {
     if (!bulkInvoiceForm.invoiceNumber) {
@@ -261,6 +332,24 @@ export default function FinanceLedgerPage() {
     }
     setBulkSaveLoading(true);
     try {
+      if (selectedUni) {
+        const cleanUniName = selectedUni.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
+        const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanUniName.toLowerCase());
+        if (partnerUniRecord) {
+          const formattedSlabs = bulkSlabs.map((slab: any) => ({
+            minStudents: parseInt(slab.minStudents) || 1,
+            maxStudents: slab.maxStudents ? parseInt(slab.maxStudents) : null,
+            commissionType: slab.commissionType,
+            commissionValue: parseFloat(slab.commissionValue) || 0,
+          }));
+          await fetch(`/api/admin/universities/${partnerUniRecord.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slabs: formattedSlabs }),
+          });
+        }
+      }
+
       const res = await fetch('/api/finance/bulk-invoice', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -283,6 +372,7 @@ export default function FinanceLedgerPage() {
         alert('Bulk invoice generated and saved successfully!');
         setIsBulkModalOpen(false);
         setModalSelectedCommIds([]);
+        fetchUniversities();
         fetchCommissions();
       } else {
         alert(data.error || 'Failed to save bulk invoice.');
@@ -1874,50 +1964,142 @@ export default function FinanceLedgerPage() {
                 )}
               </div>
 
-              {/* Volume Slabs Status Card */}
-              {selectedUni && (() => {
-                const cleanUniName = selectedUni.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
-                const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanUniName.toLowerCase());
-                const slabsList = Array.isArray(partnerUniRecord?.slabs) ? (partnerUniRecord.slabs as any[]) : [];
-                const activeCount = bulkCalculations.length;
+              {/* Volume Slabs Configuration & Live Highlight (Editable) */}
+              {selectedUni && (
+                <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-3">
+                  <div className="flex flex-wrap justify-between items-center gap-2 border-b border-[#0d3420] pb-2.5">
+                    <div>
+                      <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
+                        University Slab System Configuration (Editable)
+                      </span>
+                      <span className="text-[9px] text-slate-400">
+                        Edit slab thresholds or rates below. Active slab highlights automatically based on {bulkCalculations.length} included student(s).
+                      </span>
+                    </div>
 
-                return (
-                  <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-2">
-                    <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
-                      University Slab System Status
-                    </span>
-                    {slabsList.length === 0 ? (
-                      <p className="text-slate-400 italic text-[11px]">
-                        No volume slabs configured for this university in settings. Standard commission values will be used.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {slabsList.map((slab: any, idx: number) => {
-                          const min = parseInt(slab.minStudents) || 1;
-                          const max = slab.maxStudents ? parseInt(slab.maxStudents) : null;
-                          const isActive = activeCount >= min && (!max || activeCount <= max);
-                          return (
-                            <div 
-                              key={idx} 
-                              className={`p-2.5 rounded-xl border text-center font-mono flex flex-col justify-center ${
-                                isActive 
-                                  ? 'bg-emerald-950/40 border-emerald-500 text-emerald-400 font-bold scale-102 shadow-lg shadow-emerald-500/10' 
-                                  : 'bg-slate-950/30 border-slate-850 text-slate-500'
-                              }`}
-                            >
-                              <span className="text-[10px] font-semibold">{min}{max ? ` - ${max}` : '+'} Students</span>
-                              <span className="mt-1 text-[11px] font-bold">
-                                {slab.commissionValue}{slab.commissionType === 'PERCENT' ? '%' : ' USD'}
-                              </span>
-                              {isActive && <span className="text-[8px] uppercase tracking-wider text-emerald-500 font-extrabold mt-1">Active Slab</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={addBulkSlabRow}
+                        className="px-2.5 py-1 bg-[#010a06] border border-[#0e3322] text-[9px] font-bold text-slate-300 font-mono rounded-lg hover:bg-[#0d3420] hover:text-white transition-all cursor-pointer"
+                      >
+                        + Add Slab Row
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveBulkSlabsToUniversity}
+                        disabled={isUpdatingSlabs}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold font-mono rounded-lg transition-all cursor-pointer disabled:opacity-50 flex items-center space-x-1"
+                      >
+                        {isUpdatingSlabs && <Loader2 className="w-3 h-3 animate-spin" />}
+                        <span>Save & Update Slabs</span>
+                      </button>
+                    </div>
                   </div>
-                );
-              })()}
+
+                  {slabSuccessMsg && (
+                    <div className="text-[10px] text-emerald-400 font-semibold bg-emerald-950/40 border border-emerald-500/30 p-2 rounded-xl">
+                      ✓ {slabSuccessMsg}
+                    </div>
+                  )}
+
+                  {bulkSlabs.length === 0 ? (
+                    <div className="flex items-center justify-between py-2 text-slate-400 italic text-[11px]">
+                      <span>No volume slabs configured. Standard base/bonus commission values will be used.</span>
+                      <button
+                        type="button"
+                        onClick={addBulkSlabRow}
+                        className="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 text-[10px] rounded-lg font-mono"
+                      >
+                        + Add First Volume Slab
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                      {bulkSlabs.map((slab: any, idx: number) => {
+                        const min = parseInt(slab.minStudents) || 1;
+                        const max = slab.maxStudents ? parseInt(slab.maxStudents) : null;
+                        const activeCount = bulkCalculations.length;
+                        const isActive = activeCount >= min && (!max || activeCount <= max);
+
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`flex items-center space-x-2 p-2 rounded-xl border text-xs transition-all ${
+                              isActive 
+                                ? 'bg-emerald-950/40 border-emerald-500 shadow-md shadow-emerald-500/10' 
+                                : 'bg-[#010a06] border-[#0e3322]'
+                            }`}
+                          >
+                            <div className="flex-1 grid grid-cols-4 gap-2 font-mono">
+                              <div>
+                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Min Students</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  required
+                                  value={slab.minStudents}
+                                  onChange={(e) => updateBulkSlabRow(idx, 'minStudents', e.target.value)}
+                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Max Students</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="Above"
+                                  value={slab.maxStudents || ''}
+                                  onChange={(e) => updateBulkSlabRow(idx, 'maxStudents', e.target.value)}
+                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Comm Type</label>
+                                <select
+                                  value={slab.commissionType}
+                                  onChange={(e) => updateBulkSlabRow(idx, 'commissionType', e.target.value)}
+                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
+                                >
+                                  <option value="PERCENT">Percentage (%)</option>
+                                  <option value="FLAT">Flat ($)</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Comm Value</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  required
+                                  value={slab.commissionValue}
+                                  onChange={(e) => updateBulkSlabRow(idx, 'commissionValue', e.target.value)}
+                                  className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-bold text-emerald-400"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-1 shrink-0">
+                              {isActive && (
+                                <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 font-extrabold text-[8px] uppercase tracking-wider rounded-lg border border-emerald-500/30">
+                                  Active
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removeBulkSlabRow(idx)}
+                                className="p-1.5 text-rose-400 hover:bg-rose-950/30 rounded-lg transition-all"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Student Checklist Selection list */}
               {selectedUni && (
