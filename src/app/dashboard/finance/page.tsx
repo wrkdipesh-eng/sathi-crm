@@ -388,6 +388,9 @@ export default function FinanceLedgerPage() {
       const totalForeign = baseCommForeign + bonusCommForeign;
       const totalNpr = totalForeign * exchangeRate;
 
+      const rateText = baseType === 'PERCENT' ? `${baseValue}%` : `${comm.currency} ${baseValue.toLocaleString()}`;
+      const isSlabApplied = !!activeSlab;
+
       let subAgentNpr = 0;
       if (comm.applicant?.subAgent?.id) {
         const splitValue = comm.applicant.subAgentCommissionSplit !== null
@@ -432,7 +435,9 @@ export default function FinanceLedgerPage() {
         commissionAmountNpr: totalNpr,
         subAgentAmountNpr: subAgentNpr,
         branchAmountNpr: branchNpr,
-        hqAmountNpr: hqNpr
+        hqAmountNpr: hqNpr,
+        rateText,
+        isSlabApplied
       };
     });
 
@@ -2754,7 +2759,6 @@ export default function FinanceLedgerPage() {
                           <th className="px-4 py-3">Student & Course</th>
                           <th className="px-4 py-3 text-right">Tuition Fee</th>
                           <th className="px-4 py-3 text-right">Commission Rate</th>
-                          <th className="px-4 py-3 text-right">Bonus Applied</th>
                           <th className="px-4 py-3 text-right">Net Amount</th>
                         </tr>
                       </thead>
@@ -2763,7 +2767,7 @@ export default function FinanceLedgerPage() {
                           <tr key={idx} className="hover:bg-slate-900/40 print:hover:bg-transparent">
                             <td className="px-4 py-3 font-mono text-slate-500">{idx + 1}</td>
                             <td className="px-4 py-3">
-                              <span className="font-bold text-slate-100 print:text-slate-950 block text-xs">{item.studentName}</span>
+                              <span className="font-bold text-slate-100 print:text-slate-950 block text-xs">{item.applicantName}</span>
                               <span className="text-[9px] text-slate-400 print:text-slate-500">{item.course}</span>
                             </td>
                             <td className="px-4 py-3 text-right font-mono font-medium">
@@ -2774,13 +2778,6 @@ export default function FinanceLedgerPage() {
                                 <span className="text-[#eab308] print:text-slate-900 font-bold">{item.rateText} (Slab)</span>
                               ) : (
                                 <span>{item.rateText} (Base)</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 text-right font-mono text-indigo-400 print:text-slate-900 font-semibold">
-                              {item.bonusAmountForeign > 0 ? (
-                                <span>{item.currency} {item.bonusAmountForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                              ) : (
-                                <span className="text-slate-600 print:text-slate-400">-</span>
                               )}
                             </td>
                             <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400 print:text-slate-900">
