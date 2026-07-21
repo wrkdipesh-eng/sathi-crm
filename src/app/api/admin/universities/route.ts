@@ -49,6 +49,11 @@ export async function POST(req: NextRequest) {
         commissionPercentage: item.commissionPercentage !== undefined && item.commissionPercentage !== null && !isNaN(parseFloat(item.commissionPercentage)) ? parseFloat(item.commissionPercentage) : null,
         type: (item.type === 'PORTAL' ? 'PORTAL' : 'DIRECT') as UniversityType,
         portalName: item.type === 'PORTAL' ? (item.portalName || '').trim() : null,
+        baseCommissionType: item.baseCommissionType || null,
+        baseCommissionValue: item.baseCommissionValue !== undefined && item.baseCommissionValue !== null && !isNaN(parseFloat(item.baseCommissionValue)) ? parseFloat(item.baseCommissionValue) : null,
+        bonusType: item.bonusType || null,
+        bonusValue: item.bonusValue !== undefined && item.bonusValue !== null && !isNaN(parseFloat(item.bonusValue)) ? parseFloat(item.bonusValue) : null,
+        slabs: item.slabs || null,
         organizationId: authUser.organizationId,
       })).filter((item: any) => item.name && item.country && item.course);
 
@@ -63,7 +68,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, count: created.count });
     } else {
       // Single insert
-      const { name, country, course, tuitionFee, intakes, commissionPercentage, type, portalName } = body;
+      const {
+        name,
+        country,
+        course,
+        tuitionFee,
+        intakes,
+        commissionPercentage,
+        type,
+        portalName,
+        baseCommissionType,
+        baseCommissionValue,
+        bonusType,
+        bonusValue,
+        slabs
+      } = body;
 
       if (!name || !country || !course) {
         return NextResponse.json({ error: 'Name, country, and course are required fields' }, { status: 400 });
@@ -79,6 +98,11 @@ export async function POST(req: NextRequest) {
           commissionPercentage: commissionPercentage !== undefined && commissionPercentage !== null && commissionPercentage !== '' && !isNaN(parseFloat(commissionPercentage)) ? parseFloat(commissionPercentage) : null,
           type: type === 'PORTAL' ? 'PORTAL' : 'DIRECT',
           portalName: type === 'PORTAL' ? (portalName || '').trim() : null,
+          baseCommissionType: baseCommissionType || null,
+          baseCommissionValue: baseCommissionValue !== undefined && baseCommissionValue !== null && baseCommissionValue !== '' && !isNaN(parseFloat(baseCommissionValue)) ? parseFloat(baseCommissionValue) : null,
+          bonusType: bonusType || null,
+          bonusValue: bonusValue !== undefined && bonusValue !== null && bonusValue !== '' && !isNaN(parseFloat(bonusValue)) ? parseFloat(bonusValue) : null,
+          slabs: slabs || undefined,
           organizationId: authUser.organizationId,
         },
       });

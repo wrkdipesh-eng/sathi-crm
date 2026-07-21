@@ -253,6 +253,14 @@ model PartnerUniversity {
   commissionPercentage Float?         // e.g. 15 for 15%
   type                 UniversityType @default(DIRECT)
   portalName           String?        // e.g. ApplyBoard, KC Overseas, etc. (only if type is PORTAL)
+  
+  // Custom commission structure
+  baseCommissionType   String?        // PERCENTAGE, FLAT
+  baseCommissionValue  Float?
+  bonusType            String?        // PERCENTAGE, FLAT, NONE
+  bonusValue           Float?
+  slabs                Json?          // Volume-based commission slabs
+
   organizationId       String
   organization         Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt            DateTime       @default(now())

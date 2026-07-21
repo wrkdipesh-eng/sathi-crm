@@ -44,7 +44,64 @@ export async function createCommissionIfVisaFiled(applicantId: string, tx: any) 
   const cleanFeeStr = tuitionFeeStr.split('/')[0].replace(/[^0-9.]/g, '');
   const tuitionAmount = parseFloat(cleanFeeStr) || 25000.0;
 
-  const commissionAmountForeign = tuitionAmount * (commPercent / 100);
+  // 6. Calculate commission amount foreign based on slabs or base/bonus rules
+  const studentCount = await tx.commissionLedger.count({
+    where: {
+      partnerUniversity: {
+        equals: applicant.targetUniversity,
+        mode: 'insensitive'
+      }
+    }
+  });
+
+  let commissionAmountForeign = 0;
+
+  if (partnerUni && Array.isArray(partnerUni.slabs) && partnerUni.slabs.length > 0) {
+    const currentStudentNumber = studentCount + 1;
+    const slabs = partnerUni.slabs as any[];
+    const matchingSlab = slabs.find(slab => {
+      const min = parseInt(slab.minStudents) || 0;
+      const max = slab.maxStudents ? parseInt(slab.maxStudents) : Infinity;
+      return currentStudentNumber >= min && currentStudentNumber <= max;
+    });
+
+    if (matchingSlab) {
+      const slabVal = parseFloat(matchingSlab.commissionValue) || 0;
+      if (matchingSlab.commissionType === 'PERCENT') {
+        commissionAmountForeign = tuitionAmount * (slabVal / 100);
+      } else {
+        commissionAmountForeign = slabVal;
+      }
+    } else {
+      commissionAmountForeign = calculateBaseAndBonus(partnerUni, tuitionAmount);
+    }
+  } else {
+    commissionAmountForeign = calculateBaseAndBonus(partnerUni, tuitionAmount);
+  }
+
+  function calculateBaseAndBonus(pUni: any, tuition: number) {
+    let baseForeign = 0;
+    if (pUni?.baseCommissionType === 'FLAT') {
+      baseForeign = parseFloat(pUni.baseCommissionValue?.toString()) || 0;
+    } else if (pUni?.baseCommissionType === 'PERCENT') {
+      const baseVal = parseFloat(pUni.baseCommissionValue?.toString()) || 0;
+      baseForeign = tuition * (baseVal / 100);
+    } else {
+      // Fallback to old schema percentage
+      const pct = pUni?.commissionPercentage ? parseFloat(pUni.commissionPercentage.toString()) : 10.0;
+      baseForeign = tuition * (pct / 100);
+    }
+
+    let bonusForeign = 0;
+    if (pUni?.bonusType === 'FLAT') {
+      bonusForeign = parseFloat(pUni.bonusValue?.toString()) || 0;
+    } else if (pUni?.bonusType === 'PERCENT') {
+      const bonusVal = parseFloat(pUni.bonusValue?.toString()) || 0;
+      bonusForeign = tuition * (bonusVal / 100);
+    }
+
+    return baseForeign + bonusForeign;
+  }
 
   // 6. Fetch exchange rate
   let exchangeRate = FALLBACK_RATES[currency] || 133.0;

@@ -71,6 +71,11 @@ export default function AdminSettingsPage() {
     commissionPercentage: '',
     type: 'DIRECT',
     portalName: '',
+    baseCommissionType: 'PERCENT',
+    baseCommissionValue: '',
+    bonusType: 'NONE',
+    bonusValue: '',
+    slabs: [] as any[],
   });
 
   // Bulk Import state
@@ -340,6 +345,36 @@ export default function AdminSettingsPage() {
     setIsUserModalOpen(true);
   };
 
+  const addSlabRow = () => {
+    setUniForm(prev => {
+      const nextMin = prev.slabs.length === 0 
+        ? 1 
+        : (parseInt(prev.slabs[prev.slabs.length - 1].maxStudents) || 1) + 1;
+      return {
+        ...prev,
+        slabs: [
+          ...prev.slabs,
+          { minStudents: nextMin, maxStudents: '', commissionType: 'PERCENT', commissionValue: '' }
+        ]
+      };
+    });
+  };
+
+  const updateSlabRow = (index: number, field: string, value: any) => {
+    setUniForm(prev => {
+      const updatedSlabs = [...prev.slabs];
+      updatedSlabs[index] = { ...updatedSlabs[index], [field]: value };
+      return { ...prev, slabs: updatedSlabs };
+    });
+  };
+
+  const removeSlabRow = (index: number) => {
+    setUniForm(prev => ({
+      ...prev,
+      slabs: prev.slabs.filter((_, idx) => idx !== index)
+    }));
+  };
+
   // University Submit
   const handleUniSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,17 +388,31 @@ export default function AdminSettingsPage() {
     const method = editingUni ? 'PATCH' : 'POST';
     const url = editingUni ? `/api/admin/universities/${editingUni.id}` : '/api/admin/universities';
 
+    const formattedSlabs = uniForm.slabs.map((slab: any) => ({
+      minStudents: parseInt(slab.minStudents) || 1,
+      maxStudents: slab.maxStudents ? parseInt(slab.maxStudents) : null,
+      commissionType: slab.commissionType,
+      commissionValue: parseFloat(slab.commissionValue) || 0,
+    }));
+
+    const payload = {
+      ...uniForm,
+      baseCommissionValue: uniForm.baseCommissionValue ? parseFloat(uniForm.baseCommissionValue) : null,
+      bonusValue: uniForm.bonusValue ? parseFloat(uniForm.bonusValue) : null,
+      slabs: formattedSlabs,
+    };
+
     try {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(uniForm),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
         setIsUniModalOpen(false);
         setEditingUni(null);
-        setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '', type: 'DIRECT', portalName: '' });
+        setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '', type: 'DIRECT', portalName: '', baseCommissionType: 'PERCENT', baseCommissionValue: '', bonusType: 'NONE', bonusValue: '', slabs: [] });
         fetchUniversities();
       } else {
         const data = await res.json();
@@ -949,7 +998,7 @@ export default function AdminSettingsPage() {
                   <button
                     onClick={() => {
                       setEditingUni(null);
-                      setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '', type: 'DIRECT', portalName: '' });
+                      setUniForm({ name: '', country: '', course: '', tuitionFee: '', intakes: '', commissionPercentage: '', type: 'DIRECT', portalName: '', baseCommissionType: 'PERCENT', baseCommissionValue: '', bonusType: 'NONE', bonusValue: '', slabs: [] });
                       setUniError(null);
                       setIsUniModalOpen(true);
                     }}
@@ -1015,7 +1064,7 @@ export default function AdminSettingsPage() {
                           <button
                             onClick={() => {
                               setEditingUni(null);
-                              setUniForm({
+                               setUniForm({
                                 name: group.name,
                                 country: group.country,
                                 course: '',
@@ -1024,6 +1073,11 @@ export default function AdminSettingsPage() {
                                 commissionPercentage: '',
                                 type: 'DIRECT',
                                 portalName: '',
+                                baseCommissionType: 'PERCENT',
+                                baseCommissionValue: '',
+                                bonusType: 'NONE',
+                                bonusValue: '',
+                                slabs: [],
                               });
                               setUniError(null);
                               setIsUniModalOpen(true);
@@ -1080,6 +1134,11 @@ export default function AdminSettingsPage() {
                                           commissionPercentage: uni.commissionPercentage !== null && uni.commissionPercentage !== undefined ? uni.commissionPercentage.toString() : '',
                                           type: uni.type || 'DIRECT',
                                           portalName: uni.portalName || '',
+                                          baseCommissionType: uni.baseCommissionType || 'PERCENT',
+                                          baseCommissionValue: uni.baseCommissionValue !== null && uni.baseCommissionValue !== undefined ? uni.baseCommissionValue.toString() : '',
+                                          bonusType: uni.bonusType || 'NONE',
+                                          bonusValue: uni.bonusValue !== null && uni.bonusValue !== undefined ? uni.bonusValue.toString() : '',
+                                          slabs: Array.isArray(uni.slabs) ? uni.slabs : [],
                                         });
                                         setUniError(null);
                                         setIsUniModalOpen(true);
@@ -1389,25 +1448,25 @@ export default function AdminSettingsPage() {
       {/* University Modal (Create/Update) */}
       {isUniModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+          <div className="w-full max-w-lg bg-[#03150d] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]">
             
-            <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/20 flex justify-between items-center">
+            <div className="px-6 py-4 border-b border-[#0d3420] bg-slate-950/20 flex justify-between items-center">
               <div className="flex items-center space-x-2 text-slate-100 font-mono">
-                <GraduationCap className="w-5 h-5 text-indigo-500" />
+                <GraduationCap className="w-5 h-5 text-emerald-500" />
                 <h3 className="font-bold text-sm">
-                  {editingUni ? `Edit Listing: ${editingUni.name}` : 'Add Represented University'}
+                  {editingUni ? `Edit Represented University` : 'Add Represented University'}
                 </h3>
               </div>
               <button
                 onClick={() => setIsUniModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-slate-100 rounded-lg transition-all cursor-pointer"
+                className="p-1.5 hover:bg-[#0d3420] text-slate-400 hover:text-slate-100 rounded-lg transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleUniSubmit} className="p-6 space-y-4">
-              {uniError && <div className="text-[10px] text-rose-500 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">{uniError}</div>}
+            <form onSubmit={handleUniSubmit} className="p-6 space-y-4 overflow-y-auto">
+              {uniError && <div className="text-[10px] text-rose-550 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">{uniError}</div>}
               
               <div>
                 <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">University Name *</label>
@@ -1426,7 +1485,7 @@ export default function AdminSettingsPage() {
                     }));
                   }}
                   placeholder="e.g. York University"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360]"
                 />
                 <datalist id="existing-unis">
                   {existingUniversities.map((eu, idx) => (
@@ -1444,7 +1503,7 @@ export default function AdminSettingsPage() {
                     value={uniForm.country}
                     onChange={(e) => setUniForm(prev => ({ ...prev, country: e.target.value }))}
                     placeholder="e.g. Canada"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360]"
                   />
                 </div>
                 <div>
@@ -1455,7 +1514,7 @@ export default function AdminSettingsPage() {
                     value={uniForm.course}
                     onChange={(e) => setUniForm(prev => ({ ...prev, course: e.target.value }))}
                     placeholder="e.g. MBA"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360]"
                   />
                 </div>
               </div>
@@ -1468,7 +1527,7 @@ export default function AdminSettingsPage() {
                     value={uniForm.tuitionFee}
                     onChange={(e) => setUniForm(prev => ({ ...prev, tuitionFee: e.target.value }))}
                     placeholder="e.g. CAD 24,000 / Year"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono"
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360] font-mono"
                   />
                 </div>
                 <div>
@@ -1478,23 +1537,61 @@ export default function AdminSettingsPage() {
                     value={uniForm.intakes}
                     onChange={(e) => setUniForm(prev => ({ ...prev, intakes: e.target.value }))}
                     placeholder="e.g. Jan, Sept"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360]"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Commission Percentage (%)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={uniForm.commissionPercentage}
-                  onChange={(e) => setUniForm(prev => ({ ...prev, commissionPercentage: e.target.value }))}
-                  placeholder="e.g. 15.00"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 font-mono"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Base Commission Type</label>
+                  <select
+                    value={uniForm.baseCommissionType}
+                    onChange={(e) => setUniForm(prev => ({ ...prev, baseCommissionType: e.target.value }))}
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-[#a1a1aa] text-xs focus:outline-none focus:border-[#1ca360] cursor-pointer"
+                  >
+                    <option value="PERCENT">Percentage (%)</option>
+                    <option value="FLAT">Flat Amount ($)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Base Commission Value</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={uniForm.baseCommissionValue}
+                    onChange={(e) => setUniForm(prev => ({ ...prev, baseCommissionValue: e.target.value }))}
+                    placeholder="e.g. 15.00"
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Bonus Type</label>
+                  <select
+                    value={uniForm.bonusType}
+                    onChange={(e) => setUniForm(prev => ({ ...prev, bonusType: e.target.value, bonusValue: e.target.value === 'NONE' ? '' : prev.bonusValue }))}
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-[#a1a1aa] text-xs focus:outline-none focus:border-[#1ca360] cursor-pointer"
+                  >
+                    <option value="NONE">None</option>
+                    <option value="PERCENT">Percentage (%)</option>
+                    <option value="FLAT">Flat Amount ($)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Bonus Value (Optional)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    disabled={uniForm.bonusType === 'NONE'}
+                    value={uniForm.bonusValue}
+                    onChange={(e) => setUniForm(prev => ({ ...prev, bonusValue: e.target.value }))}
+                    placeholder={uniForm.bonusType === 'NONE' ? 'Disabled' : 'e.g. 500'}
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360] font-mono disabled:opacity-40"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1510,39 +1607,120 @@ export default function AdminSettingsPage() {
                         portalName: val === 'DIRECT' ? '' : prev.portalName 
                       }));
                     }}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 text-xs focus:outline-none cursor-pointer focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-[#a1a1aa] text-xs focus:outline-none cursor-pointer focus:border-[#1ca360]"
                   >
                     <option value="DIRECT">Direct Representation</option>
                     <option value="PORTAL">Portal Representation</option>
                   </select>
                 </div>
-                {uniForm.type === 'PORTAL' && (
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Portal Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={uniForm.portalName}
-                      onChange={(e) => setUniForm(prev => ({ ...prev, portalName: e.target.value }))}
-                      placeholder="e.g. ApplyBoard, KC, Adventus"
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
-                    />
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5 font-mono">Portal Name *</label>
+                  <input
+                    type="text"
+                    required={uniForm.type === 'PORTAL'}
+                    disabled={uniForm.type !== 'PORTAL'}
+                    value={uniForm.portalName}
+                    onChange={(e) => setUniForm(prev => ({ ...prev, portalName: e.target.value }))}
+                    placeholder={uniForm.type !== 'PORTAL' ? 'N/A' : 'e.g. ApplyBoard'}
+                    className="w-full px-3 py-2 bg-[#010a06] border border-[#0e3322] rounded-xl text-slate-200 text-xs focus:outline-none focus:border-[#1ca360] disabled:opacity-40"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-[#0e3322]/50 pt-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-[#eab308] uppercase tracking-wider font-mono">
+                    VOLUME-BASED COMMISSION SLABS (SLAB SYSTEM)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={addSlabRow}
+                    className="px-2.5 py-1 bg-[#010a06] border border-[#0e3322] text-[9px] font-bold text-slate-350 font-mono rounded-lg hover:bg-[#0d3420] hover:text-white transition-all cursor-pointer"
+                  >
+                    + Add Slab Row
+                  </button>
+                </div>
+
+                {uniForm.slabs.length === 0 ? (
+                  <p className="text-[10px] text-slate-500 italic">
+                    No slabs configured. Standard commission values will be used.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                    {uniForm.slabs.map((slab, index) => (
+                      <div key={index} className="flex items-center space-x-2 bg-[#010a06] p-2.5 rounded-xl border border-[#0e3322] text-xs">
+                        <div className="flex-1 grid grid-cols-4 gap-2">
+                          <div>
+                            <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Min Students</label>
+                            <input
+                              type="number"
+                              min="1"
+                              required
+                              value={slab.minStudents}
+                              onChange={(e) => updateSlabRow(index, 'minStudents', e.target.value)}
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Max Students</label>
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="Blank for above"
+                              value={slab.maxStudents || ''}
+                              onChange={(e) => updateSlabRow(index, 'maxStudents', e.target.value)}
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Type</label>
+                            <select
+                              value={slab.commissionType}
+                              onChange={(e) => updateSlabRow(index, 'commissionType', e.target.value)}
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none cursor-pointer"
+                            >
+                              <option value="PERCENT">%</option>
+                              <option value="FLAT">Flat ($)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[8px] text-slate-400 font-medium mb-0.5">Value</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              required
+                              value={slab.commissionValue}
+                              onChange={(e) => updateSlabRow(index, 'commissionValue', e.target.value)}
+                              className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-[11px] focus:outline-none font-mono"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeSlabRow(index)}
+                          className="p-1 text-rose-500 hover:bg-rose-950/30 rounded-lg transition-all mt-3"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              <div className="pt-4 border-t border-slate-800 flex justify-end space-x-2">
+              <div className="pt-4 border-t border-[#0e3322]/50 flex justify-end space-x-2">
                 <button
                   type="button"
                   onClick={() => setIsUniModalOpen(false)}
-                  className="py-2 px-4 bg-slate-850 hover:bg-slate-800 text-slate-400 text-xs font-bold rounded-xl transition-all cursor-pointer font-mono"
+                  className="py-2 px-4 bg-slate-950 hover:bg-slate-900 border border-[#0e3322] text-slate-350 text-xs font-bold rounded-xl transition-all cursor-pointer font-mono"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingUni}
-                  className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-slate-950 text-xs font-bold rounded-xl transition-all cursor-pointer font-mono disabled:opacity-50"
+                  className="py-2 px-5 bg-[#e2b13c] hover:bg-[#c99b2c] text-slate-950 text-xs font-bold rounded-xl transition-all cursor-pointer font-mono disabled:opacity-50"
                 >
                   {isSavingUni ? 'Saving...' : 'Save University'}
                 </button>
