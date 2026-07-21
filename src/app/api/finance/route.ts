@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
           select: {
             id: true,
             name: true,
+            targetCourse: true,
             branch: { select: { id: true, name: true } },
             counselor: { select: { id: true, name: true } },
             subAgent: { select: { id: true, name: true, email: true } },
@@ -126,6 +127,7 @@ export async function POST(req: NextRequest) {
           select: {
             id: true,
             name: true,
+            targetCourse: true,
             branch: { select: { id: true, name: true } },
             counselor: { select: { id: true, name: true } },
             subAgent: { select: { id: true, name: true, email: true } },

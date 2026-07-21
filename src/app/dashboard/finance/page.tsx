@@ -1414,6 +1414,9 @@ export default function FinanceLedgerPage() {
                         <Link href={`/dashboard/applicants/${comm.applicant.id}`} className="hover:underline">
                           {comm.applicant.name}
                         </Link>
+                        <span className="text-[9px] text-indigo-400 font-bold font-mono block mt-0.5 uppercase tracking-wider">
+                          {comm.applicant.targetCourse || 'N/A'}
+                        </span>
                         <span className="text-[9px] text-slate-500 block mt-0.5 font-medium">Branch: {comm.applicant.branch?.name}</span>
                       </td>
                       <td className="px-6 py-4 font-medium text-slate-300">{comm.partnerUniversity}</td>
