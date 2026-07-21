@@ -467,6 +467,7 @@ export default function FinanceLedgerPage() {
           bulkInvoiceForm: { ...bulkInvoiceForm },
           bulkCalculations: [...bulkCalculations],
           bulkSlabs: [...bulkSlabs],
+          bankDetails: { ...bankDetails },
         });
         setIsBulkModalOpen(false);
         setIsGeneratedInvoiceOpen(true);
@@ -2197,7 +2198,7 @@ export default function FinanceLedgerPage() {
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
               
               {/* Left Column: Configuration Panel (Hidden in Print) */}
-              <div className="w-full lg:w-1/2 bg-slate-950/40 border-r border-slate-800/80 p-5 overflow-y-auto space-y-5 print:hidden text-xs select-none">
+              <div className="w-full lg:w-[40%] bg-slate-950/40 border-r border-slate-800/80 p-5 overflow-y-auto space-y-5 print:hidden text-xs select-none">
                 
                 {/* 1. Selector & Basic Config fields */}
                 <div className="space-y-3 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/80">
@@ -2469,7 +2470,7 @@ export default function FinanceLedgerPage() {
                                         setModalSelectedCommIds(prev => prev.filter(id => id !== c.id));
                                       }
                                     }}
-                                    className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                                    className="rounded border-slate-800 bg-slate-950 text-indigo-650 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
                                   />
                                 </td>
                                 <td className="px-3 py-2 font-semibold text-slate-200">
@@ -2487,10 +2488,66 @@ export default function FinanceLedgerPage() {
                     </div>
                   </div>
                 )}
+
+                {/* 4. Bank Details Configuration (Editable) */}
+                {selectedUni && (
+                  <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-3">
+                    <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
+                      Edit Bank Remittance Details
+                    </span>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Bank Name</label>
+                        <input
+                          type="text"
+                          value={bankDetails.bankName}
+                          onChange={(e) => handleBankDetailsChange('bankName', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Branch</label>
+                        <input
+                          type="text"
+                          value={bankDetails.branch}
+                          onChange={(e) => handleBankDetailsChange('branch', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Account Name</label>
+                        <input
+                          type="text"
+                          value={bankDetails.accountName}
+                          onChange={(e) => handleBankDetailsChange('accountName', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Account No</label>
+                        <input
+                          type="text"
+                          value={bankDetails.accountNo}
+                          onChange={(e) => handleBankDetailsChange('accountNo', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] text-slate-400 font-medium mb-0.5 font-mono">Swift Code</label>
+                        <input
+                          type="text"
+                          value={bankDetails.swiftCode}
+                          onChange={(e) => handleBankDetailsChange('swiftCode', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-950 border border-slate-800/80 rounded-lg text-slate-200 text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right Column: Live Invoice Preview */}
-              <div className="w-full lg:w-1/2 p-6 space-y-6 overflow-y-auto print:overflow-visible print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100 min-h-0">
+              <div className="w-full lg:w-[60%] p-6 space-y-6 overflow-y-auto print:overflow-visible print:p-0 print:text-slate-900 bg-[#020a06] print:bg-white text-slate-100 min-h-0">
                 {!selectedUni ? (
                   <div className="flex flex-col items-center justify-center py-40 text-slate-500">
                     <FileSpreadsheet className="w-14 h-14 text-slate-700 animate-pulse mb-3" />
@@ -2655,23 +2712,23 @@ export default function FinanceLedgerPage() {
                       <div className="space-y-1.5 text-slate-400 print:text-slate-600 font-mono text-[10px] leading-relaxed">
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Bank Name:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">Global IME Bank Ltd.</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.bankName}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Branch:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">Kantipath Branch, Kathmandu</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.branch}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Account Name:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">Thinkcone Study Abroad Pvt. Ltd.</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.accountName}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Account No (NPR):</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">01010100XXXXXXX</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.accountNo}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Swift Code:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">GBIMEKATMXX</span>
+                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.swiftCode}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>PAN Registration:</span>
