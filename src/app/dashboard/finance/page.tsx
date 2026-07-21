@@ -68,14 +68,11 @@ export default function FinanceLedgerPage() {
   const [isSavingAdd, setIsSavingAdd] = useState(false);
 
   // Bulk Invoice States
-  const [selectedCommIds, setSelectedCommIds] = useState<string[]>([]);
+  const [selectedUni, setSelectedUni] = useState('');
+  const [modalSelectedCommIds, setModalSelectedCommIds] = useState<string[]>([]);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [bulkInvoiceForm, setBulkInvoiceForm] = useState({
     invoiceNumber: '',
-    baseCommType: 'PERCENT' as 'PERCENT' | 'FLAT',
-    baseCommValue: '10.0',
-    bonusType: 'NONE' as 'PERCENT' | 'FLAT' | 'NONE',
-    bonusValue: '2.0',
     nprExchangeRate: '133.0',
     status: 'PENDING',
   });
@@ -83,62 +80,102 @@ export default function FinanceLedgerPage() {
   const [bulkSaveLoading, setBulkSaveLoading] = useState(false);
 
   const handleOpenBulkInvoiceModal = () => {
-    const selectedComms = commissions.filter(c => selectedCommIds.includes(c.id));
-    if (selectedComms.length === 0) return;
-
-    const firstComm = selectedComms[0];
-    const defaultRate = firstComm.nprExchangeRate ? String(firstComm.nprExchangeRate) : '133.0';
-
-    const dateStr = new Date().toISOString().split('T')[0];
-    const baseUniName = firstComm.partnerUniversity.replace(/\s+\[(Direct|Portal:.*)\]$/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
-    const defaultInvoiceNum = `BULK-${baseUniName}-${dateStr}`;
-
+    setSelectedUni('');
+    setModalSelectedCommIds([]);
     setBulkInvoiceForm({
-      invoiceNumber: defaultInvoiceNum,
-      baseCommType: 'PERCENT',
-      baseCommValue: '10.0',
-      bonusType: 'NONE',
-      bonusValue: '2.0',
-      nprExchangeRate: defaultRate,
+      invoiceNumber: '',
+      nprExchangeRate: '133.0',
       status: 'PENDING',
     });
-
+    setBulkCalculations([]);
     setIsBulkModalOpen(true);
   };
 
+  const handleUniChange = (uniName: string) => {
+    setSelectedUni(uniName);
+    const matchingComms = commissions.filter(c => 
+      c.partnerUniversity === uniName && 
+      c.status === 'PENDING'
+    );
+    const ids = matchingComms.map(c => c.id);
+    setModalSelectedCommIds(ids);
+
+    const firstComm = matchingComms[0];
+    const defaultRate = firstComm?.nprExchangeRate ? String(firstComm.nprExchangeRate) : '133.0';
+    const dateStr = new Date().toISOString().split('T')[0];
+    const baseUniName = uniName.replace(/\s+\[(Direct|Portal:.*)\]$/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+    const defaultInvoiceNum = `BULK-${baseUniName}-${dateStr}`;
+
+    setBulkInvoiceForm(prev => ({
+      ...prev,
+      invoiceNumber: defaultInvoiceNum,
+      nprExchangeRate: defaultRate,
+    }));
+  };
+
   useEffect(() => {
-    if (!isBulkModalOpen) return;
+    if (!isBulkModalOpen || !selectedUni) {
+      setBulkCalculations([]);
+      return;
+    }
 
-    const selectedComms = commissions.filter(c => selectedCommIds.includes(c.id));
-    const { baseCommType, baseCommValue, bonusType, bonusValue, nprExchangeRate } = bulkInvoiceForm;
+    const matchingComms = commissions.filter(c => 
+      c.partnerUniversity === selectedUni && 
+      c.status === 'PENDING'
+    );
+    const activeComms = matchingComms.filter(c => modalSelectedCommIds.includes(c.id));
+    const count = activeComms.length;
 
-    const baseVal = parseFloat(baseCommValue) || 0;
-    const bonusVal = parseFloat(bonusValue) || 0;
-    const exchangeRate = parseFloat(nprExchangeRate) || 0;
+    const cleanSelectedUniName = selectedUni.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
+    const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanSelectedUniName.toLowerCase());
+    const slabsList = Array.isArray(partnerUniRecord?.slabs) ? (partnerUniRecord.slabs as any[]) : [];
+    
+    // Find active slab based on count
+    const activeSlab = slabsList.find(slab => {
+      const min = parseInt(slab.minStudents) || 0;
+      const max = slab.maxStudents ? parseInt(slab.maxStudents) : Infinity;
+      return count >= min && count <= max;
+    });
 
-    const calcs = selectedComms.map((comm) => {
-      const cleanUniName = comm.partnerUniversity.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
-      const matchedUni = universities.find(
+    let baseType = 'PERCENT';
+    let baseValue = 10.0;
+
+    if (activeSlab) {
+      baseType = activeSlab.commissionType;
+      baseValue = parseFloat(activeSlab.commissionValue) || 0;
+    } else if (partnerUniRecord) {
+      baseType = partnerUniRecord.baseCommissionType || 'PERCENT';
+      baseValue = partnerUniRecord.baseCommissionValue !== null 
+        ? parseFloat(partnerUniRecord.baseCommissionValue.toString()) 
+        : (partnerUniRecord.commissionPercentage || 10.0);
+    }
+
+    const bonusType = partnerUniRecord?.bonusType || 'NONE';
+    const bonusValue = partnerUniRecord?.bonusValue ? parseFloat(partnerUniRecord.bonusValue.toString()) : 0;
+    const exchangeRate = parseFloat(bulkInvoiceForm.nprExchangeRate) || 133.0;
+
+    const calcs = activeComms.map((comm) => {
+      const matchedProg = universities.find(
         (u) =>
-          u.name.toLowerCase() === cleanUniName.toLowerCase() &&
+          u.name.toLowerCase() === cleanSelectedUniName.toLowerCase() &&
           (!comm.applicant.targetCourse || u.course.toLowerCase() === comm.applicant.targetCourse.toLowerCase())
       );
 
-      const feeStr = matchedUni?.tuitionFee || '25000';
+      const feeStr = matchedProg?.tuitionFee || partnerUniRecord?.tuitionFee || '25000';
       const { numericFee } = parseFeeAndCurrency(feeStr);
       
       let baseCommForeign = 0;
-      if (baseCommType === 'PERCENT') {
-        baseCommForeign = numericFee * (baseVal / 100);
+      if (baseType === 'PERCENT') {
+        baseCommForeign = numericFee * (baseValue / 100);
       } else {
-        baseCommForeign = baseVal;
+        baseCommForeign = baseValue;
       }
 
       let bonusCommForeign = 0;
       if (bonusType === 'PERCENT') {
-        bonusCommForeign = numericFee * (bonusVal / 100);
+        bonusCommForeign = numericFee * (bonusValue / 100);
       } else if (bonusType === 'FLAT') {
-        bonusCommForeign = bonusVal;
+        bonusCommForeign = bonusValue;
       }
 
       const totalForeign = baseCommForeign + bonusCommForeign;
@@ -193,7 +230,7 @@ export default function FinanceLedgerPage() {
     });
 
     setBulkCalculations(calcs);
-  }, [bulkInvoiceForm, isBulkModalOpen, selectedCommIds, commissions, universities, branches]);
+  }, [bulkInvoiceForm, isBulkModalOpen, selectedUni, modalSelectedCommIds, commissions, universities, branches]);
 
   const handleSaveBulkInvoice = async () => {
     if (!bulkInvoiceForm.invoiceNumber) {
@@ -223,7 +260,7 @@ export default function FinanceLedgerPage() {
       if (res.ok) {
         alert('Bulk invoice generated and saved successfully!');
         setIsBulkModalOpen(false);
-        setSelectedCommIds([]);
+        setModalSelectedCommIds([]);
         fetchCommissions();
       } else {
         alert(data.error || 'Failed to save bulk invoice.');
@@ -645,15 +682,13 @@ export default function FinanceLedgerPage() {
             </div>
           )}
 
-          {selectedCommIds.length > 0 && (
-            <button
-              onClick={() => handleOpenBulkInvoiceModal()}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-semibold shadow-md transition-all cursor-pointer select-none"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>Generate Bulk Invoice ({selectedCommIds.length})</span>
-            </button>
-          )}
+          <button
+            onClick={() => handleOpenBulkInvoiceModal()}
+            className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-semibold shadow-md transition-all cursor-pointer select-none"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Bulk Invoice Generator</span>
+          </button>
 
           <button
             onClick={() => {
@@ -782,20 +817,6 @@ export default function FinanceLedgerPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="px-4 py-4 w-10 text-center">
-                    <input 
-                      type="checkbox" 
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedCommIds(commissions.map(c => c.id));
-                        } else {
-                          setSelectedCommIds([]);
-                        }
-                      }}
-                      checked={commissions.length > 0 && selectedCommIds.length === commissions.length}
-                      className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
-                    />
-                  </th>
                   <th className="px-6 py-4">Placed Applicant</th>
                   <th className="px-6 py-4">Partner University</th>
                   <th className="px-6 py-4">University Commission Amount</th>
@@ -812,20 +833,6 @@ export default function FinanceLedgerPage() {
                 {commissions.map((comm) => {
                   return (
                     <tr key={comm.id} className="hover:bg-slate-850/50 transition-all">
-                      <td className="px-4 py-4 text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedCommIds.includes(comm.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedCommIds(prev => [...prev, comm.id]);
-                            } else {
-                              setSelectedCommIds(prev => prev.filter(id => id !== comm.id));
-                            }
-                          }}
-                          className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
-                        />
-                      </td>
                       <td className="px-6 py-4 font-semibold text-slate-200">
                         <Link href={`/dashboard/applicants/${comm.applicant.id}`} className="hover:text-indigo-600 hover:underline">
                           {comm.applicant.name}
@@ -1648,7 +1655,7 @@ export default function FinanceLedgerPage() {
       {/* Bulk Invoice Modal */}
       {isBulkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in print:bg-white print:p-0 print:absolute print:inset-0">
-          <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:text-slate-950">
+          <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:bg-white print:text-slate-950">
             
             {/* Control Header (Hidden in Print) */}
             <div className="px-6 py-4 border-b border-slate-800/60 bg-slate-950/40 flex justify-between items-center print:hidden">
@@ -1658,7 +1665,13 @@ export default function FinanceLedgerPage() {
               </span>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    if (!selectedUni) {
+                      alert('Please select a university first');
+                      return;
+                    }
+                    window.print();
+                  }}
                   className="flex items-center space-x-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-all cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
@@ -1673,194 +1686,279 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
 
-            {/* Config Box (Hidden in Print) */}
-            <div className="p-6 border-b border-slate-800 bg-slate-950/20 grid grid-cols-1 md:grid-cols-4 gap-4 print:hidden text-xs">
-              <div>
-                <label className="block text-[10px] text-slate-400 font-medium mb-1">Invoice / Claim Number</label>
-                <input
-                  type="text"
-                  value={bulkInvoiceForm.invoiceNumber}
-                  onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-slate-400 font-medium mb-1">Base Commission</label>
-                <div className="flex space-x-1">
+            {/* University Selector & Config Box (Hidden in Print) */}
+            <div className="p-6 border-b border-slate-800 bg-slate-950/20 space-y-4 print:hidden text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1">Select Partner University *</label>
                   <select
-                    value={bulkInvoiceForm.baseCommType}
-                    onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, baseCommType: e.target.value as 'PERCENT' | 'FLAT' }))}
-                    className="px-2 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none w-20"
+                    value={selectedUni}
+                    onChange={(e) => handleUniChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none cursor-pointer"
                   >
-                    <option value="PERCENT">%</option>
-                    <option value="FLAT">Flat</option>
+                    <option value="">-- Choose University --</option>
+                    {Array.from(
+                      new Set(commissions.filter(c => c.status === 'PENDING').map(c => c.partnerUniversity))
+                    ).sort().map((uni, idx) => (
+                      <option key={idx} value={uni}>{uni}</option>
+                    ))}
                   </select>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={bulkInvoiceForm.baseCommValue}
-                    onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, baseCommValue: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none"
-                  />
                 </div>
+
+                {selectedUni && (
+                  <>
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-medium mb-1">Invoice / Claim Number</label>
+                      <input
+                        type="text"
+                        value={bulkInvoiceForm.invoiceNumber}
+                        onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 font-medium mb-1">NPR Exchange Rate</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={bulkInvoiceForm.nprExchangeRate}
+                        onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, nprExchangeRate: e.target.value }))}
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div>
-                <label className="block text-[10px] text-slate-400 font-medium mb-1">Bonus Structure (Tiered)</label>
-                <div className="flex space-x-1">
-                  <select
-                    value={bulkInvoiceForm.bonusType}
-                    onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, bonusType: e.target.value as 'PERCENT' | 'FLAT' | 'NONE' }))}
-                    className="px-2 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none w-24"
-                  >
-                    <option value="NONE">None</option>
-                    <option value="PERCENT">% Bonus</option>
-                    <option value="FLAT">Flat Bonus</option>
-                  </select>
-                  {bulkInvoiceForm.bonusType !== 'NONE' && (
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={bulkInvoiceForm.bonusValue}
-                      onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, bonusValue: e.target.value }))}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none"
-                    />
-                  )}
-                </div>
-              </div>
+              {/* Volume Slabs Status Card */}
+              {selectedUni && (() => {
+                const cleanUniName = selectedUni.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
+                const partnerUniRecord = universities.find(u => u.name.toLowerCase() === cleanUniName.toLowerCase());
+                const slabsList = Array.isArray(partnerUniRecord?.slabs) ? (partnerUniRecord.slabs as any[]) : [];
+                const activeCount = bulkCalculations.length;
 
-              <div>
-                <label className="block text-[10px] text-slate-400 font-medium mb-1">NPR Exchange Rate</label>
-                <input
-                  type="number"
-                  step="0.0001"
-                  value={bulkInvoiceForm.nprExchangeRate}
-                  onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, nprExchangeRate: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none font-mono"
-                />
-              </div>
+                return (
+                  <div className="bg-[#03150d] border border-[#0d3420] p-4 rounded-2xl space-y-2">
+                    <span className="font-bold text-[10px] text-[#eab308] uppercase tracking-wider block font-mono">
+                      University Slab System Status
+                    </span>
+                    {slabsList.length === 0 ? (
+                      <p className="text-slate-400 italic text-[11px]">
+                        No volume slabs configured for this university in settings. Standard commission values will be used.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {slabsList.map((slab: any, idx: number) => {
+                          const min = parseInt(slab.minStudents) || 1;
+                          const max = slab.maxStudents ? parseInt(slab.maxStudents) : null;
+                          const isActive = activeCount >= min && (!max || activeCount <= max);
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`p-2.5 rounded-xl border text-center font-mono flex flex-col justify-center ${
+                                isActive 
+                                  ? 'bg-emerald-950/40 border-emerald-500 text-emerald-400 font-bold scale-102 shadow-lg shadow-emerald-500/10' 
+                                  : 'bg-slate-950/30 border-slate-850 text-slate-500'
+                              }`}
+                            >
+                              <span className="text-[10px] font-semibold">{min}{max ? ` - ${max}` : '+'} Students</span>
+                              <span className="mt-1 text-[11px] font-bold">
+                                {slab.commissionValue}{slab.commissionType === 'PERCENT' ? '%' : ' USD'}
+                              </span>
+                              {isActive && <span className="text-[8px] uppercase tracking-wider text-emerald-500 font-extrabold mt-1">Active Slab</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Student Checklist Selection list */}
+              {selectedUni && (
+                <div className="space-y-1.5">
+                  <span className="font-bold text-[10px] text-slate-450 uppercase tracking-wide block">
+                    Choose Students to Include in this Claim Batch
+                  </span>
+                  <div className="border border-slate-800/80 rounded-2xl overflow-hidden max-h-[160px] overflow-y-auto">
+                    <table className="w-full text-left border-collapse text-xs bg-slate-950/20">
+                      <thead>
+                        <tr className="border-b border-slate-800 bg-slate-950/40 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                          <th className="px-4 py-2 w-10 text-center">Include</th>
+                          <th className="px-4 py-2">Student Name</th>
+                          <th className="px-4 py-2">Course</th>
+                          <th className="px-4 py-2 text-right">Tuition Fee</th>
+                          <th className="px-4 py-2 text-right">Calculated Comm</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/30">
+                        {commissions.filter(c => c.partnerUniversity === selectedUni && c.status === 'PENDING').map(c => {
+                          const isChecked = modalSelectedCommIds.includes(c.id);
+                          const calcItem = bulkCalculations.find(item => item.id === c.id);
+                          return (
+                            <tr key={c.id} className={`hover:bg-slate-850/20 transition-all ${!isChecked ? 'opacity-35' : ''}`}>
+                              <td className="px-4 py-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setModalSelectedCommIds(prev => [...prev, c.id]);
+                                    } else {
+                                      setModalSelectedCommIds(prev => prev.filter(id => id !== c.id));
+                                    }
+                                  }}
+                                  className="rounded border-slate-800 bg-slate-950 text-indigo-650 focus:ring-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                                />
+                              </td>
+                              <td className="px-4 py-2 font-semibold text-slate-200">{c.applicant.name}</td>
+                              <td className="px-4 py-2 text-slate-400">{c.applicant.targetCourse || 'N/A'}</td>
+                              <td className="px-4 py-2 text-right font-mono text-slate-400">
+                                {calcItem ? `${calcItem.currency} ${calcItem.tuitionFee.toLocaleString()}` : ''}
+                              </td>
+                              <td className="px-4 py-2 text-right font-mono font-bold text-emerald-455">
+                                {calcItem ? `${calcItem.currency} ${calcItem.commissionAmountForeign.toLocaleString()}` : ''}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Invoice Sheet View */}
             <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-0 print:text-slate-900 bg-slate-900/10 print:bg-white">
-              
-              {/* Print Header */}
-              <div className="flex justify-between items-start border-b border-slate-800/20 print:border-slate-300 pb-6">
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight text-slate-100 print:text-slate-900 font-sans">Thinkcone Study Abroad</h2>
-                  <p className="text-[10px] text-slate-500 print:text-slate-600 mt-1">
-                    Kathmandu HQ, Putalisadak, Nepal<br/>
-                    Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
-                  </p>
+              {!selectedUni ? (
+                <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+                  <FileSpreadsheet className="w-12 h-12 text-slate-700 animate-pulse mb-3" />
+                  <p className="text-xs font-medium">Please select a Partner University from the dropdown to generate the invoice sheet.</p>
                 </div>
-                <div className="text-right">
-                  <span className="px-2.5 py-1 bg-slate-800 print:bg-slate-100 text-slate-300 print:text-slate-700 font-bold text-[9px] uppercase tracking-wider rounded">
-                    Bulk Commission Claim Invoice
-                  </span>
-                  <div className="text-xs text-slate-400 print:text-slate-600 mt-2 font-mono">Invoice #: {bulkInvoiceForm.invoiceNumber}</div>
-                  <div className="text-[10px] text-slate-500 print:text-slate-600 mt-0.5">Date: {new Date().toLocaleDateString()}</div>
-                </div>
-              </div>
+              ) : (
+                <>
+                  {/* Print Header */}
+                  <div className="flex justify-between items-start border-b border-slate-800/20 print:border-slate-300 pb-6">
+                    <div>
+                      <h2 className="text-xl font-bold tracking-tight text-slate-100 print:text-slate-900 font-sans">Thinkcone Study Abroad</h2>
+                      <p className="text-[10px] text-slate-500 print:text-slate-600 mt-1">
+                        Kathmandu HQ, Putalisadak, Nepal<br/>
+                        Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="px-2.5 py-1 bg-slate-800 print:bg-slate-100 text-slate-300 print:text-slate-700 font-bold text-[9px] uppercase tracking-wider rounded">
+                        Bulk Commission Claim Invoice
+                      </span>
+                      <div className="text-xs text-slate-400 print:text-slate-600 mt-2 font-mono">Invoice #: {bulkInvoiceForm.invoiceNumber}</div>
+                      <div className="text-[10px] text-slate-500 print:text-slate-600 mt-0.5">Date: {new Date().toLocaleDateString()}</div>
+                    </div>
+                  </div>
 
-              {/* Recipient Details */}
-              <div className="bg-slate-950/40 print:bg-slate-50 p-4 rounded-2xl border border-slate-800/40 print:border-slate-200 text-xs">
-                <div>
-                  <span className="font-bold text-[10px] text-slate-500 print:text-slate-400 uppercase tracking-wide block">Bill To Partner University</span>
-                  <span className="font-bold text-slate-200 print:text-slate-900 text-sm block mt-1">
-                    {bulkCalculations[0]?.university || 'Partner University'}
-                  </span>
-                  <span className="text-slate-500 mt-0.5 block">Bulk International Recruitment Commissions Claim</span>
-                </div>
-              </div>
+                  {/* Recipient Details */}
+                  <div className="bg-slate-950/40 print:bg-slate-50 p-4 rounded-2xl border border-slate-800/40 print:border-slate-200 text-xs">
+                    <div>
+                      <span className="font-bold text-[10px] text-slate-500 print:text-slate-400 uppercase tracking-wide block">Bill To Partner University</span>
+                      <span className="font-bold text-slate-200 print:text-slate-900 text-sm block mt-1">
+                        {selectedUni}
+                      </span>
+                      <span className="text-slate-500 mt-0.5 block">Bulk International Recruitment Commissions Claim</span>
+                    </div>
+                  </div>
 
-              {/* Items Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs print:text-slate-900">
-                  <thead>
-                    <tr className="border-b border-slate-800 print:border-slate-350 bg-slate-950/20 print:bg-slate-50 text-[10px] font-bold text-slate-400 print:text-slate-600 uppercase tracking-wider">
-                      <th className="px-4 py-3">Student Name</th>
-                      <th className="px-4 py-3">Target Course</th>
-                      <th className="px-4 py-3 text-right">Tuition Fee</th>
-                      <th className="px-4 py-3 text-right">Base Comm</th>
-                      <th className="px-4 py-3 text-right">Bonus Comm</th>
-                      <th className="px-4 py-3 text-right">Total Claim</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/40 print:divide-slate-200">
-                    {bulkCalculations.map((c) => (
-                      <tr key={c.id}>
-                        <td className="px-4 py-3 font-semibold text-slate-200 print:text-slate-900">{c.applicantName}</td>
-                        <td className="px-4 py-3 text-slate-400 print:text-slate-700">{c.course}</td>
-                        <td className="px-4 py-3 text-right font-mono">{c.currency} {c.tuitionFee.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">{c.currency} {c.baseCommForeign.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">{c.currency} {c.bonusCommForeign.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-indigo-400 print:text-slate-900">{c.currency} {c.commissionAmountForeign.toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  {/* Items Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs print:text-slate-900">
+                      <thead>
+                        <tr className="border-b border-slate-800 print:border-slate-350 bg-slate-950/20 print:bg-slate-50 text-[10px] font-bold text-slate-400 print:text-slate-600 uppercase tracking-wider">
+                          <th className="px-4 py-3">Student Name</th>
+                          <th className="px-4 py-3">Target Course</th>
+                          <th className="px-4 py-3 text-right">Tuition Fee</th>
+                          <th className="px-4 py-3 text-right">Base Comm</th>
+                          <th className="px-4 py-3 text-right">Bonus Comm</th>
+                          <th className="px-4 py-3 text-right">Total Claim</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/40 print:divide-slate-200">
+                        {bulkCalculations.map((c) => (
+                          <tr key={c.id}>
+                            <td className="px-4 py-3 font-semibold text-slate-200 print:text-slate-900">{c.applicantName}</td>
+                            <td className="px-4 py-3 text-slate-400 print:text-slate-700">{c.course}</td>
+                            <td className="px-4 py-3 text-right font-mono">{c.currency} {c.tuitionFee.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">{c.currency} {c.baseCommForeign.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-300 print:text-slate-700">{c.currency} {c.bonusCommForeign.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-right font-mono font-bold text-indigo-400 print:text-slate-900">{c.currency} {c.commissionAmountForeign.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-              {/* Calculation Summary Details */}
-              <div className="pt-4 border-t border-slate-800 print:border-slate-300 flex flex-col items-end space-y-2 text-xs">
-                <div className="flex justify-between w-64 text-slate-400 print:text-slate-600">
-                  <span>Number of Students:</span>
-                  <span className="font-bold text-slate-200 print:text-slate-900">{bulkCalculations.length}</span>
-                </div>
-                <div className="flex justify-between w-64 text-slate-400 print:text-slate-600">
-                  <span>Grand Total (Foreign):</span>
-                  <span className="font-bold text-slate-200 print:text-slate-900 font-mono">
-                    {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountForeign, 0).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between w-64 text-slate-400 print:text-slate-600 font-mono">
-                  <span>NPR Exchange Rate:</span>
-                  <span>@ Rs. {parseFloat(bulkInvoiceForm.nprExchangeRate).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between w-64 border-t border-slate-800/80 print:border-slate-200 pt-2 text-slate-100 print:text-slate-900 font-semibold text-sm">
-                  <span>Total NPR Claim:</span>
-                  <span className="font-bold font-mono text-emerald-500 print:text-slate-900">
-                    Rs. {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountNpr, 0).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
+                  {/* Calculation Summary Details */}
+                  <div className="pt-4 border-t border-slate-800 print:border-slate-300 flex flex-col items-end space-y-2 text-xs">
+                    <div className="flex justify-between w-64 text-slate-400 print:text-slate-600">
+                      <span>Number of Students:</span>
+                      <span className="font-bold text-slate-200 print:text-slate-900">{bulkCalculations.length}</span>
+                    </div>
+                    <div className="flex justify-between w-64 text-slate-400 print:text-slate-600">
+                      <span>Grand Total (Foreign):</span>
+                      <span className="font-bold text-slate-200 print:text-slate-900 font-mono">
+                        {bulkCalculations[0]?.currency} {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountForeign, 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between w-64 text-slate-400 print:text-slate-600 font-mono">
+                      <span>NPR Exchange Rate:</span>
+                      <span>@ Rs. {parseFloat(bulkInvoiceForm.nprExchangeRate).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between w-64 border-t border-slate-800/80 print:border-slate-200 pt-2 text-slate-100 print:text-slate-900 font-semibold text-sm">
+                      <span>Total NPR Claim:</span>
+                      <span className="font-bold font-mono text-emerald-500 print:text-slate-900">
+                        Rs. {bulkCalculations.reduce((sum, c) => sum + c.commissionAmountNpr, 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Footer controls (Hidden in Print) */}
-            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 print:hidden text-xs">
-              <div className="flex items-center space-x-2">
-                <span className="text-slate-400 font-medium">Update Status:</span>
-                <select
-                  value={bulkInvoiceForm.status}
-                  onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, status: e.target.value }))}
-                  className="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 focus:outline-none"
-                >
-                  <option value="PENDING">Keep as Receivable (Pending)</option>
-                  <option value="RECEIVED">Mark as Received (Paid by Uni)</option>
-                </select>
-              </div>
+            {selectedUni && (
+              <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 print:hidden text-xs">
+                <div className="flex items-center space-x-2">
+                  <span className="text-slate-400 font-medium">Update Status:</span>
+                  <select
+                    value={bulkInvoiceForm.status}
+                    onChange={(e) => setBulkInvoiceForm(prev => ({ ...prev, status: e.target.value }))}
+                    className="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 focus:outline-none"
+                  >
+                    <option value="PENDING">Keep as Receivable (Pending)</option>
+                    <option value="RECEIVED">Mark as Received (Paid by Uni)</option>
+                  </select>
+                </div>
 
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsBulkModalOpen(false)}
-                  className="py-2 px-4 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl transition-all cursor-pointer"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveBulkInvoice}
-                  disabled={bulkSaveLoading}
-                  className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center space-x-1"
-                >
-                  {bulkSaveLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Invoice & Update Status</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsBulkModalOpen(false)}
+                    className="py-2 px-4 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl transition-all cursor-pointer"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveBulkInvoice}
+                    disabled={bulkSaveLoading || bulkCalculations.length === 0}
+                    className="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center space-x-1"
+                  >
+                    {bulkSaveLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Save Invoice & Update Status</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>
