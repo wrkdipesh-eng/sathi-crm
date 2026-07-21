@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth';
 import { PipelineStage, CommunicationType } from '@prisma/client';
+import { createCommissionIfVisaFiled } from '@/lib/commission';
 
 // PATCH: Update secondary application details or stage
 export async function PATCH(
@@ -57,6 +58,11 @@ export async function PATCH(
           stageUpdatedAt: new Date(),
         },
       });
+
+      // Auto-create commission ledger entry if stage is VISA_FILED
+      if (newPrimaryStage === PipelineStage.VISA_FILED) {
+        await createCommissionIfVisaFiled(applicantId, prisma);
+      }
 
       await prisma.application.update({
         where: { id: appId },

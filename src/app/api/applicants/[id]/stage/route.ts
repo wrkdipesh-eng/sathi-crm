@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser, canWriteApplicant } from '@/lib/auth';
 import { PipelineStage, CommunicationType } from '@prisma/client';
+import { createCommissionIfVisaFiled } from '@/lib/commission';
 
 export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -89,6 +90,11 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
           stageUpdatedAt: now,
         },
       });
+
+      // Auto-create commission ledger entry if stage is VISA_FILED
+      if (newStage === PipelineStage.VISA_FILED) {
+        await createCommissionIfVisaFiled(id, tx);
+      }
 
       // 4. Create timeline transition log note
       await tx.communicationLog.create({
