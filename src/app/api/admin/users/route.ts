@@ -4,16 +4,16 @@ import { getAuthUser } from '@/lib/auth';
 import { Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-// Enforce Director role check for all admin routes
-function checkDirector(authUser: any) {
-  return authUser && authUser.role === Role.DIRECTOR;
+// Enforce Director or Superadmin role check for all admin routes
+function checkAdminAccess(authUser: any) {
+  return authUser && (authUser.role === Role.DIRECTOR || authUser.role === Role.SUPERADMIN);
 }
 
 // GET: List all users in the organization
 export async function GET(req: NextRequest) {
   try {
     const authUser = getAuthUser(req);
-    if (!checkDirector(authUser)) {
+    if (!checkAdminAccess(authUser)) {
       return NextResponse.json({ error: 'Forbidden: Director privileges required' }, { status: 403 });
     }
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const authUser = getAuthUser(req);
-    if (!checkDirector(authUser)) {
+    if (!checkAdminAccess(authUser)) {
       return NextResponse.json({ error: 'Forbidden: Director privileges required' }, { status: 403 });
     }
 
