@@ -27,11 +27,25 @@ import {
 } from 'lucide-react';
 
 const ROLES = [
+  // Admin Roles
+  { value: 'SUPERADMIN', label: 'Superadmin (Full Access)' },
   { value: 'DIRECTOR', label: 'Director (HQ)' },
-  { value: 'BRANCH_MANAGER', label: 'Branch Manager' },
-  { value: 'COUNSELOR', label: 'Counselor' },
+
+  // Operational Roles
+  { value: 'ACCOUNTS', label: 'Accounts' },
   { value: 'FINANCE', label: 'Finance' },
-  { value: 'SUB_AGENT', label: 'Sub-agent' }
+  { value: 'DOCUMENTATION_OFFICER', label: 'Documentation Officer' },
+  { value: 'FRONT_DESK_OFFICER', label: 'Front Desk Officer' },
+
+  // Branch/Team Roles
+  { value: 'MANAGER', label: 'Manager' },
+  { value: 'BRANCH_MANAGER', label: 'Branch Manager' },
+  { value: 'SENIOR_COUNSELOR', label: 'Senior Counselor' },
+  { value: 'COUNSELOR', label: 'Counselor' },
+
+  // External Roles
+  { value: 'SUB_AGENT', label: 'Sub-agent' },
+  { value: 'STUDENT_PORTAL', label: 'Student Portal' }
 ];
 
 export default function AdminSettingsPage() {
@@ -1849,7 +1863,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
 
-              {userForm.role !== 'DIRECTOR' && userForm.role !== 'SUB_AGENT' && (
+              {!['DIRECTOR', 'SUPERADMIN', 'SUB_AGENT', 'STUDENT_PORTAL', 'ACCOUNTS', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER'].includes(userForm.role) && (
                 <div className="border-t border-slate-850 pt-3 mt-2">
                   <label className="block text-[10px] text-slate-400 font-medium mb-1.5">
                     Assign Branch Office *
@@ -1865,6 +1879,21 @@ export default function AdminSettingsPage() {
                       <option key={b.id} value={b.id}>{b.name}</option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {userForm.role === 'SUB_AGENT' && (
+                <div className="border-t border-slate-850 pt-3 mt-2">
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1.5">
+                    Commission Split (e.g. 0.40 for 40%, or flat amount like 15000)
+                  </label>
+                  <input
+                    type="text"
+                    value={userForm.subAgentCommissionSplit}
+                    onChange={(e) => setUserForm(prev => ({ ...prev, subAgentCommissionSplit: e.target.value }))}
+                    placeholder="0.40"
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                  />
                 </div>
               )}
 
