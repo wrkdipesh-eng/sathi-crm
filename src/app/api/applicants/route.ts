@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser, getAccessQueryFilter } from '@/lib/auth';
 import { PipelineStage, DocumentStatus, CommunicationType } from '@prisma/client';
+import { verifyEmailDomain, isValidPhone } from '@/lib/validation';
 
 // Helper: Seed checklist based on country (dynamic from DB)
 async function createChecklistDocs(applicantId: string, country: string, organizationId: string) {
@@ -207,6 +208,25 @@ export async function POST(req: NextRequest) {
         { error: 'Name, target country, source, and branch are required' },
         { status: 400 }
       );
+    }
+
+    if (email) {
+      const emailCheck = await verifyEmailDomain(email);
+      if (!emailCheck.valid) {
+        return NextResponse.json({ error: emailCheck.reason || 'Invalid email address' }, { status: 400 });
+      }
+    }
+    if (guardianEmail) {
+      const guardianEmailCheck = await verifyEmailDomain(guardianEmail);
+      if (!guardianEmailCheck.valid) {
+        return NextResponse.json({ error: guardianEmailCheck.reason || 'Invalid guardian email address' }, { status: 400 });
+      }
+    }
+    if (phone && !isValidPhone(phone)) {
+      return NextResponse.json({ error: 'Mobile number is not a valid phone number' }, { status: 400 });
+    }
+    if (guardianPhone && !isValidPhone(guardianPhone)) {
+      return NextResponse.json({ error: 'Guardian phone number is not a valid phone number' }, { status: 400 });
     }
 
     // Determine subAgentId and custom split if source is SUB_AGENT

@@ -30,6 +30,7 @@ import {
   Pencil,
   Star
 } from 'lucide-react';
+import { isValidEmailFormat, isValidPhone } from '@/lib/validation';
 
 const PROMOTE_OPTIONS = [
   'INQUIRY',
@@ -358,9 +359,21 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
   // Edit Profile Form Submit
   const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSavingProfile(true);
     const fd = new FormData(e.currentTarget);
-    
+
+    const emailVal = (fd.get('email') as string) || '';
+    const phoneVal = (fd.get('phone') as string) || '';
+    if (emailVal && !isValidEmailFormat(emailVal)) {
+      alert('Email address format is invalid');
+      return;
+    }
+    if (phoneVal && !isValidPhone(phoneVal)) {
+      alert('Mobile number is not a valid phone number');
+      return;
+    }
+
+    setIsSavingProfile(true);
+
     // Parse test scores
     const ieltsVal = fd.get('ielts');
     const pteVal = fd.get('pte');

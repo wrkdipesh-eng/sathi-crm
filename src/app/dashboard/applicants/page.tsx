@@ -16,6 +16,7 @@ import {
   BookOpen,
   X
 } from 'lucide-react';
+import { isValidEmailFormat, isValidPhone } from '@/lib/validation';
 
 const STAGES = [
   'INQUIRY',
@@ -232,8 +233,26 @@ export default function ApplicantsListPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setFormError(null);
+
+    if (formData.email && !isValidEmailFormat(formData.email)) {
+      setFormError('Email address format is invalid');
+      return;
+    }
+    if (formData.guardianEmail && !isValidEmailFormat(formData.guardianEmail)) {
+      setFormError('Guardian email address format is invalid');
+      return;
+    }
+    if (formData.phone && !isValidPhone(formData.phone)) {
+      setFormError('Mobile number is not a valid phone number');
+      return;
+    }
+    if (formData.guardianPhone && !isValidPhone(formData.guardianPhone)) {
+      setFormError('Guardian phone number is not a valid phone number');
+      return;
+    }
+
+    setIsSubmitting(true);
 
     // Build the request body with formatted test scores
     const requestData = {

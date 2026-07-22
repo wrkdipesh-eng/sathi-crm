@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser, canWriteApplicant } from '@/lib/auth';
 import { Role } from '@prisma/client';
+import { verifyEmailDomain, isValidPhone } from '@/lib/validation';
 
 // GET: Retrieve single applicant with full relations
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -116,6 +117,16 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       branchCommissionSplit,
       priority,
     } = body;
+
+    if (email) {
+      const emailCheck = await verifyEmailDomain(email);
+      if (!emailCheck.valid) {
+        return NextResponse.json({ error: emailCheck.reason || 'Invalid email address' }, { status: 400 });
+      }
+    }
+    if (phone && !isValidPhone(phone)) {
+      return NextResponse.json({ error: 'Mobile number is not a valid phone number' }, { status: 400 });
+    }
 
     const updatedApplicant = await prisma.applicant.update({
       where: { id },
