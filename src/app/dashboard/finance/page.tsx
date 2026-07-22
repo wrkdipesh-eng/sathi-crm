@@ -1088,8 +1088,6 @@ export default function FinanceLedgerPage() {
             display: block !important;
             width: 100% !important;
             max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
             box-shadow: none !important;
             overflow: visible !important;
           }
@@ -3181,7 +3179,7 @@ export default function FinanceLedgerPage() {
       {/* Generated Official Invoice Modal View */}
       {isGeneratedInvoiceOpen && generatedInvoiceData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in print:bg-[#020a06] print:p-0 print:block print:static">
-          <div className="w-full max-w-5xl bg-[#020a06] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-3xl print:w-full print:max-h-none print:bg-[#020a06] print:border-[#0d3420] print:block">
+          <div className="w-full max-w-5xl bg-[#020a06] border border-[#0d3420] text-slate-100 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:shadow-none print:rounded-3xl print:w-full print:max-h-none print:bg-[#020a06] print:border-[#0d3420] print:block print:overflow-visible">
             
             {/* Action Top Bar (Hidden in Print) */}
             <div className="px-6 py-4 border-b border-[#0d3420] bg-slate-950/60 flex justify-between items-center print:hidden">
