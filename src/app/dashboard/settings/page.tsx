@@ -51,15 +51,24 @@ const ROLES = [
 ];
 
 const PERMISSIONS = [
-  { key: 'dashboard_view', label: 'View Dashboard', icon: '📊' },
-  { key: 'applicants_view', label: 'View Applicants', icon: '👁️' },
-  { key: 'applicants_create', label: 'Create Applicants', icon: '➕' },
-  { key: 'applicants_edit', label: 'Edit Applicants', icon: '✏️' },
-  { key: 'applicants_delete', label: 'Delete Applicants', icon: '🗑️' },
-  { key: 'finance_view', label: 'View Finance', icon: '💰' },
-  { key: 'finance_edit', label: 'Edit Finance', icon: '💵' },
-  { key: 'settings_access', label: 'Access Settings', icon: '⚙️' },
-  { key: 'users_manage', label: 'Manage Users', icon: '👥' }
+  // Core access
+  { key: 'dashboard_view', label: 'View Dashboard', icon: '📊', category: 'Core Access' },
+  { key: 'applicants_view', label: 'View Applicants', icon: '👁️', category: 'Core Access' },
+  { key: 'applicants_create', label: 'Create Applicants', icon: '➕', category: 'Core Access' },
+  { key: 'applicants_edit', label: 'Edit Applicants', icon: '✏️', category: 'Core Access' },
+  { key: 'applicants_delete', label: 'Delete Applicants', icon: '🗑️', category: 'Core Access' },
+  { key: 'finance_view', label: 'View Finance', icon: '💰', category: 'Core Access' },
+  { key: 'finance_edit', label: 'Edit Finance', icon: '💵', category: 'Core Access' },
+  { key: 'settings_access', label: 'Access Settings', icon: '⚙️', category: 'Core Access' },
+  { key: 'users_manage', label: 'Manage Users', icon: '👥', category: 'Core Access' },
+
+  // Scope controls
+  { key: 'applicants_view_all_branches', label: 'View All Branches Applicants', icon: '🌐', category: 'Applicant Scope' },
+  { key: 'applicants_view_own_branch_only', label: 'View Own Branch Applicants Only', icon: '🏢', category: 'Applicant Scope' },
+  { key: 'finance_view_all_branches', label: 'View All Branches Finance', icon: '🌍', category: 'Finance Scope' },
+  { key: 'finance_view_own_branch_only', label: 'View Own Branch Finance Only', icon: '💼', category: 'Finance Scope' },
+  { key: 'settings_organization_only', label: 'Organization Settings Only', icon: '🏛️', category: 'Settings Scope' },
+  { key: 'users_create_standard_only', label: 'Create Standard Users Only', icon: '👤', category: 'User Scope' }
 ];
 
 export default function AdminSettingsPage() {
@@ -212,7 +221,13 @@ export default function AdminSettingsPage() {
       finance_view: false,
       finance_edit: false,
       settings_access: false,
-      users_manage: false
+      users_manage: false,
+      applicants_view_all_branches: false,
+      applicants_view_own_branch_only: false,
+      finance_view_all_branches: false,
+      finance_view_own_branch_only: false,
+      settings_organization_only: false,
+      users_create_standard_only: false
     }
   });
 
@@ -1934,8 +1949,8 @@ export default function AdminSettingsPage() {
               )}
 
               {/* Permissions Section */}
-              <div className="border-t border-slate-850 pt-4 mt-4">
-                <div className="flex items-center space-x-2 mb-3">
+              <div className="border-t border-slate-850 pt-4 mt-4 max-h-96 overflow-y-auto">
+                <div className="flex items-center space-x-2 mb-3 sticky top-0">
                   <Shield className="w-4 h-4 text-indigo-400" />
                   <label className="block text-[10px] text-slate-300 font-bold uppercase tracking-wider">
                     Page & Feature Permissions
@@ -1944,27 +1959,37 @@ export default function AdminSettingsPage() {
                 <p className="text-[9px] text-slate-500 mb-3">
                   Select which pages and features this user can access:
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {PERMISSIONS.map((perm) => (
-                    <label key={perm.key} className="flex items-center space-x-2 p-2 bg-slate-950/40 border border-slate-800 rounded-lg hover:border-indigo-500/50 cursor-pointer transition-all">
-                      <input
-                        type="checkbox"
-                        checked={userForm.permissions[perm.key as keyof typeof userForm.permissions]}
-                        onChange={(e) => setUserForm(prev => ({
-                          ...prev,
-                          permissions: {
-                            ...prev.permissions,
-                            [perm.key]: e.target.checked
-                          }
-                        }))}
-                        className="w-4 h-4 rounded border-slate-600 text-indigo-600 cursor-pointer"
-                      />
-                      <span className="text-[9px] text-slate-300 font-medium">
-                        {perm.icon} {perm.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+
+                {/* Group permissions by category */}
+                {['Core Access', 'Applicant Scope', 'Finance Scope', 'Settings Scope', 'User Scope'].map((category) => {
+                  const categoryPerms = PERMISSIONS.filter((p: any) => p.category === category);
+                  return (
+                    <div key={category} className="mb-4">
+                      <h4 className="text-[9px] font-bold text-indigo-400 uppercase mb-2 px-1">{category}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {categoryPerms.map((perm: any) => (
+                          <label key={perm.key} className="flex items-center space-x-2 p-2 bg-slate-950/40 border border-slate-800 rounded-lg hover:border-indigo-500/50 cursor-pointer transition-all">
+                            <input
+                              type="checkbox"
+                              checked={userForm.permissions[perm.key as keyof typeof userForm.permissions]}
+                              onChange={(e) => setUserForm(prev => ({
+                                ...prev,
+                                permissions: {
+                                  ...prev.permissions,
+                                  [perm.key]: e.target.checked
+                                }
+                              }))}
+                              className="w-4 h-4 rounded border-slate-600 text-indigo-600 cursor-pointer"
+                            />
+                            <span className="text-[9px] text-slate-300 font-medium">
+                              {perm.icon} {perm.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Modal Actions */}

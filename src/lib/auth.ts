@@ -5,6 +5,7 @@ import { Role } from '@prisma/client';
 const JWT_SECRET = process.env.JWT_SECRET || 'sathi-crm-super-secret-key-for-local-development-change-in-production';
 
 export interface UserPermissions {
+  // Core page access
   dashboard_view: boolean;
   applicants_view: boolean;
   applicants_create: boolean;
@@ -14,6 +15,14 @@ export interface UserPermissions {
   finance_edit: boolean;
   settings_access: boolean;
   users_manage: boolean;
+
+  // Granular scope controls
+  applicants_view_all_branches: boolean;     // Can view applicants across all branches
+  applicants_view_own_branch_only: boolean;  // Can only view own branch applicants
+  finance_view_all_branches: boolean;        // Can view finance across all branches
+  finance_view_own_branch_only: boolean;     // Can only view own branch finance
+  settings_organization_only: boolean;       // Can access org settings (no user/branch ops)
+  users_create_standard_only: boolean;       // Can only create standard users, not admins
 }
 
 export interface JwtPayload {
@@ -229,6 +238,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
     finance_edit: false,
     settings_access: false,
     users_manage: false,
+    applicants_view_all_branches: false,
+    applicants_view_own_branch_only: false,
+    finance_view_all_branches: false,
+    finance_view_own_branch_only: false,
+    settings_organization_only: false,
+    users_create_standard_only: false,
   };
 
   switch (role) {
@@ -244,6 +259,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
         finance_edit: true,
         settings_access: true,
         users_manage: true,
+        applicants_view_all_branches: true,
+        applicants_view_own_branch_only: false,
+        finance_view_all_branches: true,
+        finance_view_own_branch_only: false,
+        settings_organization_only: false,
+        users_create_standard_only: false,
       };
 
     case Role.ACCOUNTS:
@@ -258,6 +279,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
         finance_edit: true,
         settings_access: false,
         users_manage: false,
+        applicants_view_all_branches: true,
+        applicants_view_own_branch_only: false,
+        finance_view_all_branches: true,
+        finance_view_own_branch_only: false,
+        settings_organization_only: false,
+        users_create_standard_only: false,
       };
 
     case Role.MANAGER:
@@ -272,6 +299,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
         finance_edit: false,
         settings_access: false,
         users_manage: false,
+        applicants_view_all_branches: false,
+        applicants_view_own_branch_only: true,
+        finance_view_all_branches: false,
+        finance_view_own_branch_only: false,
+        settings_organization_only: false,
+        users_create_standard_only: false,
       };
 
     case Role.SENIOR_COUNSELOR:
@@ -286,6 +319,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
         finance_edit: false,
         settings_access: false,
         users_manage: false,
+        applicants_view_all_branches: false,
+        applicants_view_own_branch_only: true,
+        finance_view_all_branches: false,
+        finance_view_own_branch_only: false,
+        settings_organization_only: false,
+        users_create_standard_only: false,
       };
 
     case Role.DOCUMENTATION_OFFICER:
@@ -300,6 +339,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
         finance_edit: false,
         settings_access: false,
         users_manage: false,
+        applicants_view_all_branches: true,
+        applicants_view_own_branch_only: false,
+        finance_view_all_branches: false,
+        finance_view_own_branch_only: false,
+        settings_organization_only: false,
+        users_create_standard_only: false,
       };
 
     case Role.SUB_AGENT:
@@ -313,6 +358,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
         finance_edit: false,
         settings_access: false,
         users_manage: false,
+        applicants_view_all_branches: false,
+        applicants_view_own_branch_only: true,
+        finance_view_all_branches: false,
+        finance_view_own_branch_only: false,
+        settings_organization_only: false,
+        users_create_standard_only: false,
       };
 
     case Role.STUDENT_PORTAL:
@@ -326,6 +377,12 @@ export function getDefaultPermissionsForRole(role: Role): UserPermissions {
         finance_edit: false,
         settings_access: false,
         users_manage: false,
+        applicants_view_all_branches: false,
+        applicants_view_own_branch_only: true,
+        finance_view_all_branches: false,
+        finance_view_own_branch_only: false,
+        settings_organization_only: false,
+        users_create_standard_only: false,
       };
 
     default:

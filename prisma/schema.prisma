@@ -96,7 +96,7 @@ model User {
   subAgentCommissionSplit Float?       // Flat rate or percentage if this user is a sub-agent (e.g. 0.50 for 50%)
 
   // Granular permissions (JSON)
-  permissions             Json         @default("{\"dashboard_view\": false, \"applicants_view\": false, \"applicants_create\": false, \"applicants_edit\": false, \"applicants_delete\": false, \"finance_view\": false, \"finance_edit\": false, \"settings_access\": false, \"users_manage\": false}")
+  permissions             Json         @default("{\"dashboard_view\": false, \"applicants_view\": false, \"applicants_create\": false, \"applicants_edit\": false, \"applicants_delete\": false, \"finance_view\": false, \"finance_edit\": false, \"settings_access\": false, \"users_manage\": false, \"applicants_view_all_branches\": false, \"applicants_view_own_branch_only\": false, \"finance_view_all_branches\": false, \"finance_view_own_branch_only\": false, \"settings_organization_only\": false, \"users_create_standard_only\": false}")
 
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
