@@ -88,12 +88,16 @@ model User {
   organization            Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   branchId                String?
   branch                  Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  
+
   assignedApplicants      Applicant[]  @relation("counselor")
   createdApplicants       Applicant[]  @relation("creator")
   subAgentApplicants      Applicant[]  @relation("subAgent")
-  
+
   subAgentCommissionSplit Float?       // Flat rate or percentage if this user is a sub-agent (e.g. 0.50 for 50%)
+
+  // Granular permissions (JSON)
+  permissions             Json         @default("{\"dashboard_view\": false, \"applicants_view\": false, \"applicants_create\": false, \"applicants_edit\": false, \"applicants_delete\": false, \"finance_view\": false, \"finance_edit\": false, \"settings_access\": false, \"users_manage\": false}")
+
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
 }

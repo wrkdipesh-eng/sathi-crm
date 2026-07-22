@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, email, password, role, branchId, subAgentCommissionSplit } = body;
+    const { name, email, password, role, branchId, subAgentCommissionSplit, permissions } = body;
 
     if (!name || !email || !password || !role) {
       return NextResponse.json({ error: 'Name, email, password, and role are required' }, { status: 400 });
@@ -78,8 +78,9 @@ export async function POST(req: NextRequest) {
         passwordHash,
         role,
         organizationId: authUser!.organizationId,
-        branchId: role !== Role.DIRECTOR && role !== Role.SUB_AGENT ? (branchId || null) : null,
+        branchId: role !== Role.DIRECTOR && role !== Role.SUPERADMIN && role !== Role.SUB_AGENT ? (branchId || null) : null,
         subAgentCommissionSplit: role === Role.SUB_AGENT ? parseFloat(subAgentCommissionSplit || '0.40') : null,
+        permissions: permissions || {},
       },
     });
 

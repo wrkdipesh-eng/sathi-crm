@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { 
-  Building, 
-  Users, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  MapPin, 
-  Key, 
-  Coins, 
-  Loader2, 
-  X, 
+import {
+  Building,
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  MapPin,
+  Key,
+  Coins,
+  Loader2,
+  X,
   CheckCircle,
   AlertCircle,
   ShieldCheck,
@@ -23,8 +23,10 @@ import {
   Globe,
   BookOpen,
   School,
-  Compass
+  Compass,
+  Shield
 } from 'lucide-react';
+import { getDefaultPermissionsForRole } from '@/lib/auth';
 
 const ROLES = [
   // Admin Roles
@@ -46,6 +48,18 @@ const ROLES = [
   // External Roles
   { value: 'SUB_AGENT', label: 'Sub-agent' },
   { value: 'STUDENT_PORTAL', label: 'Student Portal' }
+];
+
+const PERMISSIONS = [
+  { key: 'dashboard_view', label: 'View Dashboard', icon: '📊' },
+  { key: 'applicants_view', label: 'View Applicants', icon: '👁️' },
+  { key: 'applicants_create', label: 'Create Applicants', icon: '➕' },
+  { key: 'applicants_edit', label: 'Edit Applicants', icon: '✏️' },
+  { key: 'applicants_delete', label: 'Delete Applicants', icon: '🗑️' },
+  { key: 'finance_view', label: 'View Finance', icon: '💰' },
+  { key: 'finance_edit', label: 'Edit Finance', icon: '💵' },
+  { key: 'settings_access', label: 'Access Settings', icon: '⚙️' },
+  { key: 'users_manage', label: 'Manage Users', icon: '👥' }
 ];
 
 export default function AdminSettingsPage() {
@@ -188,7 +202,18 @@ export default function AdminSettingsPage() {
     password: '',
     role: 'COUNSELOR',
     branchId: '',
-    subAgentCommissionSplit: '0.40'
+    subAgentCommissionSplit: '0.40',
+    permissions: {
+      dashboard_view: false,
+      applicants_view: false,
+      applicants_create: false,
+      applicants_edit: false,
+      applicants_delete: false,
+      finance_view: false,
+      finance_edit: false,
+      settings_access: false,
+      users_manage: false
+    }
   });
 
   // Group universities by name + country
@@ -439,7 +464,8 @@ export default function AdminSettingsPage() {
       password: '', // Leave blank for password reset
       role: u.role,
       branchId: u.branchId || '',
-      subAgentCommissionSplit: u.subAgentCommissionSplit !== null ? u.subAgentCommissionSplit.toString() : '0.40'
+      subAgentCommissionSplit: u.subAgentCommissionSplit !== null ? u.subAgentCommissionSplit.toString() : '0.40',
+      permissions: u.permissions || getDefaultPermissionsForRole(u.role)
     });
     setUserError(null);
     setIsUserModalOpen(true);
@@ -447,13 +473,15 @@ export default function AdminSettingsPage() {
 
   const openAddUser = () => {
     setEditingUser(null);
+    const defaultPermissions = getDefaultPermissionsForRole('COUNSELOR');
     setUserForm({
       name: '',
       email: '',
       password: '',
       role: 'COUNSELOR',
       branchId: branches[0]?.id || '',
-      subAgentCommissionSplit: '0.40'
+      subAgentCommissionSplit: '0.40',
+      permissions: defaultPermissions
     });
     setUserError(null);
     setIsUserModalOpen(true);
@@ -1853,7 +1881,15 @@ export default function AdminSettingsPage() {
                   </label>
                   <select
                     value={userForm.role}
-                    onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value }))}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      const defaultPermissions = getDefaultPermissionsForRole(newRole as any);
+                      setUserForm(prev => ({
+                        ...prev,
+                        role: newRole,
+                        permissions: defaultPermissions
+                      }));
+                    }}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
                   >
                     {ROLES.map((r) => (
@@ -1896,6 +1932,40 @@ export default function AdminSettingsPage() {
                   />
                 </div>
               )}
+
+              {/* Permissions Section */}
+              <div className="border-t border-slate-850 pt-4 mt-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Shield className="w-4 h-4 text-indigo-400" />
+                  <label className="block text-[10px] text-slate-300 font-bold uppercase tracking-wider">
+                    Page & Feature Permissions
+                  </label>
+                </div>
+                <p className="text-[9px] text-slate-500 mb-3">
+                  Select which pages and features this user can access:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {PERMISSIONS.map((perm) => (
+                    <label key={perm.key} className="flex items-center space-x-2 p-2 bg-slate-950/40 border border-slate-800 rounded-lg hover:border-indigo-500/50 cursor-pointer transition-all">
+                      <input
+                        type="checkbox"
+                        checked={userForm.permissions[perm.key as keyof typeof userForm.permissions]}
+                        onChange={(e) => setUserForm(prev => ({
+                          ...prev,
+                          permissions: {
+                            ...prev.permissions,
+                            [perm.key]: e.target.checked
+                          }
+                        }))}
+                        className="w-4 h-4 rounded border-slate-600 text-indigo-600 cursor-pointer"
+                      />
+                      <span className="text-[9px] text-slate-300 font-medium">
+                        {perm.icon} {perm.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
               {/* Modal Actions */}
               <div className="pt-4 border-t border-slate-800 flex justify-end space-x-3 mt-4">

@@ -4,6 +4,18 @@ import { Role } from '@prisma/client';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sathi-crm-super-secret-key-for-local-development-change-in-production';
 
+export interface UserPermissions {
+  dashboard_view: boolean;
+  applicants_view: boolean;
+  applicants_create: boolean;
+  applicants_edit: boolean;
+  applicants_delete: boolean;
+  finance_view: boolean;
+  finance_edit: boolean;
+  settings_access: boolean;
+  users_manage: boolean;
+}
+
 export interface JwtPayload {
   userId: string;
   email: string;
@@ -11,6 +23,7 @@ export interface JwtPayload {
   role: Role;
   organizationId: string;
   branchId: string | null;
+  permissions?: UserPermissions;
 }
 
 export function signToken(payload: JwtPayload): string {
@@ -200,4 +213,170 @@ export function canModifyFinancials(user: JwtPayload): boolean {
     default:
       return false;
   }
+}
+
+/**
+ * Get default permissions for a role (used during user creation)
+ */
+export function getDefaultPermissionsForRole(role: Role): UserPermissions {
+  const defaultPermissions: UserPermissions = {
+    dashboard_view: false,
+    applicants_view: false,
+    applicants_create: false,
+    applicants_edit: false,
+    applicants_delete: false,
+    finance_view: false,
+    finance_edit: false,
+    settings_access: false,
+    users_manage: false,
+  };
+
+  switch (role) {
+    case Role.SUPERADMIN:
+    case Role.DIRECTOR:
+      return {
+        dashboard_view: true,
+        applicants_view: true,
+        applicants_create: true,
+        applicants_edit: true,
+        applicants_delete: true,
+        finance_view: true,
+        finance_edit: true,
+        settings_access: true,
+        users_manage: true,
+      };
+
+    case Role.ACCOUNTS:
+    case Role.FINANCE:
+      return {
+        dashboard_view: true,
+        applicants_view: true,
+        applicants_create: false,
+        applicants_edit: false,
+        applicants_delete: false,
+        finance_view: true,
+        finance_edit: true,
+        settings_access: false,
+        users_manage: false,
+      };
+
+    case Role.MANAGER:
+    case Role.BRANCH_MANAGER:
+      return {
+        dashboard_view: true,
+        applicants_view: true,
+        applicants_create: true,
+        applicants_edit: true,
+        applicants_delete: true,
+        finance_view: false,
+        finance_edit: false,
+        settings_access: false,
+        users_manage: false,
+      };
+
+    case Role.SENIOR_COUNSELOR:
+    case Role.COUNSELOR:
+      return {
+        dashboard_view: true,
+        applicants_view: true,
+        applicants_create: true,
+        applicants_edit: true,
+        applicants_delete: false,
+        finance_view: false,
+        finance_edit: false,
+        settings_access: false,
+        users_manage: false,
+      };
+
+    case Role.DOCUMENTATION_OFFICER:
+    case Role.FRONT_DESK_OFFICER:
+      return {
+        dashboard_view: true,
+        applicants_view: true,
+        applicants_create: false,
+        applicants_edit: false,
+        applicants_delete: false,
+        finance_view: false,
+        finance_edit: false,
+        settings_access: false,
+        users_manage: false,
+      };
+
+    case Role.SUB_AGENT:
+      return {
+        dashboard_view: false,
+        applicants_view: true,
+        applicants_create: true,
+        applicants_edit: false,
+        applicants_delete: false,
+        finance_view: false,
+        finance_edit: false,
+        settings_access: false,
+        users_manage: false,
+      };
+
+    case Role.STUDENT_PORTAL:
+      return {
+        dashboard_view: false,
+        applicants_view: true,
+        applicants_create: false,
+        applicants_edit: false,
+        applicants_delete: false,
+        finance_view: false,
+        finance_edit: false,
+        settings_access: false,
+        users_manage: false,
+      };
+
+    default:
+      return defaultPermissions;
+  }
+}
+
+/**
+ * Check if user has a specific permission
+ */
+export function hasPermission(user: JwtPayload | null, permission: keyof UserPermissions): boolean {
+  if (!user) return false;
+  if (!user.permissions) return false;
+  return user.permissions[permission] === true;
+}
+
+/**
+ * Permission check functions for common operations
+ */
+export function canViewDashboard(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'dashboard_view');
+}
+
+export function canViewApplicantsPage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'applicants_view');
+}
+
+export function canCreateApplicantPage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'applicants_create');
+}
+
+export function canEditApplicantPage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'applicants_edit');
+}
+
+export function canDeleteApplicantPage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'applicants_delete');
+}
+
+export function canViewFinancePage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'finance_view');
+}
+
+export function canEditFinancePage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'finance_edit');
+}
+
+export function canAccessSettingsPage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'settings_access');
+}
+
+export function canManageUsersPage(user: JwtPayload | null): boolean {
+  return hasPermission(user, 'users_manage');
 }

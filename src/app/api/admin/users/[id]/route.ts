@@ -4,8 +4,8 @@ import { getAuthUser } from '@/lib/auth';
 import { Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-function checkDirector(authUser: any) {
-  return authUser && authUser.role === Role.DIRECTOR;
+function checkAdminAccess(authUser: any) {
+  return authUser && (authUser.role === Role.DIRECTOR || authUser.role === Role.SUPERADMIN);
 }
 
 // PATCH: Update user profile
@@ -13,13 +13,13 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   const params = await props.params;
   try {
     const authUser = getAuthUser(req);
-    if (!checkDirector(authUser)) {
-      return NextResponse.json({ error: 'Forbidden: Director privileges required' }, { status: 403 });
+    if (!checkAdminAccess(authUser)) {
+      return NextResponse.json({ error: 'Forbidden: Admin privileges required' }, { status: 403 });
     }
 
     const { id } = params;
     const body = await req.json();
-    const { name, email, password, role, branchId, subAgentCommissionSplit } = body;
+    const { name, email, password, role, branchId, subAgentCommissionSplit, permissions } = body;
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -56,12 +56,17 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
     // Branch assignment logic
     if (branchId !== undefined) {
-      updateData.branchId = role !== Role.DIRECTOR && role !== Role.SUB_AGENT ? (branchId || null) : null;
+      updateData.branchId = role !== Role.DIRECTOR && role !== Role.SUPERADMIN && role !== Role.SUB_AGENT ? (branchId || null) : null;
     }
 
     // Sub-agent splits
     if (subAgentCommissionSplit !== undefined) {
       updateData.subAgentCommissionSplit = role === Role.SUB_AGENT ? parseFloat(subAgentCommissionSplit) : null;
+    }
+
+    // Permissions
+    if (permissions !== undefined) {
+      updateData.permissions = permissions;
     }
 
     const updatedUser = await prisma.user.update({
@@ -82,8 +87,8 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
   const params = await props.params;
   try {
     const authUser = getAuthUser(req);
-    if (!checkDirector(authUser)) {
-      return NextResponse.json({ error: 'Forbidden: Director privileges required' }, { status: 403 });
+    if (!checkAdminAccess(authUser)) {
+      return NextResponse.json({ error: 'Forbidden: Admin privileges required' }, { status: 403 });
     }
 
     const { id } = params;
