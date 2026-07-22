@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  UserPlus, 
-  Clock, 
-  MapPin, 
+import {
+  Plus,
+  Search,
+  Filter,
+  UserPlus,
+  Clock,
+  MapPin,
   CheckCircle,
   FileText,
   AlertTriangle,
@@ -17,6 +17,7 @@ import {
   X
 } from 'lucide-react';
 import { isValidEmailFormat, isValidPhone } from '@/lib/validation';
+import { canCreateApplicant } from '@/lib/auth';
 
 const STAGES = [
   'INQUIRY',
@@ -346,7 +347,7 @@ export default function ApplicantsListPage() {
             Manage and track candidate pipelines from counseling to visa approval.
           </p>
         </div>
-        {currentUser?.role !== 'FINANCE' && currentUser?.role !== 'STUDENT_PORTAL' && (
+        {currentUser && canCreateApplicant(currentUser) && (
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center space-x-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-indigo-600/10 cursor-pointer"
@@ -389,8 +390,8 @@ export default function ApplicantsListPage() {
             ))}
           </select>
 
-          {/* Branch Filter (only visible for Directors/HQ or read-only) */}
-          {currentUser?.role === 'DIRECTOR' ? (
+          {/* Branch Filter (visible for org-wide roles) */}
+          {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER'].includes(currentUser?.role) ? (
             <select
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
@@ -408,8 +409,8 @@ export default function ApplicantsListPage() {
             </div>
           )}
 
-          {/* Counselor Filter (HQ and Manager role only) */}
-          {(currentUser?.role === 'DIRECTOR' || currentUser?.role === 'BRANCH_MANAGER') && (
+          {/* Counselor Filter (org-wide and manager roles only) */}
+          {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'BRANCH_MANAGER', 'MANAGER'].includes(currentUser?.role) && (
             <select
               value={counselorFilter}
               onChange={(e) => setCounselorFilter(e.target.value)}

@@ -99,3 +99,105 @@ export function canWriteApplicant(user: JwtPayload, applicantBranchId: string, a
 
   return false;
 }
+
+/**
+ * Check if user can access the admin settings panel (user/branch/university management).
+ * Only SUPERADMIN and DIRECTOR can access settings.
+ */
+export function canAccessSettings(user: JwtPayload): boolean {
+  return user.role === Role.SUPERADMIN || user.role === Role.DIRECTOR;
+}
+
+/**
+ * Check if user can access the finance/commissions page.
+ * SUPERADMIN, DIRECTOR, ACCOUNTS, and FINANCE roles can access.
+ */
+export function canAccessFinance(user: JwtPayload): boolean {
+  switch (user.role) {
+    case Role.SUPERADMIN:
+    case Role.DIRECTOR:
+    case Role.ACCOUNTS:
+    case Role.FINANCE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Check if user can view applicants (any applicants, not just their own).
+ * All roles except STUDENT_PORTAL and SUB_AGENT have general applicant access.
+ */
+export function canViewApplicants(user: JwtPayload): boolean {
+  return user.role !== Role.STUDENT_PORTAL && user.role !== Role.SUB_AGENT;
+}
+
+/**
+ * Check if user can edit applicants (create, update).
+ * SUB_AGENT is view-only for other's leads; STUDENT_PORTAL is read-only.
+ */
+export function canCreateApplicant(user: JwtPayload): boolean {
+  switch (user.role) {
+    case Role.STUDENT_PORTAL:
+    case Role.SUB_AGENT:
+    case Role.DOCUMENTATION_OFFICER:
+    case Role.FRONT_DESK_OFFICER:
+      return false;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Check if user can delete applicants.
+ * Only SUPERADMIN, DIRECTOR, and BRANCH_MANAGER can delete.
+ */
+export function canDeleteApplicant(user: JwtPayload): boolean {
+  switch (user.role) {
+    case Role.SUPERADMIN:
+    case Role.DIRECTOR:
+    case Role.BRANCH_MANAGER:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Check if user can manage staff/users.
+ * Only SUPERADMIN and DIRECTOR can manage users.
+ */
+export function canManageUsers(user: JwtPayload): boolean {
+  return user.role === Role.SUPERADMIN || user.role === Role.DIRECTOR;
+}
+
+/**
+ * Check if user can view/export financial reports.
+ * SUPERADMIN, DIRECTOR, ACCOUNTS, and FINANCE can view financials.
+ */
+export function canViewFinancials(user: JwtPayload): boolean {
+  switch (user.role) {
+    case Role.SUPERADMIN:
+    case Role.DIRECTOR:
+    case Role.ACCOUNTS:
+    case Role.FINANCE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Check if user can modify financial records (invoices, commission splits).
+ * Only SUPERADMIN, DIRECTOR, and FINANCE can modify.
+ */
+export function canModifyFinancials(user: JwtPayload): boolean {
+  switch (user.role) {
+    case Role.SUPERADMIN:
+    case Role.DIRECTOR:
+    case Role.FINANCE:
+      return true;
+    default:
+      return false;
+  }
+}

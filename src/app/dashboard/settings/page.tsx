@@ -230,8 +230,8 @@ export default function AdminSettingsPage() {
       const userData = await userRes.json();
       setCurrentUser(userData.user);
 
-      if (userData.user.role !== 'DIRECTOR') {
-        setError('Access Denied: Director privileges are required to view this control panel.');
+      if (userData.user.role !== 'DIRECTOR' && userData.user.role !== 'SUPERADMIN') {
+        setError('Access Denied: Only Superadmin and Director can access the control panel.');
         setLoading(false);
         return;
       }

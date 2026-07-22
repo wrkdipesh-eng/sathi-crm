@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  DollarSign, 
-  TrendingUp, 
-  ArrowUpRight, 
-  Briefcase, 
-  MapPin, 
-  Calendar, 
-  Printer, 
-  Loader2, 
+import {
+  DollarSign,
+  TrendingUp,
+  ArrowUpRight,
+  Briefcase,
+  MapPin,
+  Calendar,
+  Printer,
+  Loader2,
   CheckCircle,
   Clock,
   Filter,
@@ -23,6 +23,7 @@ import {
   GraduationCap,
   FileCheck
 } from 'lucide-react';
+import { canModifyFinancials } from '@/lib/auth';
 
 export default function FinanceLedgerPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -1044,7 +1045,7 @@ export default function FinanceLedgerPage() {
     );
   }
 
-  if (currentUser.role !== 'DIRECTOR' && currentUser.role !== 'FINANCE') {
+  if (!['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE'].includes(currentUser.role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center space-y-4">
         <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-500 animate-bounce">
@@ -1053,7 +1054,7 @@ export default function FinanceLedgerPage() {
         <div>
           <h2 className="text-lg font-bold text-slate-100 font-sans">Access Denied</h2>
           <p className="text-xs text-slate-400 mt-1 max-w-sm font-sans leading-relaxed">
-            This section contains restricted financial transactions and is only accessible by Finance Officers and Directors.
+            This section contains restricted financial transactions and is only accessible by Superadmin, Director, Accounts, and Finance roles.
           </p>
         </div>
       </div>
@@ -1548,64 +1549,68 @@ export default function FinanceLedgerPage() {
                           >
                             <Printer className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            onClick={() => {
-                              const totalNpr = comm.commissionAmountNpr;
-                              
-                              let agentPct = 0;
-                              if (totalNpr > 0) {
-                                agentPct = (comm.subAgentAmountNpr / totalNpr) * 100;
-                              }
-                              
-                              let branchPct = 0;
-                              if (totalNpr > 0) {
-                                branchPct = (comm.branchAmountNpr / totalNpr) * 100;
-                              }
+                          {currentUser && canModifyFinancials(currentUser) && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  const totalNpr = comm.commissionAmountNpr;
 
-                              setCommissionToEdit(comm);
-                              setEditForm({
-                                partnerUniversity: comm.partnerUniversity,
-                                currency: comm.currency,
-                                commissionAmountForeign: String(comm.commissionAmountForeign),
-                                nprExchangeRate: String(comm.nprExchangeRate),
-                                status: comm.status,
-                                agentSplitPercent: agentPct > 0 ? agentPct.toFixed(1) : '0',
-                                subAgentAmountNpr: String(comm.subAgentAmountNpr),
-                                branchSplitPercent: branchPct > 0 ? branchPct.toFixed(1) : '0',
-                                branchAmountNpr: String(comm.branchAmountNpr),
-                              });
-                              
-                              const matchedEditUni = universities.find(u => 
-                                u.name.toLowerCase() === comm.partnerUniversity.toLowerCase() &&
-                                (!comm.applicant.targetCourse || u.course.toLowerCase() === comm.applicant.targetCourse.toLowerCase())
-                              ) || universities.find(u => 
-                                u.name.toLowerCase() === comm.partnerUniversity.toLowerCase()
-                              );
+                                  let agentPct = 0;
+                                  if (totalNpr > 0) {
+                                    agentPct = (comm.subAgentAmountNpr / totalNpr) * 100;
+                                  }
 
-                              if (matchedEditUni && matchedEditUni.commissionPercentage) {
-                                const parsed = parseFeeAndCurrency(matchedEditUni.tuitionFee);
-                                setEditCommType('PERCENT');
-                                setEditCommPercent(String(matchedEditUni.commissionPercentage));
-                                setEditTuitionFee(String(parsed.numericFee));
-                              } else {
-                                setEditCommType('FLAT');
-                                setEditCommPercent('');
-                                setEditTuitionFee('');
-                              }
-                              setEditModalOpen(true);
-                            }}
-                            className="p-1 rounded bg-slate-850 hover:bg-indigo-50 text-amber-600 border border-slate-800 cursor-pointer"
-                            title="Edit Commission ledger entry"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCommission(comm.id)}
-                            className="p-1 rounded bg-slate-850 hover:bg-indigo-50 text-rose-500 border border-slate-800 cursor-pointer"
-                            title="Delete Commission ledger entry"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                                  let branchPct = 0;
+                                  if (totalNpr > 0) {
+                                    branchPct = (comm.branchAmountNpr / totalNpr) * 100;
+                                  }
+
+                                  setCommissionToEdit(comm);
+                                  setEditForm({
+                                    partnerUniversity: comm.partnerUniversity,
+                                    currency: comm.currency,
+                                    commissionAmountForeign: String(comm.commissionAmountForeign),
+                                    nprExchangeRate: String(comm.nprExchangeRate),
+                                    status: comm.status,
+                                    agentSplitPercent: agentPct > 0 ? agentPct.toFixed(1) : '0',
+                                    subAgentAmountNpr: String(comm.subAgentAmountNpr),
+                                    branchSplitPercent: branchPct > 0 ? branchPct.toFixed(1) : '0',
+                                    branchAmountNpr: String(comm.branchAmountNpr),
+                                  });
+
+                                  const matchedEditUni = universities.find(u =>
+                                    u.name.toLowerCase() === comm.partnerUniversity.toLowerCase() &&
+                                    (!comm.applicant.targetCourse || u.course.toLowerCase() === comm.applicant.targetCourse.toLowerCase())
+                                  ) || universities.find(u =>
+                                    u.name.toLowerCase() === comm.partnerUniversity.toLowerCase()
+                                  );
+
+                                  if (matchedEditUni && matchedEditUni.commissionPercentage) {
+                                    const parsed = parseFeeAndCurrency(matchedEditUni.tuitionFee);
+                                    setEditCommType('PERCENT');
+                                    setEditCommPercent(String(matchedEditUni.commissionPercentage));
+                                    setEditTuitionFee(String(parsed.numericFee));
+                                  } else {
+                                    setEditCommType('FLAT');
+                                    setEditCommPercent('');
+                                    setEditTuitionFee('');
+                                  }
+                                  setEditModalOpen(true);
+                                }}
+                                className="p-1 rounded bg-slate-850 hover:bg-indigo-50 text-amber-600 border border-slate-800 cursor-pointer"
+                                title="Edit Commission ledger entry"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCommission(comm.id)}
+                                className="p-1 rounded bg-slate-850 hover:bg-indigo-50 text-rose-500 border border-slate-800 cursor-pointer"
+                                title="Delete Commission ledger entry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
