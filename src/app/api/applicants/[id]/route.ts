@@ -128,6 +128,23 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       return NextResponse.json({ error: 'Mobile number is not a valid phone number' }, { status: 400 });
     }
 
+    if (email && email !== applicant.email) {
+      const existingApplicant = await prisma.applicant.findFirst({
+        where: { email, organizationId: applicant.organizationId, id: { not: id } },
+      });
+      if (existingApplicant) {
+        return NextResponse.json({ error: 'An applicant with this email already exists' }, { status: 400 });
+      }
+    }
+    if (phone && phone !== applicant.phone) {
+      const existingApplicant = await prisma.applicant.findFirst({
+        where: { phone, organizationId: applicant.organizationId, id: { not: id } },
+      });
+      if (existingApplicant) {
+        return NextResponse.json({ error: 'An applicant with this phone number already exists' }, { status: 400 });
+      }
+    }
+
     const updatedApplicant = await prisma.applicant.update({
       where: { id },
       data: {

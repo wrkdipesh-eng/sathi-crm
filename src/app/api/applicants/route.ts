@@ -229,6 +229,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Guardian phone number is not a valid phone number' }, { status: 400 });
     }
 
+    if (email) {
+      const existingApplicant = await prisma.applicant.findFirst({
+        where: { email, organizationId: authUser.organizationId },
+      });
+      if (existingApplicant) {
+        return NextResponse.json({ error: 'An applicant with this email already exists' }, { status: 400 });
+      }
+    }
+    if (phone) {
+      const existingApplicant = await prisma.applicant.findFirst({
+        where: { phone, organizationId: authUser.organizationId },
+      });
+      if (existingApplicant) {
+        return NextResponse.json({ error: 'An applicant with this phone number already exists' }, { status: 400 });
+      }
+    }
+
     // Determine subAgentId and custom split if source is SUB_AGENT
     const resolvedSubAgentId = source === 'SUB_AGENT' ? subAgentId : null;
     const resolvedSplit = source === 'SUB_AGENT' && subAgentCommissionSplit ? parseFloat(subAgentCommissionSplit) : null;
