@@ -127,7 +127,7 @@ model Applicant {
   missedFollowUpCount     Int                  @default(0) // Counter: 0, 1, or 2+ → COLD
 
   lastPriorityChangeAt    DateTime?            // Track when priority last changed
-  priorityChangeReason    String?              // NEW_ENTRY, SUBMISSION_COMMITTED, COMMITMENT_MISSED, STAGE_CHANGE, FOLLOWUP_MISSED, MANUAL
+  priorityChangeReason    String?              // NEW_ENTRY, SUBMISSION_COMMITTED, COMMITMENT_MISSED, STAGE_CHANGE, FOLLOWUP_MISSED, CONVERTED, RE_ENGAGE, STATUS_CHANGE, MANUAL, AUTO_ASSIGNMENT
 
   organizationId          String
   organization            Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)

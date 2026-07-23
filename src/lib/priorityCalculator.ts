@@ -10,17 +10,25 @@ export interface PriorityResult {
 /**
  * Calculate priority based on engagement, commitment, and follow-ups
  *
- * PRIORITY Logic (Urgency/Engagement Level):
+ * PRIORITY Logic (Urgency/Engagement Level) — only applies while the
+ * applicant is still a lead (INQUIRY/COUNSELLING/CLASS_ENROLLMENT):
  * - NEW ENTRY (INQUIRY) → HOT (reason: NEW_ENTRY)
  * - COMMITMENT set + not expired → HOT (reason: SUBMISSION_COMMITTED)
  * - Commitment date passed unmet → WARM (reason: COMMITMENT_MISSED)
  * - 2+ missed follow-ups → COLD (reason: FOLLOWUP_MISSED)
  * - Default engaged leads → WARM
  *
+ * Once the applicant is off the lead-conversion track, priority stops
+ * measuring "urgency to convert" and either clears or resets:
+ * - Application submitted or beyond (REAL) → no priority (reason: CONVERTED)
+ * - Visa refused (REJECTED) → HOT (reason: RE_ENGAGE) — they may reapply to
+ *   the same or a different destination, so they surface again as a fresh
+ *   lead rather than disappearing from the priority filters.
+ *
  * APPLICANT STATUS (whether they're real/verified):
  * - APPLICATION_SUBMITTED or beyond → REAL (separate field)
  * - INQUIRY/COUNSELLING → INQUIRY
- * - VISA_REFUSED/CLOSED → CLOSED/REJECTED
+ * - VISA_REFUSED → REJECTED
  */
 export function calculatePriority(
   pipelineStage: PipelineStage,
@@ -29,8 +37,29 @@ export function calculatePriority(
   applicantCreatedAt?: Date
 ): PriorityResult {
   const now = new Date();
+  const status = calculateApplicantStatus(pipelineStage);
 
-  // RULE 1: If 2+ missed follow-ups → COLD (override everything)
+  // RULE 0a: Already converted to a real applicant — priority measures
+  // conversion urgency, which no longer applies once they've converted.
+  if (status === 'REAL') {
+    return {
+      priority: null,
+      reason: 'CONVERTED',
+      missedFollowUpCount,
+    };
+  }
+
+  // RULE 0b: Visa refused — reset to HOT as a fresh re-engagement
+  // opportunity rather than a dead lead, since they may reapply.
+  if (status === 'REJECTED') {
+    return {
+      priority: 'HOT',
+      reason: 'RE_ENGAGE',
+      missedFollowUpCount,
+    };
+  }
+
+  // RULE 1: If 2+ missed follow-ups → COLD (override everything below)
   if (missedFollowUpCount >= 2) {
     return {
       priority: 'COLD',
@@ -227,6 +256,10 @@ export async function updateApplicantPriority(
                 ? `${actualMissedCount} missed follow-up(s). Last follow-up was due on ${
                     lastFollowUpDate?.toISOString().split('T')[0] || 'unknown date'
                   }`
+                : result.reason === 'CONVERTED'
+                ? `Applicant reached "${applicant.pipelineStage}" — priority cleared, no longer tracked as a lead`
+                : result.reason === 'RE_ENGAGE'
+                ? `Visa refused — reset to HOT in case the applicant reapplies to the same or a different destination`
                 : !priorityChanged && statusChanged
                 ? `Status changed from "${applicant.applicantStatus || 'none'}" to "${newApplicantStatus}" (priority unchanged: ${result.priority})`
                 : undefined,
