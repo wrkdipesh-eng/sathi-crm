@@ -1670,121 +1670,249 @@ export default function AdminSettingsPage() {
                           <span className="text-[10px] text-indigo-400 font-mono italic">✨ Live Real-Time Preview Active</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          
-                          {/* Color 1: Background */}
-                          <div className="space-y-1.5">
-                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                              Background Color
-                            </label>
-                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
-                              <input
-                                type="color"
-                                value={customThemeColors.bg}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, bg: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
+                        {/* Preset Color Templates */}
+                        <div className="space-y-2">
+                          <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Quick Presets</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { name: 'Dark Green', colors: { bg: '#020a06', card: '#051810', accent: '#d4af37', text: '#ffffff' } },
+                              { name: 'Dark Blue', colors: { bg: '#0f172a', card: '#1e293b', accent: '#00d4ff', text: '#ffffff' } },
+                              { name: 'Dark Purple', colors: { bg: '#1a0f2e', card: '#2d1b4e', accent: '#fbbf24', text: '#ffffff' } },
+                              { name: 'Light Mode', colors: { bg: '#f8fafc', card: '#ffffff', accent: '#059669', text: '#1e293b' } },
+                              { name: 'Dark Red', colors: { bg: '#1f1117', card: '#422620', accent: '#f97316', text: '#ffffff' } },
+                              { name: 'Dark Teal', colors: { bg: '#0c1e1a', card: '#143d3a', accent: '#14b8a6', text: '#ffffff' } },
+                              { name: 'Light Warm', colors: { bg: '#fffbf0', card: '#fef3c7', accent: '#d97706', text: '#78350f' } },
+                              { name: 'Dark Slate', colors: { bg: '#0f172a', card: '#1e293b', accent: '#64748b', text: '#e2e8f0' } },
+                            ].map((preset) => (
+                              <button
+                                key={preset.name}
+                                type="button"
+                                onClick={() => {
+                                  setCustomThemeColors(preset.colors);
+                                  applyThemeColors('custom', preset.colors);
                                 }}
-                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                              />
-                              <input
-                                type="text"
-                                value={customThemeColors.bg}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, bg: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
-                              />
+                                className="p-2 rounded-lg border border-slate-700 hover:border-indigo-500 transition-colors group"
+                                title={`Apply ${preset.name}`}
+                              >
+                                <div className="flex gap-1 mb-1">
+                                  <div className="w-3 h-3 rounded-sm border border-slate-600" style={{ backgroundColor: preset.colors.bg }} />
+                                  <div className="w-3 h-3 rounded-sm border border-slate-600" style={{ backgroundColor: preset.colors.card }} />
+                                  <div className="w-3 h-3 rounded-sm border border-slate-600" style={{ backgroundColor: preset.colors.accent }} />
+                                  <div className="w-3 h-3 rounded-sm border border-slate-600" style={{ backgroundColor: preset.colors.text }} />
+                                </div>
+                                <span className="text-[9px] text-slate-400 group-hover:text-indigo-400 block leading-tight">{preset.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                          {/* Color Picker Section */}
+                          <div className="lg:col-span-2 space-y-4">
+                            {/* Color 1: Background */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  🎨 Background Color
+                                </label>
+                                <span className="text-[9px] text-slate-500">Page background</span>
+                              </div>
+                              <div className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
+                                <div className="relative group">
+                                  <input
+                                    type="color"
+                                    value={customThemeColors.bg}
+                                    onChange={(e) => {
+                                      const updated = { ...customThemeColors, bg: e.target.value };
+                                      setCustomThemeColors(updated);
+                                      applyThemeColors('custom', updated);
+                                    }}
+                                    className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-2 border-slate-700"
+                                  />
+                                  <div
+                                    className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 rounded text-[8px] text-slate-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                                    style={{ backgroundColor: customThemeColors.bg }}
+                                  >Click to pick
+                                  </div>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={customThemeColors.bg}
+                                  onChange={(e) => {
+                                    const updated = { ...customThemeColors, bg: e.target.value };
+                                    setCustomThemeColors(updated);
+                                    applyThemeColors('custom', updated);
+                                  }}
+                                  className="flex-1 bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 rounded-lg px-3 py-2 uppercase"
+                                  placeholder="#020a06"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Color 2: Card / Container */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  📦 Card / Surface Color
+                                </label>
+                                <span className="text-[9px] text-slate-500">Cards & containers</span>
+                              </div>
+                              <div className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
+                                <div className="relative group">
+                                  <input
+                                    type="color"
+                                    value={customThemeColors.card}
+                                    onChange={(e) => {
+                                      const updated = { ...customThemeColors, card: e.target.value };
+                                      setCustomThemeColors(updated);
+                                      applyThemeColors('custom', updated);
+                                    }}
+                                    className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-2 border-slate-700"
+                                  />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={customThemeColors.card}
+                                  onChange={(e) => {
+                                    const updated = { ...customThemeColors, card: e.target.value };
+                                    setCustomThemeColors(updated);
+                                    applyThemeColors('custom', updated);
+                                  }}
+                                  className="flex-1 bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 rounded-lg px-3 py-2 uppercase"
+                                  placeholder="#051810"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Color 3: Primary Highlight (Buttons & Active Subtabs) */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  ⭐ Accent / Highlight Color
+                                </label>
+                                <span className="text-[9px] text-slate-500">Buttons, links, focus</span>
+                              </div>
+                              <div className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
+                                <div className="relative group">
+                                  <input
+                                    type="color"
+                                    value={customThemeColors.accent}
+                                    onChange={(e) => {
+                                      const updated = { ...customThemeColors, accent: e.target.value };
+                                      setCustomThemeColors(updated);
+                                      applyThemeColors('custom', updated);
+                                    }}
+                                    className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-2 border-slate-700"
+                                  />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={customThemeColors.accent}
+                                  onChange={(e) => {
+                                    const updated = { ...customThemeColors, accent: e.target.value };
+                                    setCustomThemeColors(updated);
+                                    applyThemeColors('custom', updated);
+                                  }}
+                                  className="flex-1 bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 rounded-lg px-3 py-2 uppercase"
+                                  placeholder="#d4af37"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Color 4: Text / Typography */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                                  ✍️ Text / Font Color
+                                </label>
+                                <span className="text-[9px] text-slate-500">All text & typography</span>
+                              </div>
+                              <div className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
+                                <div className="relative group">
+                                  <input
+                                    type="color"
+                                    value={customThemeColors.text}
+                                    onChange={(e) => {
+                                      const updated = { ...customThemeColors, text: e.target.value };
+                                      setCustomThemeColors(updated);
+                                      applyThemeColors('custom', updated);
+                                    }}
+                                    className="w-12 h-12 rounded-lg cursor-pointer bg-transparent border-2 border-slate-700"
+                                  />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={customThemeColors.text}
+                                  onChange={(e) => {
+                                    const updated = { ...customThemeColors, text: e.target.value };
+                                    setCustomThemeColors(updated);
+                                    applyThemeColors('custom', updated);
+                                  }}
+                                  className="flex-1 bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 rounded-lg px-3 py-2 uppercase"
+                                  placeholder="#ffffff"
+                                />
+                              </div>
                             </div>
                           </div>
 
-                          {/* Color 2: Card / Container */}
-                          <div className="space-y-1.5">
+                          {/* Live Preview Section */}
+                          <div className="lg:col-span-1 space-y-3">
                             <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                              Card / Surface Color
+                              🎬 Live Preview
                             </label>
-                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
-                              <input
-                                type="color"
-                                value={customThemeColors.card}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, card: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                              />
-                              <input
-                                type="text"
-                                value={customThemeColors.card}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, card: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
-                              />
+                            <div className="rounded-xl overflow-hidden border border-slate-700 shadow-lg">
+                              <div style={{ backgroundColor: customThemeColors.bg }} className="p-4 space-y-2">
+                                {/* Preview Background */}
+                                <div style={{ backgroundColor: customThemeColors.card, color: customThemeColors.text }} className="p-3 rounded-lg text-[11px] font-medium">
+                                  Card Preview
+                                </div>
+                                {/* Preview Button */}
+                                <button
+                                  type="button"
+                                  style={{ backgroundColor: customThemeColors.accent, color: customThemeColors.bg }}
+                                  className="w-full py-2 rounded-lg text-[11px] font-bold transition-transform hover:scale-105"
+                                >
+                                  Button
+                                </button>
+                                {/* Preview Text */}
+                                <div style={{ color: customThemeColors.text }} className="text-[10px] leading-relaxed opacity-90">
+                                  Sample text with your chosen colors
+                                </div>
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Color 3: Primary Highlight (Buttons & Active Subtabs) */}
-                          <div className="space-y-1.5">
-                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                              Button & Tab Highlight
-                            </label>
-                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
-                              <input
-                                type="color"
-                                value={customThemeColors.accent}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, accent: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                              />
-                              <input
-                                type="text"
-                                value={customThemeColors.accent}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, accent: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Color 4: Text / Typography */}
-                          <div className="space-y-1.5">
-                            <label className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                              Text / Font Color
-                            </label>
-                            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1.5">
-                              <input
-                                type="color"
-                                value={customThemeColors.text}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, text: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
-                              />
-                              <input
-                                type="text"
-                                value={customThemeColors.text}
-                                onChange={(e) => {
-                                  const updated = { ...customThemeColors, text: e.target.value };
-                                  setCustomThemeColors(updated);
-                                  applyThemeColors('custom', updated);
-                                }}
-                                className="w-full bg-transparent text-xs font-mono text-slate-200 focus:outline-none uppercase"
-                              />
+                            {/* Contrast Indicator */}
+                            <div className="space-y-2">
+                              <p className="text-[10px] text-slate-400 font-semibold uppercase">Contrast Check</p>
+                              <div className="text-[9px] space-y-1 bg-slate-900 border border-slate-800 rounded-lg p-2">
+                                <div
+                                  className="p-2 rounded flex items-center justify-between"
+                                  style={{ backgroundColor: customThemeColors.bg }}
+                                >
+                                  <span style={{ color: customThemeColors.text }}>Text on Background</span>
+                                  <span className={`text-[8px] font-bold ${
+                                    Math.abs(parseInt(customThemeColors.bg.substring(1), 16) - parseInt(customThemeColors.text.substring(1), 16)) > 8388608 / 2
+                                      ? 'text-green-400'
+                                      : 'text-yellow-400'
+                                  }`}>
+                                    ✓ OK
+                                  </span>
+                                </div>
+                                <div
+                                  className="p-2 rounded flex items-center justify-between"
+                                  style={{ backgroundColor: customThemeColors.card }}
+                                >
+                                  <span style={{ color: customThemeColors.text }}>Text on Card</span>
+                                  <span className={`text-[8px] font-bold ${
+                                    Math.abs(parseInt(customThemeColors.card.substring(1), 16) - parseInt(customThemeColors.text.substring(1), 16)) > 8388608 / 2
+                                      ? 'text-green-400'
+                                      : 'text-yellow-400'
+                                  }`}>
+                                    ✓ OK
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </div>
 
