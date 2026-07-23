@@ -16,7 +16,9 @@ import {
   BookOpen,
   X,
   Trash2,
-  Pencil
+  Pencil,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { isValidEmailFormat, isValidPhone } from '@/lib/validation';
 import { canCreateApplicant } from '@/lib/auth';
@@ -57,6 +59,10 @@ export default function ApplicantsListPage() {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [initialized, setInitialized] = useState(false);
+  // Advanced filters (Counselor, Lead Source, Target Country, University,
+  // exact stage, stuck-leads threshold) are hidden by default -- most staff
+  // only ever need Search, Branch, and the category/priority pills below.
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   
   // Metadata for select dropdowns
   const [branches, setBranches] = useState<any[]>([]);
@@ -662,17 +668,21 @@ export default function ApplicantsListPage() {
         </div>
       )}
 
-      {/* Filters Section */}
-      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+      {/* Filters Section -- Search + Branch stay visible at all times; the
+          category pills below answer "which leads do I want to see" in
+          plain language; anything more technical (exact stage, counselor,
+          source, country, university, stuck-leads threshold) is tucked
+          behind "More filters" so the page isn't overwhelming by default. */}
+      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">
         <div className="flex items-center space-x-2 text-xs font-bold text-indigo-400 uppercase tracking-wider">
           <Filter className="w-3.5 h-3.5" />
-          <span>Filters</span>
+          <span>Find a Lead</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Search bar */}
           <div>
-            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Search</label>
+            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Search by Name, Email or Phone</label>
             <div className="relative">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
               <input
@@ -683,21 +693,6 @@ export default function ApplicantsListPage() {
                 className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
               />
             </div>
-          </div>
-
-          {/* Stage Filter */}
-          <div>
-            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Pipeline Stage</label>
-            <select
-              value={stage}
-              onChange={(e) => setStage(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-            >
-              <option value="">All Pipeline Stages</option>
-              {STAGES.map((stg) => (
-                <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
-              ))}
-            </select>
           </div>
 
           {/* Branch Filter (visible for org-wide roles) */}
@@ -721,124 +716,26 @@ export default function ApplicantsListPage() {
               </div>
             )}
           </div>
-
-          {/* Counselor Filter (org-wide and manager roles only) */}
-          {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'BRANCH_MANAGER', 'MANAGER'].includes(currentUser?.role) && (
-            <div>
-              <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Counselor</label>
-              <select
-                value={counselorFilter}
-                onChange={(e) => setCounselorFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-              >
-                <option value="">All Counselors</option>
-                {counselors.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Source Filter */}
-          <div>
-            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Lead Source</label>
-            <select
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-            >
-              <option value="">All Lead Sources</option>
-              {SOURCES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Target Country Filter */}
-          <div>
-            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Target Country</label>
-            <select
-              value={targetCountryFilter}
-              onChange={(e) => setTargetCountryFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-            >
-              <option value="">All Target Countries</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.countryName}>{c.countryName}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* University Filter */}
-          <div>
-            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">University</label>
-            <div className="relative">
-              <BookOpen className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Filter by University"
-                value={universityFilter}
-                onChange={(e) => setUniversityFilter(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
-              />
-            </div>
-          </div>
         </div>
 
-        {/* Stuck Leads Filter */}
-        <div className="flex flex-wrap items-center justify-between border-t border-slate-800/60 pt-4 gap-4">
-          <div className="flex items-center space-x-3">
-            <label className="flex items-center space-x-2 text-xs text-slate-300 font-medium cursor-pointer">
-              <input
-                type="checkbox"
-                checked={stuckFilter}
-                onChange={(e) => setStuckFilter(e.target.checked)}
-                className="w-4 h-4 accent-indigo-600 rounded bg-slate-950 border-slate-800 focus:ring-indigo-500/20"
-              />
-              <span className="flex items-center space-x-1">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                <span>Show Stuck Leads Only</span>
-              </span>
-            </label>
-
-            {stuckFilter && (
-              <div className="flex items-center space-x-2 animate-fade-in">
-                <span className="text-[10px] text-slate-400">Threshold (days):</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={stuckThreshold}
-                  onChange={(e) => setStuckThreshold(Math.max(1, parseInt(e.target.value) || 7))}
-                  className="w-14 px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-slate-200 text-xs font-mono text-center"
-                />
-              </div>
+        {/* Quick pill filters */}
+        <div className="space-y-3.5 border-t border-slate-800/60 pt-4">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-bold text-slate-400">Browse By</span>
+            {(priorityFilter || categoryFilter || stuckFilter) && (
+              <button
+                onClick={() => {
+                  setPriorityFilter('');
+                  setCategoryFilter('');
+                  setStuckFilter(false);
+                }}
+                className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-4 cursor-pointer transition-all select-none animate-fade-in"
+              >
+                Clear category filters
+              </button>
             )}
           </div>
-          <span className="text-[10px] text-slate-500 font-mono">
-            Showing {applicants.length} record{applicants.length !== 1 && 's'}
-          </span>
-        </div>
-      </div>
 
-      {/* Horizontal Quick-Filter Pill Bar */}
-      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4 shadow-sm">
-        <div className="flex justify-between items-center pb-2.5 border-b border-slate-800/60">
-          <span className="text-xs font-bold text-slate-400">Quick Filters</span>
-          {(priorityFilter || categoryFilter || stuckFilter) && (
-            <button
-              onClick={() => {
-                setPriorityFilter('');
-                setCategoryFilter('');
-                setStuckFilter(false);
-              }}
-              className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-4 cursor-pointer transition-all select-none animate-fade-in"
-            >
-              Clear All Filters
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-3.5">
           {/* Priority Filters */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-20 shrink-0">Priority</span>
@@ -895,7 +792,7 @@ export default function ApplicantsListPage() {
 
           {/* Pipeline Stage Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-20 shrink-0">Pipeline</span>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-20 shrink-0">Stage</span>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'LEAD' ? '' : 'LEAD')}
@@ -1012,6 +909,135 @@ export default function ApplicantsListPage() {
             </div>
           </div>
         </div>
+
+        {/* Advanced filters -- collapsed by default */}
+        <div className="border-t border-slate-800/60 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className="flex items-center space-x-1.5 text-xs font-bold text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
+          >
+            {showMoreFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            <span>{showMoreFilters ? 'Fewer filters' : 'More filters'}</span>
+            {!showMoreFilters && <span className="text-slate-600 font-normal normal-case">(counselor, source, country, university, exact stage)</span>}
+          </button>
+
+          {showMoreFilters && (
+            <div className="mt-4 space-y-4 animate-fade-in">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {/* Stage Filter (exact) */}
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Exact Pipeline Stage</label>
+                  <select
+                    value={stage}
+                    onChange={(e) => setStage(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+                  >
+                    <option value="">All Pipeline Stages</option>
+                    {STAGES.map((stg) => (
+                      <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Counselor Filter (org-wide and manager roles only) */}
+                {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'BRANCH_MANAGER', 'MANAGER'].includes(currentUser?.role) && (
+                  <div>
+                    <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Counselor</label>
+                    <select
+                      value={counselorFilter}
+                      onChange={(e) => setCounselorFilter(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+                    >
+                      <option value="">All Counselors</option>
+                      {counselors.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Source Filter */}
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Lead Source</label>
+                  <select
+                    value={sourceFilter}
+                    onChange={(e) => setSourceFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+                  >
+                    <option value="">All Lead Sources</option>
+                    {SOURCES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Target Country Filter */}
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Target Country</label>
+                  <select
+                    value={targetCountryFilter}
+                    onChange={(e) => setTargetCountryFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+                  >
+                    <option value="">All Target Countries</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.countryName}>{c.countryName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* University Filter */}
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">University</label>
+                  <div className="relative">
+                    <BookOpen className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Filter by University"
+                      value={universityFilter}
+                      onChange={(e) => setUniversityFilter(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Stuck Leads Filter */}
+              <div className="flex flex-wrap items-center gap-4">
+                <label className="flex items-center space-x-2 text-xs text-slate-300 font-medium cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={stuckFilter}
+                    onChange={(e) => setStuckFilter(e.target.checked)}
+                    className="w-4 h-4 accent-indigo-600 rounded bg-slate-950 border-slate-800 focus:ring-indigo-500/20"
+                  />
+                  <span className="flex items-center space-x-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Show Stuck Leads Only</span>
+                  </span>
+                </label>
+
+                {stuckFilter && (
+                  <div className="flex items-center space-x-2 animate-fade-in">
+                    <span className="text-[10px] text-slate-400">Threshold (days):</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={stuckThreshold}
+                      onChange={(e) => setStuckThreshold(Math.max(1, parseInt(e.target.value) || 7))}
+                      className="w-14 px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-slate-200 text-xs font-mono text-center"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="text-right text-[10px] text-slate-500 font-mono border-t border-slate-800/60 pt-3">
+          Showing {applicants.length} record{applicants.length !== 1 && 's'}
+        </div>
       </div>
 
       {/* Table Section */}
@@ -1037,7 +1063,7 @@ export default function ApplicantsListPage() {
                   <th className="px-6 py-4">Counselor / Branch</th>
                   <th className="px-6 py-4">Source</th>
                   <th className="px-6 py-4">Pipeline Stage</th>
-                  <th className="px-6 py-4">Stage Age</th>
+                  <th className="px-6 py-4">Days in Stage</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
