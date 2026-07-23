@@ -49,7 +49,7 @@ export default function RootLayout({
                   document.title = savedTitle;
                 }
 
-                const savedTheme = localStorage.getItem('organization_theme_palette') || 'dark-emerald';
+                const savedTheme = localStorage.getItem('organization_theme_palette') || 'light-executive';
                 document.documentElement.setAttribute('data-theme', savedTheme);
                 const builtInLightThemes = ['light-executive', 'light-sage', 'light-clean'];
                 let isLight = builtInLightThemes.indexOf(savedTheme) !== -1;

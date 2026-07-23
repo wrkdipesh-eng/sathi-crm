@@ -90,7 +90,7 @@ export default function AdminSettingsPage() {
     tagline: '',
     logoUrl: '',
     logoIcon: 'Globe',
-    themePalette: 'dark-emerald',
+    themePalette: 'light-executive',
     faviconUrl: '',
     titleTag: '',
   });
@@ -141,7 +141,7 @@ export default function AdminSettingsPage() {
   };
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('organization_theme_palette') || 'dark-emerald';
+    const savedTheme = localStorage.getItem('organization_theme_palette') || 'light-executive';
     const savedCustom = localStorage.getItem('organization_custom_theme_colors');
     let colorsObj = customThemeColors;
     if (savedCustom) {

@@ -178,19 +178,19 @@
 
   --ring: rgba(37, 99, 235, 0.4);
 
-  --slate-50: #f9fafb;
-  --slate-100: #f3f4f6;
-  --slate-200: #e5e7eb;
-  --slate-300: #d1d5db;
-  --slate-350: #9ca3af;
+  --slate-50: #030712;
+  --slate-100: #111827;
+  --slate-200: #1f2937;
+  --slate-300: #374151;
+  --slate-350: #4b5563;
   --slate-400: #6b7280;
-  --slate-500: #4b5563;
-  --slate-600: #374151;
-  --slate-700: #1f2937;
-  --slate-800: #111827;
-  --slate-850: #0f172a;
-  --slate-900: #030712;
-  --slate-950: #030712;
+  --slate-500: #9ca3af;
+  --slate-600: #d1d5db;
+  --slate-700: #e5e7eb;
+  --slate-800: #f3f4f6;
+  --slate-850: #f9fafb;
+  --slate-900: #ffffff;
+  --slate-950: #f9fafb;
 
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(37, 99, 235, 0.1);
@@ -217,19 +217,19 @@
 
   --ring: rgba(4, 120, 87, 0.4);
 
-  --slate-50: #f1f5f3;
-  --slate-100: #e6f2ed;
-  --slate-200: #d1e5dd;
-  --slate-300: #b8d5ca;
-  --slate-350: #8eb5a3;
-  --slate-400: #6b9b8a;
-  --slate-500: #4b5d59;
-  --slate-600: #3a4945;
-  --slate-700: #1f3a34;
-  --slate-800: #0f2e2a;
-  --slate-850: #064e3b;
-  --slate-900: #03291f;
-  --slate-950: #01150c;
+  --slate-50: #01150c;
+  --slate-100: #064e3b;
+  --slate-200: #0f2e2a;
+  --slate-300: #1f3a34;
+  --slate-350: #3a4945;
+  --slate-400: #4b5d59;
+  --slate-500: #6b9b8a;
+  --slate-600: #8eb5a3;
+  --slate-700: #b8d5ca;
+  --slate-800: #d1e5dd;
+  --slate-850: #e6f2ed;
+  --slate-900: #ffffff;
+  --slate-950: #f1f5f3;
 
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(4, 120, 87, 0.15);
@@ -256,19 +256,19 @@
 
   --ring: rgba(30, 64, 175, 0.4);
 
-  --slate-50: #f9fafb;
-  --slate-100: #f3f4f6;
-  --slate-200: #e5e7eb;
-  --slate-300: #d1d5db;
-  --slate-350: #9ca3af;
+  --slate-50: #030712;
+  --slate-100: #111827;
+  --slate-200: #1f2937;
+  --slate-300: #374151;
+  --slate-350: #4b5563;
   --slate-400: #6b7280;
-  --slate-500: #4b5563;
-  --slate-600: #374151;
-  --slate-700: #1f2937;
-  --slate-800: #111827;
-  --slate-850: #0f172a;
-  --slate-900: #030712;
-  --slate-950: #030712;
+  --slate-500: #9ca3af;
+  --slate-600: #d1d5db;
+  --slate-700: #e5e7eb;
+  --slate-800: #f3f4f6;
+  --slate-850: #f9fafb;
+  --slate-900: #ffffff;
+  --slate-950: #f9fafb;
 
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(30, 64, 175, 0.1);
