@@ -1678,10 +1678,10 @@ export default function AdminSettingsPage() {
                               { name: 'Dark Green', colors: { bg: '#020a06', card: '#051810', accent: '#d4af37', text: '#ffffff' } },
                               { name: 'Dark Blue', colors: { bg: '#0f172a', card: '#1e293b', accent: '#00d4ff', text: '#ffffff' } },
                               { name: 'Dark Purple', colors: { bg: '#1a0f2e', card: '#2d1b4e', accent: '#fbbf24', text: '#ffffff' } },
-                              { name: 'Light Mode', colors: { bg: '#f8fafc', card: '#ffffff', accent: '#059669', text: '#1e293b' } },
+                              { name: 'Light Sage', colors: { bg: '#f1f5f3', card: '#ffffff', accent: '#047857', text: '#064e3b' } },
                               { name: 'Dark Red', colors: { bg: '#1f1117', card: '#422620', accent: '#f97316', text: '#ffffff' } },
                               { name: 'Dark Teal', colors: { bg: '#0c1e1a', card: '#143d3a', accent: '#14b8a6', text: '#ffffff' } },
-                              { name: 'Light Warm', colors: { bg: '#fffbf0', card: '#fef3c7', accent: '#d97706', text: '#78350f' } },
+                              { name: 'Light Clean', colors: { bg: '#f9fafb', card: '#ffffff', accent: '#2563eb', text: '#111827' } },
                               { name: 'Dark Slate', colors: { bg: '#0f172a', card: '#1e293b', accent: '#64748b', text: '#e2e8f0' } },
                             ].map((preset) => (
                               <button
