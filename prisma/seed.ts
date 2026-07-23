@@ -30,7 +30,8 @@ async function main() {
   // 2. Create Organization
   const org = await prisma.organization.create({
     data: {
-      name: 'Thinkcone Study Abroad',
+      name: 'Kavya Global Network',
+      tagline: 'Where Dreams Meet Destination',
     },
   });
 
@@ -135,7 +136,7 @@ async function main() {
 
   const director = await prisma.user.create({
     data: {
-      email: 'director@thinkcone.com.np',
+      email: 'director@kavyaglobalnetwork.com.np',
       passwordHash,
       name: 'Binod Adhikari',
       role: Role.DIRECTOR,
@@ -145,7 +146,7 @@ async function main() {
 
   const ktmMgr = await prisma.user.create({
     data: {
-      email: 'ktm.mgr@thinkcone.com.np',
+      email: 'ktm.mgr@kavyaglobalnetwork.com.np',
       passwordHash,
       name: 'Sushil Kafle',
       role: Role.BRANCH_MANAGER,
@@ -156,7 +157,7 @@ async function main() {
 
   const pokharaMgr = await prisma.user.create({
     data: {
-      email: 'pokhara.mgr@thinkcone.com.np',
+      email: 'pokhara.mgr@kavyaglobalnetwork.com.np',
       passwordHash,
       name: 'Tara Sharma',
       role: Role.BRANCH_MANAGER,
@@ -167,7 +168,7 @@ async function main() {
 
   const counselor1 = await prisma.user.create({
     data: {
-      email: 'counselor.ktm1@thinkcone.com.np',
+      email: 'counselor.ktm1@kavyaglobalnetwork.com.np',
       passwordHash,
       name: 'Pooja Shrestha',
       role: Role.COUNSELOR,
@@ -178,7 +179,7 @@ async function main() {
 
   const counselor2 = await prisma.user.create({
     data: {
-      email: 'counselor.pokhara1@thinkcone.com.np',
+      email: 'counselor.pokhara1@kavyaglobalnetwork.com.np',
       passwordHash,
       name: 'Ramesh Thapa',
       role: Role.COUNSELOR,
@@ -189,7 +190,7 @@ async function main() {
 
   const finance = await prisma.user.create({
     data: {
-      email: 'finance@thinkcone.com.np',
+      email: 'finance@kavyaglobalnetwork.com.np',
       passwordHash,
       name: 'Niranjan Poudel',
       role: Role.FINANCE,
@@ -200,7 +201,7 @@ async function main() {
 
   const subAgent = await prisma.user.create({
     data: {
-      email: 'subagent.ram@thinkcone.com.np',
+      email: 'subagent.ram@kavyaglobalnetwork.com.np',
       passwordHash,
       name: 'Ram Prasad District Agent',
       role: Role.SUB_AGENT,
@@ -467,7 +468,7 @@ async function main() {
       data: {
         type: CommunicationType.WHATSAPP,
         title: 'Sent Checklist via WhatsApp',
-        content: `Dear ${app.name}, hope you are doing well. Please find the document checklist for your ${app.targetCountry} student visa application attached here. Let us know if you have any questions. - Thinkcone Study Abroad`,
+        content: `Dear ${app.name}, hope you are doing well. Please find the document checklist for your ${app.targetCountry} student visa application attached here. Let us know if you have any questions. - Kavya Global Network`,
         status: 'SENT',
         senderName: 'System',
         applicantId: app.id,
