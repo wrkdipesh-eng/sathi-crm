@@ -118,33 +118,38 @@ model Applicant {
   pipelineStage           PipelineStage        @default(INQUIRY)
   daysInCurrentStage      Int                  @default(0)
   stageUpdatedAt          DateTime             @default(now())
-  priority                String?              // HOT, WARM, COLD
-  
+  priority                String?              // HOT, WARM, COLD (auto-assigned based on pipeline & follow-ups)
+  lastFollowUpDate        DateTime?            // Track last follow-up task due date
+  missedFollowUpCount     Int                  @default(0) // Counter: 0, 1, or 2+ → COLD
+  lastPriorityChangeAt    DateTime?            // Track when priority last changed
+  priorityChangeReason    String?              // AUTO_ASSIGNMENT, STAGE_CHANGE, FOLLOWUP_MISSED, MANUAL
+
   organizationId          String
   organization            Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   branchId                String
   branch                  Branch               @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  
+
   counselorId             String?
   counselor               User?                @relation("counselor", fields: [counselorId], references: [id], onDelete: SetNull)
-  
+
   creatorId               String?
   creator                 User?                @relation("creator", fields: [creatorId], references: [id], onDelete: SetNull)
-  
+
   subAgentId              String?
   subAgent                User?                @relation("subAgent", fields: [subAgentId], references: [id], onDelete: SetNull)
   subAgentCommissionSplit Float?               // Overwrite standard split for this applicant: Flat amount (e.g. 15000) or percentage (0.4)
   branchCommissionSplit   Float?               // Overwrite standard branch split for this applicant: Flat amount or percentage
-  
+
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @updatedAt
-  
+
   guardians               Guardian[]
   pipelineStageLogs       PipelineStageLog[]
   documents               Document[]
   communicationLogs       CommunicationLog[]
   commissions             CommissionLedger[]
   applications            Application[]
+  priorityChangeHistory   PriorityChangeLog[]
 }
 
 model Application {
@@ -204,9 +209,23 @@ model CommunicationLog {
   senderName  String?           // Cache sender's name (e.g. system, counselor name)
   applicantId String
   applicant   Applicant         @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  dueDate     DateTime?         // For task types
+  dueDate     DateTime?         // For task types - used for follow-up tracking
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+}
+
+model PriorityChangeLog {
+  id                    String    @id @default(uuid())
+  applicantId           String
+  applicant             Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  oldPriority           String?   // Previous priority: HOT, WARM, COLD, null
+  newPriority           String?   // New priority: HOT, WARM, COLD, null
+  reason                String    // AUTO_ASSIGNMENT, STAGE_CHANGE, FOLLOWUP_MISSED, MANUAL, etc.
+  triggeredBy           String?   // User ID who triggered (null if automatic)
+  pipelineStage         String?   // Current pipeline stage when changed
+  missedFollowUpCount   Int?      // Count of missed follow-ups if applicable
+  notes                 String?   // Additional context (e.g. "2 missed follow-ups since 2024-01-15")
+  createdAt             DateTime  @default(now())
 }
 
 model CommissionLedger {

@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { getAuthUser, canWriteApplicant } from '@/lib/auth';
 import { PipelineStage, CommunicationType } from '@prisma/client';
 import { createCommissionIfVisaFiled } from '@/lib/commission';
+import { calculatePriority } from '@/lib/priorityCalculator';
 
 export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -81,15 +82,38 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         },
       });
 
-      // 3. Update applicant stage fields
+      // 3. Update applicant stage fields & auto-update priority
+      // Calculate new priority based on new stage
+      const priorityResult = calculatePriority(newStage, applicant.missedFollowUpCount);
+      const priorityChanged = applicant.priority !== priorityResult.priority;
+
       const updated = await tx.applicant.update({
         where: { id },
         data: {
           pipelineStage: newStage,
           daysInCurrentStage: 0,
           stageUpdatedAt: now,
+          priority: priorityResult.priority,
+          lastPriorityChangeAt: priorityChanged ? now : applicant.lastPriorityChangeAt,
+          priorityChangeReason: priorityChanged ? priorityResult.reason : applicant.priorityChangeReason,
         },
       });
+
+      // Log priority change if it occurred
+      if (priorityChanged) {
+        await tx.priorityChangeLog.create({
+          data: {
+            applicantId: id,
+            oldPriority: applicant.priority,
+            newPriority: priorityResult.priority,
+            reason: 'STAGE_CHANGE',
+            triggeredBy: authUser.userId,
+            pipelineStage: newStage,
+            missedFollowUpCount: applicant.missedFollowUpCount,
+            notes: `Automatic promotion due to stage change from "${oldStage}" to "${newStage}"`,
+          },
+        });
+      }
 
       // Auto-create commission ledger entry if stage is VISA_FILED
       if (newStage === PipelineStage.VISA_FILED) {
