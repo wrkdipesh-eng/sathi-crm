@@ -33,8 +33,11 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     }
 
     const body = await req.json();
-    const { name, email, phone, source, note, status, convertedApplicantId } = body;
+    const { name, email, phone, source, note, status, convertedApplicantId, branchId } = body;
 
+    if (name !== undefined && !name.trim()) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
     if (email) {
       const emailCheck = await verifyEmailDomain(email);
       if (!emailCheck.valid) {
@@ -51,6 +54,16 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       return NextResponse.json({ error: 'convertedApplicantId can only be set alongside status: CONVERTED' }, { status: 400 });
     }
 
+    const accessFilter = getVisitorAccessQueryFilter(authUser) as any;
+    if (branchId !== undefined) {
+      if (!branchId) {
+        return NextResponse.json({ error: 'Branch is required' }, { status: 400 });
+      }
+      if (accessFilter.branchId && accessFilter.branchId !== branchId) {
+        return NextResponse.json({ error: 'Forbidden: Cannot move a visitor outside your own branch' }, { status: 403 });
+      }
+    }
+
     const updated = await prisma.visitor.update({
       where: { id },
       data: {
@@ -61,6 +74,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         note: note !== undefined ? note : undefined,
         status: status !== undefined ? status : undefined,
         convertedApplicantId: convertedApplicantId !== undefined ? convertedApplicantId : undefined,
+        branchId: branchId !== undefined ? branchId : undefined,
       },
       include: {
         branch: { select: { id: true, name: true } },

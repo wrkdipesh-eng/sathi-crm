@@ -15,7 +15,8 @@ import {
   Loader2,
   BookOpen,
   X,
-  Trash2
+  Trash2,
+  Pencil
 } from 'lucide-react';
 import { isValidEmailFormat, isValidPhone } from '@/lib/validation';
 import { canCreateApplicant } from '@/lib/auth';
@@ -110,6 +111,9 @@ export default function ApplicantsListPage() {
   const [visitorFormError, setVisitorFormError] = useState<string | null>(null);
   const [visitorForm, setVisitorForm] = useState({ name: '', phone: '', email: '', source: 'WALK_IN', note: '', branchId: '' });
   const [visitorStatusUpdatingId, setVisitorStatusUpdatingId] = useState<string | null>(null);
+  // Set when editing an existing visitor's details (typo fixes etc.) rather
+  // than logging a brand new one -- reuses the same modal/form in edit mode.
+  const [editingVisitorId, setEditingVisitorId] = useState<string | null>(null);
   // Set when "Convert to Lead" opens the Add Applicant modal pre-filled from a
   // visitor -- links the two records together once the applicant is created.
   const [convertingVisitorId, setConvertingVisitorId] = useState<string | null>(null);
@@ -267,17 +271,21 @@ export default function ApplicantsListPage() {
 
     setIsSavingVisitor(true);
     try {
-      const res = await fetch('/api/visitors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(visitorForm),
-      });
+      const res = await fetch(
+        editingVisitorId ? `/api/visitors/${editingVisitorId}` : '/api/visitors',
+        {
+          method: editingVisitorId ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(visitorForm),
+        }
+      );
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to log visitor');
+        throw new Error(data.error || 'Failed to save visitor');
       }
 
       setIsVisitorModalOpen(false);
+      setEditingVisitorId(null);
       setVisitorForm({ name: '', phone: '', email: '', source: 'WALK_IN', note: '', branchId: currentUser?.branchId || '' });
       fetchVisitors();
     } catch (err: any) {
@@ -285,6 +293,22 @@ export default function ApplicantsListPage() {
     } finally {
       setIsSavingVisitor(false);
     }
+  };
+
+  // Opens the Log Visitor modal pre-filled with an existing visitor's details
+  // so front desk staff can fix typos in name/contact/etc.
+  const handleEditVisitorClick = (visitor: any) => {
+    setVisitorForm({
+      name: visitor.name,
+      phone: visitor.phone || '',
+      email: visitor.email || '',
+      source: visitor.source,
+      note: visitor.note || '',
+      branchId: visitor.branchId,
+    });
+    setEditingVisitorId(visitor.id);
+    setVisitorFormError(null);
+    setIsVisitorModalOpen(true);
   };
 
   const handleVisitorStatusChange = async (id: string, status: string) => {
@@ -571,7 +595,11 @@ export default function ApplicantsListPage() {
         )}
         {activeSection === 'VISITORS' && currentUser && (
           <button
-            onClick={() => setIsVisitorModalOpen(true)}
+            onClick={() => {
+              setEditingVisitorId(null);
+              setVisitorForm({ name: '', phone: '', email: '', source: 'WALK_IN', note: '', branchId: currentUser?.branchId || '' });
+              setIsVisitorModalOpen(true);
+            }}
             className="flex items-center space-x-2 py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-teal-600/10 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -1346,6 +1374,13 @@ export default function ApplicantsListPage() {
                               </>
                             )}
                             <button
+                              onClick={() => handleEditVisitorClick(v)}
+                              className="p-1.5 rounded-lg bg-slate-850 border border-slate-800 text-slate-500 hover:text-teal-400 hover:border-teal-500/40 transition-colors"
+                              title="Edit visitor details"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
                               onClick={() => handleDeleteVisitor(v.id)}
                               className="p-1.5 rounded-lg bg-slate-850 border border-slate-800 text-rose-500 hover:border-rose-500/40 transition-colors"
                               title="Delete visitor entry"
@@ -1371,10 +1406,10 @@ export default function ApplicantsListPage() {
             <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/20 flex justify-between items-center">
               <div className="flex items-center space-x-2 text-slate-100">
                 <UserPlus className="w-5 h-5 text-teal-500" />
-                <h3 className="font-bold text-sm">Log Visitor</h3>
+                <h3 className="font-bold text-sm">{editingVisitorId ? 'Edit Visitor' : 'Log Visitor'}</h3>
               </div>
               <button
-                onClick={() => setIsVisitorModalOpen(false)}
+                onClick={() => { setIsVisitorModalOpen(false); setEditingVisitorId(null); }}
                 className="text-slate-400 hover:text-slate-100 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1471,7 +1506,7 @@ export default function ApplicantsListPage() {
               <div className="flex justify-end space-x-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsVisitorModalOpen(false)}
+                  onClick={() => { setIsVisitorModalOpen(false); setEditingVisitorId(null); }}
                   className="px-4 py-2 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
@@ -1481,7 +1516,7 @@ export default function ApplicantsListPage() {
                   disabled={isSavingVisitor}
                   className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isSavingVisitor ? 'Saving...' : 'Log Visitor'}
+                  {isSavingVisitor ? 'Saving...' : editingVisitorId ? 'Save Changes' : 'Log Visitor'}
                 </button>
               </div>
             </form>
