@@ -2045,19 +2045,24 @@ export default function AdminSettingsPage() {
               {!['DIRECTOR', 'SUPERADMIN', 'SUB_AGENT', 'STUDENT_PORTAL', 'ACCOUNTS', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER'].includes(userForm.role) && (
                 <div className="border-t border-slate-850 pt-3 mt-2">
                   <label className="block text-[10px] text-slate-400 font-medium mb-1.5">
-                    Assign Branch Office *
+                    {userForm.role === 'MANAGER' ? 'Assign Branch Office (optional)' : 'Assign Branch Office *'}
                   </label>
                   <select
                     value={userForm.branchId}
-                    required
+                    required={userForm.role !== 'MANAGER'}
                     onChange={(e) => setUserForm(prev => ({ ...prev, branchId: e.target.value }))}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
                   >
-                    <option value="">Select Branch</option>
+                    <option value="">{userForm.role === 'MANAGER' ? 'Head Office (org-wide)' : 'Select Branch'}</option>
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>{b.name}</option>
                     ))}
                   </select>
+                  {userForm.role === 'MANAGER' && (
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Leave as Head Office for org-wide access, or assign a branch to scope this manager to it.
+                    </p>
+                  )}
                 </div>
               )}
 

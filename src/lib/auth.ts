@@ -77,6 +77,10 @@ export function getAccessQueryFilter(user: JwtPayload) {
       return baseFilter;
 
     case Role.MANAGER:
+      // MANAGER is either Head Office (no branch assigned -- org-wide access,
+      // same as DIRECTOR) or scoped to one branch (assigned like a BRANCH_MANAGER).
+      return user.branchId ? { ...baseFilter, branchId: user.branchId } : baseFilter;
+
     case Role.BRANCH_MANAGER:
       if (!user.branchId) {
         // Fallback: If manager has no branch, restrict to empty (cannot see everything)
@@ -107,8 +111,10 @@ export function getAccessQueryFilter(user: JwtPayload) {
  *
  * - SUPERADMIN, DIRECTOR, ACCOUNTS, FINANCE, DOCUMENTATION_OFFICER,
  *   FRONT_DESK_OFFICER: Full access to all branches under the organization.
- * - MANAGER, BRANCH_MANAGER, SENIOR_COUNSELOR, COUNSELOR: Their own branch
- *   only -- visitors are handled at the physical branch, not per-counselor.
+ * - MANAGER: Head Office (org-wide, like DIRECTOR) if no branch is assigned,
+ *   otherwise scoped to their one branch like a BRANCH_MANAGER.
+ * - BRANCH_MANAGER, SENIOR_COUNSELOR, COUNSELOR: Their own branch only --
+ *   visitors are handled at the physical branch, not per-counselor.
  * - SUB_AGENT, STUDENT_PORTAL: No access (walk-in visitors aren't relevant
  *   to a referral partner or a student's own portal view).
  */
@@ -125,6 +131,8 @@ export function getVisitorAccessQueryFilter(user: JwtPayload) {
       return baseFilter;
 
     case Role.MANAGER:
+      return user.branchId ? { ...baseFilter, branchId: user.branchId } : baseFilter;
+
     case Role.BRANCH_MANAGER:
     case Role.SENIOR_COUNSELOR:
     case Role.COUNSELOR:
@@ -144,7 +152,12 @@ export function getVisitorAccessQueryFilter(user: JwtPayload) {
 export function canWriteApplicant(user: JwtPayload, applicantBranchId: string, applicantCounselorId: string | null, applicantSubAgentId: string | null): boolean {
   if (user.role === Role.SUPERADMIN || user.role === Role.DIRECTOR || user.role === Role.ACCOUNTS || user.role === Role.FINANCE) return true;
 
-  if (user.role === Role.MANAGER || user.role === Role.BRANCH_MANAGER) {
+  if (user.role === Role.MANAGER) {
+    // Head Office manager (no branch assigned) can write across all branches.
+    return user.branchId ? user.branchId === applicantBranchId : true;
+  }
+
+  if (user.role === Role.BRANCH_MANAGER) {
     return user.branchId === applicantBranchId;
   }
 
