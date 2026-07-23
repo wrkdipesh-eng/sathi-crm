@@ -53,6 +53,7 @@ export default function FinanceLedgerPage() {
     branchAmountNpr: '',
   });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [quickStatusUpdatingId, setQuickStatusUpdatingId] = useState<string | null>(null);
 
   // Add Commission modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -658,6 +659,31 @@ export default function FinanceLedgerPage() {
     } catch (err) {
       console.error(err);
       alert('An error occurred while deleting the commission');
+    }
+  };
+
+  // One-click status transition (Pending -> Received -> Fully Settled) without
+  // reopening the full edit form and re-entering university/currency/splits.
+  const handleQuickStatusChange = async (id: string, newStatus: string) => {
+    setQuickStatusUpdatingId(id);
+    try {
+      const res = await fetch(`/api/finance/commissions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (res.ok) {
+        fetchCommissions();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to update status');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while updating the status');
+    } finally {
+      setQuickStatusUpdatingId(null);
     }
   };
 
@@ -1511,11 +1537,11 @@ export default function FinanceLedgerPage() {
                              <div className="space-y-1">
                                <div className="font-bold">Rs. {comm.branchAmountNpr.toLocaleString()}</div>
                                <span className={`inline-block text-[8px] leading-none px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider ${
-                                 comm.status !== 'PENDING'
+                                 comm.status === 'PAID_TO_SUBAGENT'
                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                    : 'bg-sky-50 text-sky-655 border border-sky-100/50'
                                }`}>
-                                 {comm.status !== 'PENDING' ? '✓ Credited' : '⋯ Pending'}
+                                 {comm.status === 'PAID_TO_SUBAGENT' ? '✓ Credited' : '⋯ Pending'}
                                </span>
                              </div>
                            ) : <span className="text-slate-600 font-mono">-</span>}
@@ -1551,6 +1577,26 @@ export default function FinanceLedgerPage() {
                           </button>
                           {currentUser && canModifyFinancials(currentUser) && (
                             <>
+                              {comm.status === 'PENDING' && (
+                                <button
+                                  onClick={() => handleQuickStatusChange(comm.id, 'RECEIVED')}
+                                  disabled={quickStatusUpdatingId === comm.id}
+                                  className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 hover:text-emerald-300 hover:border-emerald-500 transition-colors cursor-pointer disabled:opacity-50"
+                                  title="Mark as Received from university"
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              {comm.status === 'RECEIVED' && (
+                                <button
+                                  onClick={() => handleQuickStatusChange(comm.id, 'PAID_TO_SUBAGENT')}
+                                  disabled={quickStatusUpdatingId === comm.id}
+                                  className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-indigo-400 hover:text-indigo-300 hover:border-indigo-500 transition-colors cursor-pointer disabled:opacity-50"
+                                  title="Mark as fully settled (branch and sub-agent paid)"
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   const totalNpr = comm.commissionAmountNpr;

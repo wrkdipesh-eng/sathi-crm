@@ -18,10 +18,7 @@ import {
   Calendar,
   AlertTriangle,
   CheckCircle,
-  FileSpreadsheet,
   MessageSquare,
-  DollarSign,
-  Printer,
   ChevronRight,
   Loader2,
   AlertCircle,
@@ -134,13 +131,6 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 
-  // New Commission Ledger Form State
-  const [commissionForm, setCommissionForm] = useState({ partnerUniversity: '', commissionAmountForeign: '', currency: 'AUD', status: 'PENDING' });
-  const [isSavingCommission, setIsSavingCommission] = useState(false);
-
-  // Invoice Modal State for Printing
-  const [selectedCommission, setSelectedCommission] = useState<any>(null);
-
   const isVisaFiledOrBeyond = applicant ? [
     'VISA_FILED',
     'VISA_GRANTED',
@@ -158,12 +148,6 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
       }
       setApplicant(data.applicant);
       setEditRepType(data.applicant.representationType || 'DIRECT');
-      
-      // Auto-set defaults for commission form
-      setCommissionForm(prev => ({
-        ...prev,
-        partnerUniversity: data.applicant.targetUniversity || '',
-      }));
     } catch (err: any) {
       setError(err.message || 'Error occurred');
     } finally {
@@ -524,34 +508,6 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
     }
   };
 
-  // Commission Ledger Submission
-  const handleCommissionSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commissionForm.partnerUniversity || !commissionForm.commissionAmountForeign) return;
-    setIsSavingCommission(true);
-
-    try {
-      const res = await fetch(`/api/applicants/${id}/commissions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(commissionForm),
-      });
-
-      if (res.ok) {
-        setCommissionForm({ partnerUniversity: applicant.targetUniversity || '', commissionAmountForeign: '', currency: 'AUD', status: 'PENDING' });
-        fetchApplicantDetails();
-        alert('Commission ledger added!');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to record commission');
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSavingCommission(false);
-    }
-  };
-
   // WhatsApp Business API & Direct Integration
   const simulateWhatsAppSend = async () => {
     const message = prompt('Enter WhatsApp Message to send:');
@@ -769,6 +725,37 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
           })}
         </div>
       </div>
+
+      {/* Commission Summary (read-only) — full create/edit/status workflow lives on the Finance page */}
+      {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE'].includes(currentUser?.role) && applicant.commissions && applicant.commissions.length > 0 && (
+        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Commission</span>
+            <Link href="/dashboard/finance" className="text-[10px] text-indigo-500 hover:text-indigo-400 font-semibold">
+              Manage in Finance &rarr;
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {applicant.commissions.map((c: any) => (
+              <div key={c.id} className="flex items-center justify-between p-3 bg-slate-850/50 rounded-xl border border-slate-800 text-xs">
+                <div>
+                  <span className="font-bold text-slate-200 block">{c.partnerUniversity}</span>
+                  <span className="text-slate-500 text-[10px] block mt-0.5">
+                    {c.currency} {c.commissionAmountForeign.toLocaleString()} &middot; Rs. {c.commissionAmountNpr.toLocaleString()} &middot; HQ net Rs. {c.hqAmountNpr.toLocaleString()}
+                  </span>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider shrink-0 ml-3 ${
+                  c.status === 'RECEIVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' :
+                  c.status === 'PAID_TO_SUBAGENT' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30' :
+                  'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                }`}>
+                  {c.status === 'PAID_TO_SUBAGENT' ? 'Fully Settled' : c.status === 'RECEIVED' ? 'Received' : 'Receivable'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main Grid Tabs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -1480,122 +1467,6 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
 
         </div>
       </div>
-
-      {/* Printable Invoice Modal */}
-      {selectedCommission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in print:bg-white print:p-0">
-          <div className="w-full max-w-2xl bg-white text-slate-950 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] print:shadow-none print:rounded-none print:w-full print:max-h-none print:h-full">
-            
-            {/* Modal Control Header (Hidden in Print) */}
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center print:hidden">
-              <span className="text-xs font-bold text-slate-500 flex items-center"><FileSpreadsheet className="w-4 h-4 mr-1 text-indigo-600" />Commission Statement Invoice</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => window.print()}
-                  className="flex items-center space-x-1 py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-all cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print / Save PDF</span>
-                </button>
-                <button
-                  onClick={() => setSelectedCommission(null)}
-                  className="p-1.5 hover:bg-slate-200 text-slate-500 rounded-lg transition-all cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Invoice Sheet */}
-            <div className="p-8 space-y-8 overflow-y-auto print:overflow-visible flex-1 print:p-0">
-              
-              {/* Header */}
-              <div className="flex justify-between items-start border-b border-slate-100 pb-6">
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight text-slate-900">Thinkcone Study Abroad</h2>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Kathmandu HQ, Putalisadak, Nepal<br/>
-                    Email: finance@thinkcone.com.np | Tel: +977-1-44XXXXX
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="px-2.5 py-1 bg-slate-100 text-slate-600 font-bold text-[9px] uppercase tracking-wider rounded">
-                    Invoice
-                  </span>
-                  <div className="text-xs text-slate-400 mt-2 font-mono">Invoice #: {selectedCommission.invoiceNumber || 'STATEMENT-' + selectedCommission.id.slice(0, 8).toUpperCase()}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Date: {new Date(selectedCommission.createdAt).toLocaleDateString()}</div>
-                </div>
-              </div>
-
-              {/* Placed Applicant Info */}
-              <div className="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
-                <div>
-                  <span className="font-bold text-[10px] text-slate-400 uppercase tracking-wide block">Bill For</span>
-                  <span className="font-bold text-slate-800 text-sm block mt-1">{selectedCommission.partnerUniversity}</span>
-                  <span className="text-slate-500 mt-0.5 block">International Commission Department</span>
-                </div>
-                <div>
-                  <span className="font-bold text-[10px] text-slate-400 uppercase tracking-wide block">Candidate Details</span>
-                  <span className="font-bold text-slate-800 text-sm block mt-1">{selectedCommission.applicantName}</span>
-                  <span className="text-slate-500 mt-0.5 block">Branch: {selectedCommission.branchName}</span>
-                </div>
-              </div>
-
-              {/* Particulars Table */}
-              <div className="border border-slate-100 rounded-2xl overflow-hidden text-xs">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100 font-bold text-slate-500 text-[10px] uppercase">
-                      <th className="px-4 py-3">Description</th>
-                      <th className="px-4 py-3">Commission Rate</th>
-                      <th className="px-4 py-3">NPR Exchange Rate</th>
-                      <th className="px-4 py-3 text-right">Total Amount (NPR)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    <tr>
-                      <td className="px-4 py-4">
-                        <span className="font-bold text-slate-800">Recruitment Service Commission Charge</span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">Placed student in target academic course at university partner.</span>
-                      </td>
-                      <td className="px-4 py-4">{selectedCommission.currency} {selectedCommission.commissionAmountForeign.toLocaleString()}</td>
-                      <td className="px-4 py-4 font-mono">1 {selectedCommission.currency} = Rs. {selectedCommission.nprExchangeRate.toFixed(2)}</td>
-                      <td className="px-4 py-4 text-right font-mono font-semibold">Rs. {selectedCommission.commissionAmountNpr.toLocaleString()}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Calculations ledger */}
-              <div className="w-full flex justify-end">
-                <div className="w-72 space-y-2 text-xs border-t border-slate-100 pt-4">
-                  <div className="flex justify-between text-slate-500">
-                    <span>Total NPR Equivalent:</span>
-                    <span className="font-mono">Rs. {selectedCommission.commissionAmountNpr.toLocaleString()}</span>
-                  </div>
-                  {selectedCommission.subAgentAmountNpr > 0 && (
-                    <div className="flex justify-between text-amber-600 font-semibold">
-                      <span>Sub-Agent Split Deducted:</span>
-                      <span className="font-mono">Rs. -{selectedCommission.subAgentAmountNpr.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold text-sm text-slate-900 border-t border-slate-200 pt-2">
-                    <span>Net HQ Retained:</span>
-                    <span className="font-mono">Rs. {selectedCommission.hqAmountNpr.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="border-t border-slate-100 pt-8 text-[10px] text-slate-400 text-center space-y-1">
-                <p>This statement is auto-generated by Thinkcone CRM and snapshots exchange rates at creation date to avoid margin distortion.</p>
-                <p>Thank you for your partnership with Thinkcone Study Abroad.</p>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add Target Application Modal */}
       {showAppModal && (

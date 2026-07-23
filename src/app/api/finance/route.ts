@@ -84,12 +84,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const applicant = await prisma.applicant.findUnique({
+      where: { id: applicantId },
+      select: { organizationId: true },
+    });
+
+    if (!applicant) {
+      return NextResponse.json({ error: 'Applicant not found' }, { status: 404 });
+    }
+
+    if (applicant.organizationId !== authUser.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const foreign = parseFloat(commissionAmountForeign);
     const rate = parseFloat(nprExchangeRate);
     const commissionAmountNpr = foreign * rate;
     const agentNpr = parseFloat(subAgentAmountNpr) || 0;
     const branchNpr = parseFloat(branchAmountNpr) || 0;
-    const hqAmountNpr = commissionAmountNpr - agentNpr - branchNpr;
+    const hqAmountNpr = Math.max(0, commissionAmountNpr - agentNpr - branchNpr);
 
     // Persist split percentage updates back to the applicant if specified
     if (agentSplitPercent !== undefined || branchSplitPercent !== undefined) {
