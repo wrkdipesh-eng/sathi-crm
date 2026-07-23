@@ -336,6 +336,53 @@ export default function ApplicantsListPage() {
   const activePipelinesCount = allApplicants.filter(a => !['INQUIRY', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
   const stuckLeadsCount = allApplicants.filter(a => a.daysInCurrentStage >= stuckThreshold).length;
 
+  // Plain-language names for the category quick-filter codes, reused by the active-filter chips below
+  const CATEGORY_LABELS: Record<string, string> = {
+    LEAD: 'Lead Stage',
+    INQUIRING: 'Inquiring',
+    CLASS_ENROLLMENTS: 'Class Enrollments',
+    ABROAD_ENROLLMENTS: 'Abroad Enrollments',
+    DECISION: 'Decision',
+    ACTIVE_PIPELINES: 'Active Pipelines',
+    PRE_DEPARTURE: 'Pre-Departure',
+  };
+
+  // Every filter currently applied, shown as removable chips so it's always
+  // obvious at a glance what's being viewed — and how to undo it.
+  const activeFilterChips: { key: string; label: string; onRemove: () => void }[] = [];
+  if (search) activeFilterChips.push({ key: 'search', label: `Search: "${search}"`, onRemove: () => setSearch('') });
+  if (stage) activeFilterChips.push({ key: 'stage', label: `Stage: ${stage.replace(/_/g, ' ')}`, onRemove: () => setStage('') });
+  if (branchFilter) {
+    const b = branches.find(x => x.id === branchFilter);
+    activeFilterChips.push({ key: 'branch', label: `Branch: ${b?.name || 'Selected'}`, onRemove: () => setBranchFilter('') });
+  }
+  if (counselorFilter) {
+    const c = counselors.find(x => x.id === counselorFilter);
+    activeFilterChips.push({ key: 'counselor', label: `Counselor: ${c?.name || 'Selected'}`, onRemove: () => setCounselorFilter('') });
+  }
+  if (sourceFilter) {
+    const s = SOURCES.find(x => x.value === sourceFilter);
+    activeFilterChips.push({ key: 'source', label: `Source: ${s?.label || sourceFilter}`, onRemove: () => setSourceFilter('') });
+  }
+  if (universityFilter) activeFilterChips.push({ key: 'university', label: `University: "${universityFilter}"`, onRemove: () => setUniversityFilter('') });
+  if (targetCountryFilter) activeFilterChips.push({ key: 'country', label: `Country: ${targetCountryFilter}`, onRemove: () => setTargetCountryFilter('') });
+  if (stuckFilter) activeFilterChips.push({ key: 'stuck', label: `Stuck Only (${stuckThreshold}+ days)`, onRemove: () => setStuckFilter(false) });
+  if (priorityFilter) activeFilterChips.push({ key: 'priority', label: `Priority: ${priorityFilter === 'NONE' ? 'No Priority' : priorityFilter}`, onRemove: () => setPriorityFilter('') });
+  if (categoryFilter) activeFilterChips.push({ key: 'category', label: CATEGORY_LABELS[categoryFilter] || categoryFilter, onRemove: () => setCategoryFilter('') });
+
+  const clearAllFilters = () => {
+    setSearch('');
+    setStage('');
+    setBranchFilter('');
+    setCounselorFilter('');
+    setSourceFilter('');
+    setUniversityFilter('');
+    setTargetCountryFilter('');
+    setStuckFilter(false);
+    setPriorityFilter('');
+    setCategoryFilter('');
+  };
+
   return (
     <div className="space-y-6">
       
@@ -358,6 +405,32 @@ export default function ApplicantsListPage() {
         )}
       </div>
 
+      {/* Active Filters — always-visible summary of exactly what's being viewed right now */}
+      {activeFilterChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 p-3.5 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
+          <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider shrink-0">Showing:</span>
+          {activeFilterChips.map((chip) => (
+            <button
+              key={chip.key}
+              onClick={chip.onRemove}
+              className="flex items-center space-x-1.5 pl-3 pr-2 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-200 text-xs font-semibold hover:border-rose-500/50 hover:text-rose-300 transition-all cursor-pointer group"
+            >
+              <span>{chip.label}</span>
+              <X className="w-3 h-3 text-slate-500 group-hover:text-rose-400" />
+            </button>
+          ))}
+          <button
+            onClick={clearAllFilters}
+            className="text-[11px] font-bold text-indigo-300 hover:text-indigo-200 underline underline-offset-4 cursor-pointer ml-1"
+          >
+            Clear all
+          </button>
+          <span className="text-[10px] text-slate-500 font-mono ml-auto">
+            {applicants.length} of {allApplicants.length} lead{allApplicants.length !== 1 && 's'} match
+          </span>
+        </div>
+      )}
+
       {/* Filters Section */}
       <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
         <div className="flex items-center space-x-2 text-xs font-bold text-indigo-400 uppercase tracking-wider">
@@ -367,96 +440,117 @@ export default function ApplicantsListPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {/* Search bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search name, email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
-            />
+          <div>
+            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Search</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Name, email, phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
+              />
+            </div>
           </div>
 
           {/* Stage Filter */}
-          <select
-            value={stage}
-            onChange={(e) => setStage(e.target.value)}
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-          >
-            <option value="">All Pipeline Stages</option>
-            {STAGES.map((stg) => (
-              <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
-            ))}
-          </select>
-
-          {/* Branch Filter (visible for org-wide roles) */}
-          {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER'].includes(currentUser?.role) ? (
+          <div>
+            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Pipeline Stage</label>
             <select
-              value={branchFilter}
-              onChange={(e) => setBranchFilter(e.target.value)}
+              value={stage}
+              onChange={(e) => setStage(e.target.value)}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
             >
-              <option value="">All Branches</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
+              <option value="">All Pipeline Stages</option>
+              {STAGES.map((stg) => (
+                <option key={stg} value={stg}>{stg.replace('_', ' ')}</option>
               ))}
             </select>
-          ) : (
-            <div className="flex items-center px-3 py-2 bg-slate-950 border border-slate-800/40 rounded-xl text-slate-500 text-xs select-none">
-              <MapPin className="w-3.5 h-3.5 mr-1 text-slate-600 shrink-0" />
-              <span className="truncate">{currentUser?.branchName || 'HQ Rollup'}</span>
-            </div>
-          )}
+          </div>
+
+          {/* Branch Filter (visible for org-wide roles) */}
+          <div>
+            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Branch</label>
+            {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER'].includes(currentUser?.role) ? (
+              <select
+                value={branchFilter}
+                onChange={(e) => setBranchFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+              >
+                <option value="">All Branches</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="flex items-center px-3 py-2 bg-slate-950 border border-slate-800/40 rounded-xl text-slate-500 text-xs select-none">
+                <MapPin className="w-3.5 h-3.5 mr-1 text-slate-600 shrink-0" />
+                <span className="truncate">{currentUser?.branchName || 'HQ Rollup'}</span>
+              </div>
+            )}
+          </div>
 
           {/* Counselor Filter (org-wide and manager roles only) */}
           {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'BRANCH_MANAGER', 'MANAGER'].includes(currentUser?.role) && (
-            <select
-              value={counselorFilter}
-              onChange={(e) => setCounselorFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-            >
-              <option value="">All Counselors</option>
-              {counselors.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Counselor</label>
+              <select
+                value={counselorFilter}
+                onChange={(e) => setCounselorFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+              >
+                <option value="">All Counselors</option>
+                {counselors.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
           )}
 
           {/* Source Filter */}
-          <select
-            value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-          >
-            <option value="">All Lead Sources</option>
-            {SOURCES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Lead Source</label>
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+            >
+              <option value="">All Lead Sources</option>
+              {SOURCES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Target Country Filter */}
-          <select
-            value={targetCountryFilter}
-            onChange={(e) => setTargetCountryFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
-          >
-            <option value="">All Target Countries</option>
-            {countries.map((c) => (
-              <option key={c.id} value={c.countryName}>{c.countryName}</option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Target Country</label>
+            <select
+              value={targetCountryFilter}
+              onChange={(e) => setTargetCountryFilter(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-indigo-500 transition-all"
+            >
+              <option value="">All Target Countries</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.countryName}>{c.countryName}</option>
+              ))}
+            </select>
+          </div>
 
           {/* University Filter */}
-          <div className="relative">
-            <BookOpen className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Filter by University"
-              value={universityFilter}
-              onChange={(e) => setUniversityFilter(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
-            />
+          <div>
+            <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">University</label>
+            <div className="relative">
+              <BookOpen className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Filter by University"
+                value={universityFilter}
+                onChange={(e) => setUniversityFilter(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
+              />
+            </div>
           </div>
         </div>
 
@@ -723,8 +817,8 @@ export default function ApplicantsListPage() {
                     <tr 
                       key={app.id} 
                       className={`transition-all border-b border-slate-800/40 ${
-                        isStuck 
-                          ? 'bg-amber-950/15 hover:bg-amber-900/25 border-l-2 border-l-amber-500/60' 
+                        isStuck
+                          ? 'bg-amber-500/10 hover:bg-amber-500/15 border-l-2 border-l-amber-500/60'
                           : 'hover:bg-slate-850/40'
                       }`}
                     >
