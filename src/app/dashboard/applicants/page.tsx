@@ -1444,6 +1444,7 @@ export default function ApplicantsListPage() {
                     onChange={(e) => setVisitorForm(prev => ({ ...prev, branchId: e.target.value }))}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
                   >
+                    <option value="">Select Branch</option>
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>{b.name}</option>
                     ))}
