@@ -151,7 +151,7 @@ export async function getLastFollowUpDate(applicantId: string): Promise<Date | n
 
 /**
  * Update an applicant's priority and status based on current state
- * Returns whether priority changed
+ * Returns whether priority or status changed
  */
 export async function updateApplicantPriority(
   applicantId: string,
@@ -195,8 +195,10 @@ export async function updateApplicantPriority(
     if (priorityChanged || statusChanged) {
       // Get last follow-up date for context
       const lastFollowUpDate = await getLastFollowUpDate(applicantId);
+      // Log reason reflects whatever actually changed, so it never goes stale
+      const logReason = priorityChanged ? result.reason : 'STATUS_CHANGE';
 
-      // Update applicant and create history log
+      // Update applicant and create history log (log fires on priority OR status change)
       await Promise.all([
         prisma.applicant.update({
           where: { id: applicantId },
@@ -205,33 +207,31 @@ export async function updateApplicantPriority(
             applicantStatus: newApplicantStatus,
             missedFollowUpCount: actualMissedCount,
             lastFollowUpDate,
-            lastPriorityChangeAt: priorityChanged ? new Date() : applicant.priority ? undefined : new Date(),
-            priorityChangeReason: priorityChanged ? result.reason : undefined,
+            lastPriorityChangeAt: new Date(),
+            priorityChangeReason: logReason,
           },
         }),
-        ...(priorityChanged
-          ? [
-              prisma.priorityChangeLog.create({
-                data: {
-                  applicantId,
-                  oldPriority: applicant.priority,
-                  newPriority: result.priority,
-                  reason: result.reason,
-                  triggeredBy: triggeredBy || null,
-                  pipelineStage: applicant.pipelineStage,
-                  missedFollowUpCount: actualMissedCount,
-                  notes:
-                    result.reason === 'COMMITMENT_MISSED'
-                      ? `Committed submission date (${applicant.committedSubmissionDate?.toISOString().split('T')[0]}) has passed unmet`
-                      : result.reason === 'FOLLOWUP_MISSED'
-                      ? `${actualMissedCount} missed follow-up(s). Last follow-up was due on ${
-                          lastFollowUpDate?.toISOString().split('T')[0] || 'unknown date'
-                        }`
-                      : undefined,
-                },
-              }),
-            ]
-          : []),
+        prisma.priorityChangeLog.create({
+          data: {
+            applicantId,
+            oldPriority: applicant.priority,
+            newPriority: result.priority,
+            reason: logReason,
+            triggeredBy: triggeredBy || null,
+            pipelineStage: applicant.pipelineStage,
+            missedFollowUpCount: actualMissedCount,
+            notes:
+              result.reason === 'COMMITMENT_MISSED'
+                ? `Committed submission date (${applicant.committedSubmissionDate?.toISOString().split('T')[0]}) has passed unmet`
+                : result.reason === 'FOLLOWUP_MISSED'
+                ? `${actualMissedCount} missed follow-up(s). Last follow-up was due on ${
+                    lastFollowUpDate?.toISOString().split('T')[0] || 'unknown date'
+                  }`
+                : !priorityChanged && statusChanged
+                ? `Status changed from "${applicant.applicantStatus || 'none'}" to "${newApplicantStatus}" (priority unchanged: ${result.priority})`
+                : undefined,
+          },
+        }),
       ]);
 
       return true;

@@ -94,6 +94,9 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
       const priorityChanged = applicant.priority !== priorityResult.priority;
       const statusChanged = applicant.applicantStatus !== newStatus;
+      const shouldLog = priorityChanged || statusChanged;
+      // Log reason reflects whatever actually changed, so it never goes stale
+      const logReason = priorityChanged ? priorityResult.reason : 'STATUS_CHANGE';
 
       const updated = await tx.applicant.update({
         where: { id },
@@ -103,25 +106,25 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
           stageUpdatedAt: now,
           priority: priorityResult.priority,
           applicantStatus: newStatus,
-          lastPriorityChangeAt: priorityChanged ? now : applicant.lastPriorityChangeAt,
-          priorityChangeReason: priorityChanged ? priorityResult.reason : applicant.priorityChangeReason,
+          lastPriorityChangeAt: shouldLog ? now : applicant.lastPriorityChangeAt,
+          priorityChangeReason: shouldLog ? logReason : applicant.priorityChangeReason,
         },
       });
 
-      // Log priority change if it occurred
-      if (priorityChanged) {
+      // Log if priority or status changed (a stage change can move status alone, e.g. INQUIRY -> REAL, with priority unchanged)
+      if (shouldLog) {
         await tx.priorityChangeLog.create({
           data: {
             applicantId: id,
             oldPriority: applicant.priority,
             newPriority: priorityResult.priority,
-            reason: priorityResult.reason,
+            reason: logReason,
             triggeredBy: authUser.userId,
             pipelineStage: newStage,
             missedFollowUpCount: applicant.missedFollowUpCount,
-            notes: `Stage change from "${oldStage}" to "${newStage}" triggered priority update${
-              statusChanged ? ` and status update to "${newStatus}"` : ''
-            }`,
+            notes: `Stage change from "${oldStage}" to "${newStage}"${
+              priorityChanged ? ` triggered priority update` : ` (priority unchanged: ${priorityResult.priority})`
+            }${statusChanged ? ` and status update to "${newStatus}"` : ''}`,
           },
         });
       }
