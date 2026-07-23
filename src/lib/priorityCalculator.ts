@@ -136,7 +136,12 @@ export function calculateApplicantStatus(pipelineStage: PipelineStage): string {
  * A follow-up is "missed" if:
  * - It's a TASK type communication
  * - It has a dueDate in the past
- * - It's not marked as COMPLETED or PENDING
+ * - It's not marked as COMPLETED
+ *
+ * A TASK stays PENDING from creation until someone marks it COMPLETED (via
+ * PATCH /api/applicants/[id]/communication/[logId]) — there's no separate
+ * "overdue" status a due date crossing flips it to. So PENDING-but-overdue
+ * is exactly what "missed" means here, not something to exclude.
  */
 export async function countMissedFollowUps(applicantId: string): Promise<number> {
   const now = new Date();
@@ -149,7 +154,7 @@ export async function countMissedFollowUps(applicantId: string): Promise<number>
         lt: now, // Due date is in the past
       },
       status: {
-        notIn: ['COMPLETED', 'PENDING'], // Not completed or pending
+        not: 'COMPLETED',
       },
     },
   });
