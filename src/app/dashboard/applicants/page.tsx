@@ -584,28 +584,30 @@ export default function ApplicantsListPage() {
               : 'Fast-log walk-ins and inquiries before they’re qualified into a full lead.'}
           </p>
         </div>
-        {activeSection === 'LEADS' && currentUser && canCreateApplicant(currentUser) && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-indigo-600/10 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Applicant</span>
-          </button>
-        )}
-        {activeSection === 'VISITORS' && currentUser && (
-          <button
-            onClick={() => {
-              setEditingVisitorId(null);
-              setVisitorForm({ name: '', phone: '', email: '', source: 'WALK_IN', note: '', branchId: currentUser?.branchId || '' });
-              setIsVisitorModalOpen(true);
-            }}
-            className="flex items-center space-x-2 py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-teal-600/10 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Log Visitor</span>
-          </button>
-        )}
+        <div className="flex items-center space-x-2.5">
+          {currentUser && (
+            <button
+              onClick={() => {
+                setEditingVisitorId(null);
+                setVisitorForm({ name: '', phone: '', email: '', source: 'WALK_IN', note: '', branchId: currentUser?.branchId || '' });
+                setIsVisitorModalOpen(true);
+              }}
+              className="flex items-center space-x-2 py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-teal-600/10 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Visitor</span>
+            </button>
+          )}
+          {currentUser && canCreateApplicant(currentUser) && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center space-x-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-indigo-600/10 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Applicant</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Leads / Visitors tab switcher */}
