@@ -310,6 +310,7 @@ export async function POST(req: NextRequest) {
     // Auto-seed documents based on target country
     await createChecklistDocs(applicant.id, targetCountry, authUser.organizationId);
 
+    // Return created applicant with all priority system fields
     return NextResponse.json({ success: true, applicant });
   } catch (error: any) {
     console.error('Create applicant error:', error);
