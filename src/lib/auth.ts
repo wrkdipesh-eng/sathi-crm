@@ -102,6 +102,43 @@ export function getAccessQueryFilter(user: JwtPayload) {
 }
 
 /**
+ * Returns a Prisma filter condition for Visitor records, branch-scoped since
+ * Visitor has no counselorId/subAgentId to filter by individually.
+ *
+ * - SUPERADMIN, DIRECTOR, ACCOUNTS, FINANCE, DOCUMENTATION_OFFICER,
+ *   FRONT_DESK_OFFICER: Full access to all branches under the organization.
+ * - MANAGER, BRANCH_MANAGER, SENIOR_COUNSELOR, COUNSELOR: Their own branch
+ *   only -- visitors are handled at the physical branch, not per-counselor.
+ * - SUB_AGENT, STUDENT_PORTAL: No access (walk-in visitors aren't relevant
+ *   to a referral partner or a student's own portal view).
+ */
+export function getVisitorAccessQueryFilter(user: JwtPayload) {
+  const baseFilter = { organizationId: user.organizationId };
+
+  switch (user.role) {
+    case Role.SUPERADMIN:
+    case Role.DIRECTOR:
+    case Role.ACCOUNTS:
+    case Role.FINANCE:
+    case Role.DOCUMENTATION_OFFICER:
+    case Role.FRONT_DESK_OFFICER:
+      return baseFilter;
+
+    case Role.MANAGER:
+    case Role.BRANCH_MANAGER:
+    case Role.SENIOR_COUNSELOR:
+    case Role.COUNSELOR:
+      if (!user.branchId) {
+        return { ...baseFilter, branchId: 'NONE' };
+      }
+      return { ...baseFilter, branchId: user.branchId };
+
+    default:
+      return { id: 'NONE' };
+  }
+}
+
+/**
  * Helper to check if a user has permission to perform write actions on a specific applicant.
  */
 export function canWriteApplicant(user: JwtPayload, applicantBranchId: string, applicantCounselorId: string | null, applicantSubAgentId: string | null): boolean {

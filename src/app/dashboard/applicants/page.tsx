@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   Loader2,
   BookOpen,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { isValidEmailFormat, isValidPhone } from '@/lib/validation';
 import { canCreateApplicant } from '@/lib/auth';
@@ -94,6 +95,25 @@ export default function ApplicantsListPage() {
     guardianEmail: '',
   });
 
+  // Leads / Visitors tab switcher
+  const [activeSection, setActiveSection] = useState<'LEADS' | 'VISITORS'>('LEADS');
+
+  // Visitor state -- a lightweight walk-in/inquiry log, separate from Applicant
+  const [visitors, setVisitors] = useState<any[]>([]);
+  const [visitorsLoading, setVisitorsLoading] = useState(false);
+  const [visitorsInitialized, setVisitorsInitialized] = useState(false);
+  const [visitorSearch, setVisitorSearch] = useState('');
+  const [visitorStatusFilter, setVisitorStatusFilter] = useState('');
+  const [visitorBranchFilter, setVisitorBranchFilter] = useState('');
+  const [isVisitorModalOpen, setIsVisitorModalOpen] = useState(false);
+  const [isSavingVisitor, setIsSavingVisitor] = useState(false);
+  const [visitorFormError, setVisitorFormError] = useState<string | null>(null);
+  const [visitorForm, setVisitorForm] = useState({ name: '', phone: '', email: '', source: 'WALK_IN', note: '', branchId: '' });
+  const [visitorStatusUpdatingId, setVisitorStatusUpdatingId] = useState<string | null>(null);
+  // Set when "Convert to Lead" opens the Add Applicant modal pre-filled from a
+  // visitor -- links the two records together once the applicant is created.
+  const [convertingVisitorId, setConvertingVisitorId] = useState<string | null>(null);
+
   // Fetch current user and metadata
   useEffect(() => {
     async function initPage() {
@@ -105,6 +125,7 @@ export default function ApplicantsListPage() {
           // Set default branch for form
           if (userData.user.branchId) {
             setFormData(prev => ({ ...prev, branchId: userData.user.branchId }));
+            setVisitorForm(prev => ({ ...prev, branchId: userData.user.branchId }));
           }
         }
 
@@ -193,6 +214,136 @@ export default function ApplicantsListPage() {
     }
   }, [initialized, search, stage, branchFilter, counselorFilter, sourceFilter, universityFilter, stuckFilter, stuckThreshold, targetCountryFilter]);
 
+  // Fetch visitors based on filter
+  const fetchVisitors = async () => {
+    setVisitorsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (visitorSearch) params.append('search', visitorSearch);
+      if (visitorStatusFilter) params.append('status', visitorStatusFilter);
+      if (visitorBranchFilter) params.append('branchId', visitorBranchFilter);
+
+      const res = await fetch(`/api/visitors?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVisitors(data.visitors || []);
+      }
+    } catch (err) {
+      console.error('Fetch visitors error:', err);
+    } finally {
+      setVisitorsLoading(false);
+    }
+  };
+
+  // Lazy-load visitors only once the Visitors tab is actually opened
+  useEffect(() => {
+    if (activeSection === 'VISITORS' && !visitorsInitialized) {
+      setVisitorsInitialized(true);
+    }
+  }, [activeSection, visitorsInitialized]);
+
+  useEffect(() => {
+    if (visitorsInitialized) {
+      fetchVisitors();
+    }
+  }, [visitorsInitialized, visitorSearch, visitorStatusFilter, visitorBranchFilter]);
+
+  const handleLogVisitor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVisitorFormError(null);
+
+    if (!visitorForm.name.trim()) {
+      setVisitorFormError('Name is required');
+      return;
+    }
+    if (visitorForm.phone && !isValidPhone(visitorForm.phone)) {
+      setVisitorFormError('Mobile number is not a valid phone number');
+      return;
+    }
+    if (visitorForm.email && !isValidEmailFormat(visitorForm.email)) {
+      setVisitorFormError('Email address format is invalid');
+      return;
+    }
+
+    setIsSavingVisitor(true);
+    try {
+      const res = await fetch('/api/visitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(visitorForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to log visitor');
+      }
+
+      setIsVisitorModalOpen(false);
+      setVisitorForm({ name: '', phone: '', email: '', source: 'WALK_IN', note: '', branchId: currentUser?.branchId || '' });
+      fetchVisitors();
+    } catch (err: any) {
+      setVisitorFormError(err.message || 'Error occurred while saving');
+    } finally {
+      setIsSavingVisitor(false);
+    }
+  };
+
+  const handleVisitorStatusChange = async (id: string, status: string) => {
+    setVisitorStatusUpdatingId(id);
+    try {
+      const res = await fetch(`/api/visitors/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        fetchVisitors();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to update visitor');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setVisitorStatusUpdatingId(null);
+    }
+  };
+
+  const handleDeleteVisitor = async (id: string) => {
+    if (!confirm('Delete this visitor entry? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/visitors/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchVisitors();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete visitor');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Opens the existing Add Applicant modal pre-filled with this visitor's
+  // details -- submitting it creates a real Applicant and marks this visitor
+  // CONVERTED, linked to the new record.
+  const handleConvertVisitor = (visitor: any) => {
+    setFormData(prev => ({
+      ...prev,
+      name: visitor.name,
+      email: visitor.email || '',
+      phone: visitor.phone || '',
+      source: visitor.source,
+      branchId: visitor.branchId,
+    }));
+    setConvertingVisitorId(visitor.id);
+    setIsModalOpen(true);
+  };
+
+  const visitorNewCount = visitors.filter(v => v.status === 'NEW').length;
+  const visitorContactedCount = visitors.filter(v => v.status === 'CONTACTED').length;
+  const visitorConvertedCount = visitors.filter(v => v.status === 'CONVERTED').length;
+  const visitorNotInterestedCount = visitors.filter(v => v.status === 'NOT_INTERESTED').length;
+
   useEffect(() => {
     const filtered = allApplicants.filter(app => {
       // Priority filter
@@ -271,6 +422,17 @@ export default function ApplicantsListPage() {
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Failed to create lead');
+      }
+
+      // If this creation was a visitor conversion, link the two records
+      if (convertingVisitorId) {
+        await fetch(`/api/visitors/${convertingVisitorId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'CONVERTED', convertedApplicantId: data.applicant.id }),
+        }).catch((err) => console.error('Failed to link converted visitor:', err));
+        setConvertingVisitorId(null);
+        fetchVisitors();
       }
 
       setIsModalOpen(false);
@@ -389,12 +551,16 @@ export default function ApplicantsListPage() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100">Applicants & Leads</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-100">
+            {activeSection === 'LEADS' ? 'Applicants & Leads' : 'Visitors'}
+          </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage and track candidate pipelines from counseling to visa approval.
+            {activeSection === 'LEADS'
+              ? 'Manage and track candidate pipelines from counseling to visa approval.'
+              : 'Fast-log walk-ins and inquiries before they’re qualified into a full lead.'}
           </p>
         </div>
-        {currentUser && canCreateApplicant(currentUser) && (
+        {activeSection === 'LEADS' && currentUser && canCreateApplicant(currentUser) && (
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center space-x-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-indigo-600/10 cursor-pointer"
@@ -403,8 +569,43 @@ export default function ApplicantsListPage() {
             <span>Add Applicant</span>
           </button>
         )}
+        {activeSection === 'VISITORS' && currentUser && (
+          <button
+            onClick={() => setIsVisitorModalOpen(true)}
+            className="flex items-center space-x-2 py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-teal-600/10 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Log Visitor</span>
+          </button>
+        )}
       </div>
 
+      {/* Leads / Visitors tab switcher */}
+      <div className="flex items-center space-x-1 border-b border-slate-800">
+        <button
+          onClick={() => setActiveSection('LEADS')}
+          className={`px-4 py-2.5 text-xs font-bold rounded-t-lg transition-all cursor-pointer border-b-2 -mb-px ${
+            activeSection === 'LEADS'
+              ? 'text-indigo-400 border-indigo-500'
+              : 'text-slate-400 border-transparent hover:text-slate-200'
+          }`}
+        >
+          Leads ({totalLeadsCount})
+        </button>
+        <button
+          onClick={() => setActiveSection('VISITORS')}
+          className={`px-4 py-2.5 text-xs font-bold rounded-t-lg transition-all cursor-pointer border-b-2 -mb-px ${
+            activeSection === 'VISITORS'
+              ? 'text-teal-400 border-teal-500'
+              : 'text-slate-400 border-transparent hover:text-slate-200'
+          }`}
+        >
+          Visitors {visitorsInitialized ? `(${visitors.length})` : ''}
+        </button>
+      </div>
+
+      {activeSection === 'LEADS' && (
+      <>
       {/* Active Filters — always-visible summary of exactly what's being viewed right now */}
       {activeFilterChips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 p-3.5 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
@@ -931,6 +1132,361 @@ export default function ApplicantsListPage() {
           </div>
         )}
       </div>
+      </>
+      )}
+
+      {activeSection === 'VISITORS' && (
+        <>
+          {/* Visitor Filters */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+            <div className="flex items-center space-x-2 text-xs font-bold text-teal-400 uppercase tracking-wider">
+              <Filter className="w-3.5 h-3.5" />
+              <span>Filters</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Name, email, phone..."
+                    value={visitorSearch}
+                    onChange={(e) => setVisitorSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-teal-500 transition-all placeholder:text-slate-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Status</label>
+                <select
+                  value={visitorStatusFilter}
+                  onChange={(e) => setVisitorStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-teal-500 transition-all"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="NEW">New</option>
+                  <option value="CONTACTED">Contacted</option>
+                  <option value="CONVERTED">Converted</option>
+                  <option value="NOT_INTERESTED">Not Interested</option>
+                </select>
+              </div>
+
+              {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER'].includes(currentUser?.role) && (
+                <div>
+                  <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Branch</label>
+                  <select
+                    value={visitorBranchFilter}
+                    onChange={(e) => setVisitorBranchFilter(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none focus:border-teal-500 transition-all"
+                  >
+                    <option value="">All Branches</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 border-t border-slate-800/60 pt-4">
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-16 shrink-0">Status</span>
+              <button
+                onClick={() => setVisitorStatusFilter(visitorStatusFilter === 'NEW' ? '' : 'NEW')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
+                  visitorStatusFilter === 'NEW'
+                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
+                    : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-amber-400 hover:border-amber-500/30'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span>New ({visitorNewCount})</span>
+              </button>
+              <button
+                onClick={() => setVisitorStatusFilter(visitorStatusFilter === 'CONTACTED' ? '' : 'CONTACTED')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
+                  visitorStatusFilter === 'CONTACTED'
+                    ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/50'
+                    : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-indigo-400 hover:border-indigo-500/30'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                <span>Contacted ({visitorContactedCount})</span>
+              </button>
+              <button
+                onClick={() => setVisitorStatusFilter(visitorStatusFilter === 'CONVERTED' ? '' : 'CONVERTED')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
+                  visitorStatusFilter === 'CONVERTED'
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'
+                    : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-emerald-400 hover:border-emerald-500/30'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>Converted ({visitorConvertedCount})</span>
+              </button>
+              <button
+                onClick={() => setVisitorStatusFilter(visitorStatusFilter === 'NOT_INTERESTED' ? '' : 'NOT_INTERESTED')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
+                  visitorStatusFilter === 'NOT_INTERESTED'
+                    ? 'bg-slate-700 text-slate-200 border-slate-600'
+                    : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                <span>Not Interested ({visitorNotInterestedCount})</span>
+              </button>
+              <span className="text-[10px] text-slate-500 font-mono ml-auto">
+                Showing {visitors.length} record{visitors.length !== 1 && 's'}
+              </span>
+            </div>
+          </div>
+
+          {/* Visitor Table */}
+          <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl">
+            {visitorsLoading ? (
+              <div className="py-20 flex flex-col items-center justify-center space-y-3 text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+                <span className="text-xs">Loading visitor log...</span>
+              </div>
+            ) : visitors.length === 0 ? (
+              <div className="py-20 text-center text-slate-500">
+                <CheckCircle className="w-12 h-12 mx-auto text-slate-700 mb-3" />
+                <p className="text-sm font-semibold">No visitors logged</p>
+                <p className="text-xs text-slate-600 mt-1">Try resetting filters, or log a new walk-in above.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="px-6 py-4">Name</th>
+                      <th className="px-6 py-4">Contact</th>
+                      <th className="px-6 py-4">Branch</th>
+                      <th className="px-6 py-4">Source</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Logged By</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/50 text-xs text-slate-350">
+                    {visitors.map((v) => (
+                      <tr key={v.id} className="hover:bg-slate-850/40 transition-all">
+                        <td className="px-6 py-4 font-bold text-slate-200">
+                          {v.name}
+                          {v.note && <div className="text-[10px] text-slate-500 font-normal mt-0.5 max-w-[220px] truncate" title={v.note}>{v.note}</div>}
+                        </td>
+                        <td className="px-6 py-4 text-slate-300">
+                          {v.phone || <span className="text-slate-600">—</span>}
+                          {v.email && <div className="text-[10px] text-slate-500 mt-0.5">{v.email}</div>}
+                        </td>
+                        <td className="px-6 py-4 text-slate-400">{v.branch?.name}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-2 py-0.5 bg-slate-850 text-[10px] text-slate-400 rounded-md font-medium border border-slate-800">
+                            {v.source}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
+                            v.status === 'NEW' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' :
+                            v.status === 'CONTACTED' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30' :
+                            v.status === 'CONVERTED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' :
+                            'bg-slate-800 text-slate-400 border border-slate-700'
+                          }`}>
+                            {v.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-400">{v.loggedBy?.name || 'Unknown'}</td>
+                        <td className="px-6 py-4 text-slate-400 font-mono text-[11px]">{new Date(v.createdAt).toLocaleDateString()}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end space-x-1.5">
+                            {v.status === 'CONVERTED' && v.convertedApplicantId ? (
+                              <Link
+                                href={`/dashboard/applicants/${v.convertedApplicantId}`}
+                                className="whitespace-nowrap px-3 py-1.5 bg-slate-850 hover:bg-emerald-50 text-emerald-500 border border-slate-800 text-[10px] font-bold rounded-lg transition-all"
+                              >
+                                View Lead
+                              </Link>
+                            ) : v.status === 'NOT_INTERESTED' ? (
+                              <button
+                                onClick={() => handleVisitorStatusChange(v.id, 'NEW')}
+                                disabled={visitorStatusUpdatingId === v.id}
+                                className="whitespace-nowrap px-3 py-1.5 bg-slate-850 hover:bg-slate-800 text-slate-400 border border-slate-800 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50"
+                              >
+                                Reopen
+                              </button>
+                            ) : (
+                              <>
+                                {v.status === 'NEW' && (
+                                  <button
+                                    onClick={() => handleVisitorStatusChange(v.id, 'CONTACTED')}
+                                    disabled={visitorStatusUpdatingId === v.id}
+                                    className="whitespace-nowrap px-2.5 py-1.5 bg-slate-850 hover:bg-indigo-50 text-indigo-500 border border-slate-800 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50"
+                                    title="Mark as contacted"
+                                  >
+                                    Contacted
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleConvertVisitor(v)}
+                                  className="whitespace-nowrap px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition-all"
+                                >
+                                  Convert to Lead
+                                </button>
+                                <button
+                                  onClick={() => handleVisitorStatusChange(v.id, 'NOT_INTERESTED')}
+                                  disabled={visitorStatusUpdatingId === v.id}
+                                  className="p-1.5 rounded-lg bg-slate-850 border border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700 transition-colors disabled:opacity-50"
+                                  title="Not interested"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => handleDeleteVisitor(v.id)}
+                              className="p-1.5 rounded-lg bg-slate-850 border border-slate-800 text-rose-500 hover:border-rose-500/40 transition-colors"
+                              title="Delete visitor entry"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Log Visitor Modal */}
+      {isVisitorModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/20 flex justify-between items-center">
+              <div className="flex items-center space-x-2 text-slate-100">
+                <UserPlus className="w-5 h-5 text-teal-500" />
+                <h3 className="font-bold text-sm">Log Visitor</h3>
+              </div>
+              <button
+                onClick={() => setIsVisitorModalOpen(false)}
+                className="text-slate-400 hover:text-slate-100 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleLogVisitor} className="p-6 space-y-4">
+              {visitorFormError && (
+                <div className="p-3 bg-rose-950/40 border border-rose-800 rounded-xl text-rose-400 text-xs font-medium">
+                  {visitorFormError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] text-slate-400 font-medium mb-1">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={visitorForm.name}
+                  onChange={(e) => setVisitorForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. Sujan Bhattarai"
+                  className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-teal-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1">Phone</label>
+                  <input
+                    type="text"
+                    value={visitorForm.phone}
+                    onChange={(e) => setVisitorForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="98XXXXXXXX"
+                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1">Email</label>
+                  <input
+                    type="text"
+                    value={visitorForm.email}
+                    onChange={(e) => setVisitorForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="optional"
+                    className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-slate-400 font-medium mb-1">Source</label>
+                <select
+                  value={visitorForm.source}
+                  onChange={(e) => setVisitorForm(prev => ({ ...prev, source: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                >
+                  {SOURCES.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER'].includes(currentUser?.role) ? (
+                <div>
+                  <label className="block text-[10px] text-slate-400 font-medium mb-1">Branch</label>
+                  <select
+                    value={visitorForm.branchId}
+                    onChange={(e) => setVisitorForm(prev => ({ ...prev, branchId: e.target.value }))}
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex items-center px-3 py-2 bg-slate-950 border border-slate-800/40 rounded-xl text-slate-500 text-xs select-none">
+                  <MapPin className="w-3.5 h-3.5 mr-1 text-slate-600 shrink-0" />
+                  <span>{currentUser?.branchName || 'Your branch'}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] text-slate-400 font-medium mb-1">Note</label>
+                <textarea
+                  value={visitorForm.note}
+                  onChange={(e) => setVisitorForm(prev => ({ ...prev, note: e.target.value }))}
+                  placeholder="What are they interested in?"
+                  rows={2}
+                  className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-teal-500 resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsVisitorModalOpen(false)}
+                  className="px-4 py-2 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingVisitor}
+                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingVisitor ? 'Saving...' : 'Log Visitor'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Applicant Modal */}
       {isModalOpen && (
@@ -941,10 +1497,10 @@ export default function ApplicantsListPage() {
             <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/20 flex justify-between items-center">
               <div className="flex items-center space-x-2 text-slate-100">
                 <UserPlus className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-sm">Add New Student Profile</h3>
+                <h3 className="font-bold text-sm">{convertingVisitorId ? 'Convert Visitor to Lead' : 'Add New Student Profile'}</h3>
               </div>
-              <button 
-                onClick={() => setIsModalOpen(false)}
+              <button
+                onClick={() => { setIsModalOpen(false); setConvertingVisitorId(null); }}
                 className="text-slate-400 hover:text-slate-100 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -1366,7 +1922,7 @@ export default function ApplicantsListPage() {
               <div className="pt-4 border-t border-slate-800 flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => { setIsModalOpen(false); setConvertingVisitorId(null); }}
                   className="px-4 py-2 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                 >
                   Cancel
