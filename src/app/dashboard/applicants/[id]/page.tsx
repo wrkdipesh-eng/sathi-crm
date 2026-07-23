@@ -43,6 +43,38 @@ const PROMOTE_OPTIONS = [
   'PRE_DEPARTURE'
 ];
 
+// Priority is fully auto-calculated (creation date, commitment date, missed
+// follow-ups, pipeline stage) — this just translates the machine reason code
+// into a sentence so it's clear *why* a lead is HOT/WARM/COLD, not just that.
+function describePriorityReason(applicant: any): string {
+  const reason = applicant?.priorityChangeReason;
+  const missed = applicant?.missedFollowUpCount || 0;
+  const commitDate = applicant?.committedSubmissionDate
+    ? new Date(applicant.committedSubmissionDate).toLocaleDateString()
+    : null;
+
+  switch (reason) {
+    case 'NEW_ENTRY':
+      return 'New lead — created within the last 7 days.';
+    case 'SUBMISSION_COMMITTED':
+      return commitDate ? `Committed to submit by ${commitDate}.` : 'Has a future submission commitment.';
+    case 'COMMITMENT_MISSED':
+      return commitDate ? `Committed submission date (${commitDate}) passed without submitting.` : 'Missed their committed submission date.';
+    case 'FOLLOWUP_MISSED':
+      return `${missed} follow-up${missed === 1 ? '' : 's'} overdue and not yet completed.`;
+    case 'CONVERTED':
+      return 'Application already submitted — no longer tracked as a lead.';
+    case 'RE_ENGAGE':
+      return 'Visa was refused — reset to HOT in case they reapply.';
+    case 'STATUS_CHANGE':
+      return 'Pipeline stage changed; priority itself was unaffected.';
+    case 'AUTO_ASSIGNMENT':
+      return 'Engaged lead, older than 7 days with no commitment date set.';
+    default:
+      return 'Not yet evaluated.';
+  }
+}
+
 export default function ApplicantDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const router = useRouter();
@@ -100,6 +132,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
   // New Note/Task Form State
   const [noteForm, setNoteForm] = useState({ type: 'NOTE', title: '', content: '', dueDate: '' });
   const [isSavingNote, setIsSavingNote] = useState(false);
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 
   // New Commission Ledger Form State
   const [commissionForm, setCommissionForm] = useState({ partnerUniversity: '', commissionAmountForeign: '', currency: 'AUD', status: 'PENDING' });
@@ -397,7 +430,6 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
       subAgentId: fd.get('subAgentId') || null,
       subAgentCommissionSplit: fd.get('subAgentCommissionSplit') || null,
       branchCommissionSplit: fd.get('branchCommissionSplit') || null,
-      priority: fd.get('priority') || null,
     };
 
     try {
@@ -465,6 +497,30 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
       console.error(e);
     } finally {
       setIsSavingNote(false);
+    }
+  };
+
+  // Mark a follow-up TASK as completed — this is the only thing that clears
+  // it from the missed-follow-up count driving COLD priority.
+  const handleCompleteTask = async (logId: string) => {
+    setCompletingTaskId(logId);
+    try {
+      const res = await fetch(`/api/applicants/${id}/communication/${logId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'COMPLETED' }),
+      });
+
+      if (res.ok) {
+        fetchApplicantDetails();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to mark task complete');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCompletingTaskId(null);
     }
   };
 
@@ -586,13 +642,25 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
           <div>
             <div className="flex items-center space-x-2.5 flex-wrap gap-y-2">
               <h1 className="text-2xl font-bold text-slate-100 tracking-tight">{applicant.name}</h1>
-              {applicant.priority && (
+              {applicant.priority ? (
                 <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] uppercase border ${
                   applicant.priority === 'HOT' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
                   applicant.priority === 'WARM' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
                   'bg-sky-500/20 text-sky-400 border-sky-500/30'
                 }`}>
                   {applicant.priority}
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full font-bold text-[10px] uppercase border bg-slate-800 text-slate-400 border-slate-700">
+                  No Priority
+                </span>
+              )}
+              {applicant.applicantStatus && applicant.applicantStatus !== 'INQUIRY' && (
+                <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] uppercase border ${
+                  applicant.applicantStatus === 'REAL' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                  'bg-slate-700/40 text-slate-300 border-slate-600'
+                }`}>
+                  {applicant.applicantStatus === 'REAL' ? 'Real Applicant' : applicant.applicantStatus}
                 </span>
               )}
               {isStuck && (
@@ -606,6 +674,9 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
               <span>Target: <span className="font-semibold text-indigo-600">{applicant.targetCountry}</span></span>
               <span>•</span>
               <span className="text-[10px] px-1.5 py-0.5 bg-slate-850 rounded font-mono text-slate-400 uppercase">{applicant.source}</span>
+            </div>
+            <div className="text-[11px] text-slate-500 mt-1 flex items-center">
+              <span className="italic">{describePriorityReason(applicant)}</span>
             </div>
           </div>
         </div>
@@ -1119,13 +1190,21 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5">Lead Priority</label>
-                    <select name="priority" defaultValue={applicant.priority || ''} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer">
-                      <option value="">No Priority</option>
-                      <option value="HOT">🔥 Hot</option>
-                      <option value="WARM">⚡ Warm</option>
-                      <option value="COLD">❄️ Cold</option>
-                    </select>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1.5">Lead Priority (auto)</label>
+                    <div className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs flex items-center justify-between">
+                      <span className={`font-bold ${
+                        applicant.priority === 'HOT' ? 'text-rose-400' :
+                        applicant.priority === 'WARM' ? 'text-orange-400' :
+                        applicant.priority === 'COLD' ? 'text-sky-400' :
+                        'text-slate-500'
+                      }`}>
+                        {applicant.priority || 'No Priority'}
+                      </span>
+                      <span className="text-slate-500 text-[10px]">not editable</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1 leading-snug">
+                      Calculated from creation date, commitment date, missed follow-ups, and pipeline stage — set a commitment date or mark follow-ups complete to change it.
+                    </p>
                   </div>
 
                   {applicant.source === 'SUB_AGENT' ? (
@@ -1328,10 +1407,16 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
               {/* Timeline Feed */}
               <div className="relative border-l border-slate-800 pl-6 space-y-6 ml-3">
                 {applicant.communicationLogs.map((log: any) => {
+                  const isTask = log.type === 'TASK';
+                  const isCompleted = isTask && log.status === 'COMPLETED';
+                  const isOverdue = isTask && !isCompleted && log.dueDate && new Date(log.dueDate) < new Date();
+
                   return (
                     <div key={log.id} className="relative">
                       {/* Node Bullet */}
                       <span className={`absolute top-0.5 -left-[31px] w-4 h-4 rounded-full border-4 border-slate-900 flex items-center justify-center ${
+                        isCompleted ? 'bg-emerald-500' :
+                        isOverdue ? 'bg-rose-500' :
                         log.type === 'NOTE' ? 'bg-indigo-500' :
                         log.type === 'TASK' ? 'bg-amber-500' :
                         log.type === 'WHATSAPP' ? 'bg-teal-500' :
@@ -1340,19 +1425,41 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
 
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-bold text-slate-200 text-xs">{log.title}</span>
+                          <span className={`font-bold text-xs ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-200'}`}>{log.title}</span>
                           <span className="px-1.5 py-0.5 bg-slate-800 text-[8px] text-slate-400 rounded uppercase font-mono tracking-wide scale-90">
                             {log.type}
                           </span>
                         </div>
                         <p className="text-xs text-slate-400 leading-relaxed font-sans pr-4">{log.content}</p>
-                        
+
                         {log.dueDate && (
-                          <span className="text-[10px] text-amber-500 flex items-center font-semibold mt-1">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            Due: {new Date(log.dueDate).toLocaleDateString()}
-                            {log.status === 'PENDING' && <span className="ml-2 px-1.5 py-0.2 bg-amber-500/10 text-[8px] font-bold rounded">PENDING</span>}
-                          </span>
+                          <div className="flex items-center flex-wrap gap-2 mt-1">
+                            <span className={`text-[10px] flex items-center font-semibold ${
+                              isCompleted ? 'text-slate-500' : isOverdue ? 'text-rose-400' : 'text-amber-500'
+                            }`}>
+                              <Calendar className="w-3 h-3 mr-1" />
+                              Due: {new Date(log.dueDate).toLocaleDateString()}
+                            </span>
+                            {isCompleted ? (
+                              <span className="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 text-[8px] font-bold rounded flex items-center">
+                                <CheckCircle className="w-2.5 h-2.5 mr-0.5" /> COMPLETED
+                              </span>
+                            ) : isOverdue ? (
+                              <span className="px-1.5 py-0.2 bg-rose-500/10 text-rose-400 text-[8px] font-bold rounded">OVERDUE</span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 bg-amber-500/10 text-amber-400 text-[8px] font-bold rounded">PENDING</span>
+                            )}
+                            {isTask && !isCompleted && (
+                              <button
+                                onClick={() => handleCompleteTask(log.id)}
+                                disabled={completingTaskId === log.id}
+                                className="ml-auto flex items-center space-x-1 py-1 px-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 text-[10px] font-bold rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                <CheckCircle className="w-3 h-3" />
+                                <span>{completingTaskId === log.id ? 'Saving...' : 'Mark Complete'}</span>
+                              </button>
+                            )}
+                          </div>
                         )}
 
                         <div className="text-[10px] text-slate-500 flex items-center space-x-2 pt-1 font-mono">
