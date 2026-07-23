@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     const where: any = {
       AND: [
         accessFilter,
+        { deletedAt: null },
         search
           ? {
               OR: [

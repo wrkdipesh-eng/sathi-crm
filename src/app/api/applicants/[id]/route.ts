@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       },
     });
 
-    if (!applicant) {
+    if (!applicant || applicant.deletedAt) {
       return NextResponse.json({ error: 'Applicant not found' }, { status: 404 });
     }
 
@@ -181,7 +181,9 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   }
 }
 
-// DELETE: Remove applicant
+// DELETE: Soft-delete an applicant -- moves it to the Trash section instead
+// of destroying it. Only a SUPERADMIN can restore or permanently delete it
+// from there (see /api/trash/applicants).
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
@@ -196,7 +198,7 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
       where: { id },
     });
 
-    if (!applicant) {
+    if (!applicant || applicant.deletedAt) {
       return NextResponse.json({ error: 'Applicant not found' }, { status: 404 });
     }
 
@@ -208,11 +210,12 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Forbidden: Insufficient privileges' }, { status: 403 });
     }
 
-    await prisma.applicant.delete({
+    await prisma.applicant.update({
       where: { id },
+      data: { deletedAt: new Date(), deletedById: authUser.userId },
     });
 
-    return NextResponse.json({ success: true, message: 'Applicant deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Applicant moved to trash' });
   } catch (error: any) {
     console.error('Delete applicant error:', error);
     return NextResponse.json(

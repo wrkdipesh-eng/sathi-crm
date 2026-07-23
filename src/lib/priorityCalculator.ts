@@ -299,7 +299,7 @@ export async function updateApplicantPriority(
 export async function updateAllApplicantPriorities(organizationId: string): Promise<number> {
   try {
     const applicants = await prisma.applicant.findMany({
-      where: { organizationId },
+      where: { organizationId, deletedAt: null },
       select: { id: true },
     });
 

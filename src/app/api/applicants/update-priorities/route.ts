@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         // Count total applicants
         require('@/lib/prisma').default
       ).applicant.count({
-        where: { organizationId },
+        where: { organizationId, deletedAt: null },
       });
 
       result = {

@@ -16,7 +16,8 @@ import {
   School,
   Compass,
   ShieldCheck,
-  Building
+  Building,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from './LogoutButton';
@@ -124,6 +125,15 @@ export default async function DashboardLayout({
                   >
                     <Settings className="w-4 h-4 text-indigo-500" />
                     <span>Control Panel</span>
+                  </Link>
+                )}
+                {user.role === 'SUPERADMIN' && (
+                  <Link
+                    href="/dashboard/trash"
+                    className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-850 hover:text-rose-500 transition-all text-sm font-medium"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                    <span>Trash</span>
                   </Link>
                 )}
               </>

@@ -89,6 +89,7 @@ export async function GET(req: NextRequest) {
     const where: any = {
       AND: [
         accessFilter,
+        { deletedAt: null },
         // Search condition (Name, Email, or Phone)
         search
           ? {

@@ -95,6 +95,8 @@ model User {
   createdApplicants  Applicant[] @relation("creator")
   subAgentApplicants Applicant[] @relation("subAgent")
   loggedVisitors     Visitor[]   @relation("visitorLoggedBy")
+  deletedApplicants  Applicant[] @relation("applicantDeletedBy")
+  deletedVisitors    Visitor[]   @relation("visitorDeletedBy")
 
   subAgentCommissionSplit Float? // Flat rate or percentage if this user is a sub-agent (e.g. 0.50 for 50%)
 
@@ -151,6 +153,13 @@ model Applicant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Soft delete -- moves the record to the Trash section instead of removing
+  // it outright, so only a SUPERADMIN restoring or permanently deleting it
+  // from Trash actually destroys data.
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   User?     @relation("applicantDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+
   guardians             Guardian[]
   pipelineStageLogs     PipelineStageLog[]
   documents             Document[]
@@ -189,6 +198,11 @@ model Visitor {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Soft delete -- see Applicant.deletedAt for rationale.
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   User?     @relation("visitorDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 }
 
 model Application {

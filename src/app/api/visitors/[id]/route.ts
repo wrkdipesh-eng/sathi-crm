@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
 
     const { id } = params;
     const visitor = await prisma.visitor.findUnique({ where: { id } });
-    if (!visitor) {
+    if (!visitor || visitor.deletedAt) {
       return NextResponse.json({ error: 'Visitor not found' }, { status: 404 });
     }
 
@@ -89,7 +89,9 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
   }
 }
 
-// DELETE: Remove a visitor log entry (e.g. duplicate/junk entry)
+// DELETE: Soft-delete a visitor log entry -- moves it to the Trash section
+// instead of destroying it. Only a SUPERADMIN can restore or permanently
+// delete it from there (see /api/trash/visitors).
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
@@ -100,7 +102,7 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
 
     const { id } = params;
     const visitor = await prisma.visitor.findUnique({ where: { id } });
-    if (!visitor) {
+    if (!visitor || visitor.deletedAt) {
       return NextResponse.json({ error: 'Visitor not found' }, { status: 404 });
     }
 
@@ -108,7 +110,10 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    await prisma.visitor.delete({ where: { id } });
+    await prisma.visitor.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedById: authUser.userId },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
     // Get country from query params and create combinedFilter
     const country = req.nextUrl.searchParams.get('country');
-    const combinedFilter = { ...accessFilter } as any;
+    const combinedFilter = { ...accessFilter, deletedAt: null } as any;
     if (country) {
       combinedFilter.targetCountry = country;
     }
