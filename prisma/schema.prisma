@@ -118,11 +118,16 @@ model Applicant {
   pipelineStage           PipelineStage        @default(INQUIRY)
   daysInCurrentStage      Int                  @default(0)
   stageUpdatedAt          DateTime             @default(now())
-  priority                String?              // HOT, WARM, COLD (auto-assigned based on pipeline & follow-ups)
+
+  priority                String?              // HOT, WARM, COLD (urgency/engagement level)
+  applicantStatus         String?              // INQUIRY, REAL, CLOSED, REJECTED (whether they're verified/real)
+
+  committedSubmissionDate DateTime?            // When applicant committed to submit application
   lastFollowUpDate        DateTime?            // Track last follow-up task due date
   missedFollowUpCount     Int                  @default(0) // Counter: 0, 1, or 2+ → COLD
+
   lastPriorityChangeAt    DateTime?            // Track when priority last changed
-  priorityChangeReason    String?              // AUTO_ASSIGNMENT, STAGE_CHANGE, FOLLOWUP_MISSED, MANUAL
+  priorityChangeReason    String?              // NEW_ENTRY, SUBMISSION_COMMITTED, COMMITMENT_MISSED, STAGE_CHANGE, FOLLOWUP_MISSED, MANUAL
 
   organizationId          String
   organization            Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)

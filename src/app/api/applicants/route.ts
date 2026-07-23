@@ -274,9 +274,10 @@ export async function POST(req: NextRequest) {
         subAgentId: resolvedSubAgentId || null,
         subAgentCommissionSplit: resolvedSplit || null,
         branchCommissionSplit: branchCommissionSplit ? parseFloat(branchCommissionSplit) : null,
-        priority: priority || 'WARM', // Auto-assign WARM for new entries
+        priority: priority || 'HOT', // Auto-assign HOT for new entries
+        applicantStatus: 'INQUIRY', // Default status for new entries
         lastPriorityChangeAt: new Date(),
-        priorityChangeReason: 'AUTO_ASSIGNMENT',
+        priorityChangeReason: 'NEW_ENTRY',
         missedFollowUpCount: 0,
         // Optional Guardian
         guardians: guardianName && guardianRelation ? {

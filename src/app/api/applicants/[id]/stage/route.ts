@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { getAuthUser, canWriteApplicant } from '@/lib/auth';
 import { PipelineStage, CommunicationType } from '@prisma/client';
 import { createCommissionIfVisaFiled } from '@/lib/commission';
-import { calculatePriority } from '@/lib/priorityCalculator';
+import { calculatePriority, calculateApplicantStatus } from '@/lib/priorityCalculator';
 
 export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -82,10 +82,18 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         },
       });
 
-      // 3. Update applicant stage fields & auto-update priority
-      // Calculate new priority based on new stage
-      const priorityResult = calculatePriority(newStage, applicant.missedFollowUpCount);
+      // 3. Update applicant stage fields & auto-update priority & status
+      // Calculate new priority based on new stage and commitment
+      const priorityResult = calculatePriority(
+        newStage,
+        applicant.missedFollowUpCount,
+        applicant.committedSubmissionDate,
+        applicant.createdAt
+      );
+      const newStatus = calculateApplicantStatus(newStage);
+
       const priorityChanged = applicant.priority !== priorityResult.priority;
+      const statusChanged = applicant.applicantStatus !== newStatus;
 
       const updated = await tx.applicant.update({
         where: { id },
@@ -94,6 +102,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
           daysInCurrentStage: 0,
           stageUpdatedAt: now,
           priority: priorityResult.priority,
+          applicantStatus: newStatus,
           lastPriorityChangeAt: priorityChanged ? now : applicant.lastPriorityChangeAt,
           priorityChangeReason: priorityChanged ? priorityResult.reason : applicant.priorityChangeReason,
         },
@@ -106,11 +115,13 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
             applicantId: id,
             oldPriority: applicant.priority,
             newPriority: priorityResult.priority,
-            reason: 'STAGE_CHANGE',
+            reason: priorityResult.reason,
             triggeredBy: authUser.userId,
             pipelineStage: newStage,
             missedFollowUpCount: applicant.missedFollowUpCount,
-            notes: `Automatic promotion due to stage change from "${oldStage}" to "${newStage}"`,
+            notes: `Stage change from "${oldStage}" to "${newStage}" triggered priority update${
+              statusChanged ? ` and status update to "${newStatus}"` : ''
+            }`,
           },
         });
       }

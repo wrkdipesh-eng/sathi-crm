@@ -8,19 +8,29 @@ export interface PriorityResult {
 }
 
 /**
- * Calculate priority based on pipeline stage and follow-up history
+ * Calculate priority based on engagement, commitment, and follow-ups
  *
- * Logic:
- * - NEW ENTRY (INQUIRY) → WARM
- * - APPLICATION_SUBMITTED or later → HOT
- * - 2+ missed follow-ups → COLD
- * - If HOT but has missed follow-ups → stay HOT (override)
+ * PRIORITY Logic (Urgency/Engagement Level):
+ * - NEW ENTRY (INQUIRY) → HOT (reason: NEW_ENTRY)
+ * - COMMITMENT set + not expired → HOT (reason: SUBMISSION_COMMITTED)
+ * - Commitment date passed unmet → WARM (reason: COMMITMENT_MISSED)
+ * - 2+ missed follow-ups → COLD (reason: FOLLOWUP_MISSED)
+ * - Default engaged leads → WARM
+ *
+ * APPLICANT STATUS (whether they're real/verified):
+ * - APPLICATION_SUBMITTED or beyond → REAL (separate field)
+ * - INQUIRY/COUNSELLING → INQUIRY
+ * - VISA_REFUSED/CLOSED → CLOSED/REJECTED
  */
 export function calculatePriority(
   pipelineStage: PipelineStage,
-  missedFollowUpCount: number
+  missedFollowUpCount: number,
+  committedSubmissionDate?: Date | null,
+  applicantCreatedAt?: Date
 ): PriorityResult {
-  // If 2 or more missed follow-ups, always COLD
+  const now = new Date();
+
+  // RULE 1: If 2+ missed follow-ups → COLD (override everything)
   if (missedFollowUpCount >= 2) {
     return {
       priority: 'COLD',
@@ -29,28 +39,67 @@ export function calculatePriority(
     };
   }
 
-  // If application submitted or beyond, it's HOT
-  if (
-    pipelineStage === PipelineStage.APPLICATION_SUBMITTED ||
-    pipelineStage === PipelineStage.OFFER ||
-    pipelineStage === PipelineStage.VISA_FILED ||
-    pipelineStage === PipelineStage.VISA_GRANTED ||
-    pipelineStage === PipelineStage.VISA_REFUSED ||
-    pipelineStage === PipelineStage.PRE_DEPARTURE
-  ) {
-    return {
-      priority: 'HOT',
-      reason: 'STAGE_CHANGE',
-      missedFollowUpCount,
-    };
+  // RULE 2: Check commitment status
+  if (committedSubmissionDate) {
+    if (committedSubmissionDate > now) {
+      // Commitment date still in future → HOT
+      return {
+        priority: 'HOT',
+        reason: 'SUBMISSION_COMMITTED',
+        missedFollowUpCount,
+      };
+    } else {
+      // Commitment date has passed → WARM (missed commitment)
+      return {
+        priority: 'WARM',
+        reason: 'COMMITMENT_MISSED',
+        missedFollowUpCount,
+      };
+    }
   }
 
-  // Default for INQUIRY and COUNSELLING stages: WARM
+  // RULE 3: NEW ENTRY (very recent, no commitment yet)
+  if (applicantCreatedAt) {
+    const daysSinceCreation = Math.floor((now.getTime() - applicantCreatedAt.getTime()) / (1000 * 60 * 60 * 24));
+    // If less than 7 days old and no commitment → HOT (new entry)
+    if (daysSinceCreation <= 7 && !committedSubmissionDate) {
+      return {
+        priority: 'HOT',
+        reason: 'NEW_ENTRY',
+        missedFollowUpCount,
+      };
+    }
+  }
+
+  // DEFAULT: Engaged but not new/committed → WARM
   return {
     priority: 'WARM',
     reason: 'AUTO_ASSIGNMENT',
     missedFollowUpCount,
   };
+}
+
+/**
+ * Calculate applicant status (verification level)
+ *
+ * - APPLICATION_SUBMITTED or beyond → REAL (verified applicant)
+ * - VISA_REFUSED → REJECTED
+ * - Default → INQUIRY
+ */
+export function calculateApplicantStatus(pipelineStage: PipelineStage): string {
+  if (pipelineStage === PipelineStage.APPLICATION_SUBMITTED ||
+      pipelineStage === PipelineStage.OFFER ||
+      pipelineStage === PipelineStage.VISA_FILED ||
+      pipelineStage === PipelineStage.VISA_GRANTED ||
+      pipelineStage === PipelineStage.PRE_DEPARTURE) {
+    return 'REAL';
+  }
+
+  if (pipelineStage === PipelineStage.VISA_REFUSED) {
+    return 'REJECTED';
+  }
+
+  return 'INQUIRY';
 }
 
 /**
@@ -101,7 +150,7 @@ export async function getLastFollowUpDate(applicantId: string): Promise<Date | n
 }
 
 /**
- * Update an applicant's priority based on current state
+ * Update an applicant's priority and status based on current state
  * Returns whether priority changed
  */
 export async function updateApplicantPriority(
@@ -114,7 +163,10 @@ export async function updateApplicantPriority(
       select: {
         pipelineStage: true,
         priority: true,
+        applicantStatus: true,
         missedFollowUpCount: true,
+        committedSubmissionDate: true,
+        createdAt: true,
       },
     });
 
@@ -126,12 +178,21 @@ export async function updateApplicantPriority(
     const actualMissedCount = await countMissedFollowUps(applicantId);
 
     // Calculate new priority
-    const result = calculatePriority(applicant.pipelineStage as PipelineStage, actualMissedCount);
+    const result = calculatePriority(
+      applicant.pipelineStage as PipelineStage,
+      actualMissedCount,
+      applicant.committedSubmissionDate,
+      applicant.createdAt
+    );
 
-    // Check if priority changed
+    // Calculate new applicant status
+    const newApplicantStatus = calculateApplicantStatus(applicant.pipelineStage as PipelineStage);
+
+    // Check if priority or status changed
     const priorityChanged = applicant.priority !== result.priority;
+    const statusChanged = applicant.applicantStatus !== newApplicantStatus;
 
-    if (priorityChanged) {
+    if (priorityChanged || statusChanged) {
       // Get last follow-up date for context
       const lastFollowUpDate = await getLastFollowUpDate(applicantId);
 
@@ -141,29 +202,36 @@ export async function updateApplicantPriority(
           where: { id: applicantId },
           data: {
             priority: result.priority,
+            applicantStatus: newApplicantStatus,
             missedFollowUpCount: actualMissedCount,
             lastFollowUpDate,
-            lastPriorityChangeAt: new Date(),
-            priorityChangeReason: result.reason,
+            lastPriorityChangeAt: priorityChanged ? new Date() : applicant.priority ? undefined : new Date(),
+            priorityChangeReason: priorityChanged ? result.reason : undefined,
           },
         }),
-        prisma.priorityChangeLog.create({
-          data: {
-            applicantId,
-            oldPriority: applicant.priority,
-            newPriority: result.priority,
-            reason: result.reason,
-            triggeredBy: triggeredBy || null,
-            pipelineStage: applicant.pipelineStage,
-            missedFollowUpCount: actualMissedCount,
-            notes:
-              actualMissedCount > 0
-                ? `${actualMissedCount} missed follow-up(s). Last follow-up was due on ${
-                    lastFollowUpDate?.toISOString().split('T')[0] || 'unknown date'
-                  }`
-                : undefined,
-          },
-        }),
+        ...(priorityChanged
+          ? [
+              prisma.priorityChangeLog.create({
+                data: {
+                  applicantId,
+                  oldPriority: applicant.priority,
+                  newPriority: result.priority,
+                  reason: result.reason,
+                  triggeredBy: triggeredBy || null,
+                  pipelineStage: applicant.pipelineStage,
+                  missedFollowUpCount: actualMissedCount,
+                  notes:
+                    result.reason === 'COMMITMENT_MISSED'
+                      ? `Committed submission date (${applicant.committedSubmissionDate?.toISOString().split('T')[0]}) has passed unmet`
+                      : result.reason === 'FOLLOWUP_MISSED'
+                      ? `${actualMissedCount} missed follow-up(s). Last follow-up was due on ${
+                          lastFollowUpDate?.toISOString().split('T')[0] || 'unknown date'
+                        }`
+                      : undefined,
+                },
+              }),
+            ]
+          : []),
       ]);
 
       return true;
