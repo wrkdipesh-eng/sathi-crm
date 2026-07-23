@@ -267,7 +267,7 @@ export async function updateAllApplicantPriorities(organizationId: string): Prom
 
     let changedCount = 0;
     for (const applicant of applicants) {
-      const changed = await updateApplicantPriority(applicant.id, null);
+      const changed = await updateApplicantPriority(applicant.id, undefined);
       if (changed) changedCount++;
     }
 
