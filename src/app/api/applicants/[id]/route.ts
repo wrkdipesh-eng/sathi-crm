@@ -200,8 +200,8 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Applicant not found' }, { status: 404 });
     }
 
-    // Restrict deletion to DIRECTORS or BRANCH_MANAGERS of the same branch
-    const isDirector = authUser.role === Role.DIRECTOR;
+    // Restrict deletion to SUPERADMINS, DIRECTORS, or BRANCH_MANAGERS of the same branch
+    const isDirector = authUser.role === Role.DIRECTOR || authUser.role === Role.SUPERADMIN;
     const isBranchManager = authUser.role === Role.BRANCH_MANAGER && authUser.branchId === applicant.branchId;
 
     if (!isDirector && !isBranchManager) {

@@ -683,7 +683,7 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
 
         {/* Action button stubs */}
         <div className="flex items-center space-x-2">
-          {(currentUser?.role === 'DIRECTOR' || (currentUser?.role === 'BRANCH_MANAGER' && currentUser?.branchId === applicant.branchId)) && (
+          {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'DIRECTOR' || (currentUser?.role === 'BRANCH_MANAGER' && currentUser?.branchId === applicant.branchId)) && (
             <button
               onClick={handleDeleteApplicant}
               disabled={isDeleting}

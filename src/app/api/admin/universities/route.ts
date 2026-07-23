@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Require Director access
-    if (authUser.role !== Role.DIRECTOR) {
+    if (authUser.role !== Role.DIRECTOR && authUser.role !== Role.SUPERADMIN) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 

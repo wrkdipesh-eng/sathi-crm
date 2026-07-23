@@ -108,7 +108,7 @@ export default async function DashboardLayout({
                   <Users className="w-4 h-4 text-indigo-500" />
                   <span>Applicants / Leads</span>
                 </Link>
-                {(user.role === 'DIRECTOR' || user.role === 'FINANCE') && (
+                {(user.role === 'SUPERADMIN' || user.role === 'DIRECTOR' || user.role === 'FINANCE') && (
                   <Link
                     href="/dashboard/finance"
                     className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-850 hover:text-indigo-600 transition-all text-sm font-medium"
@@ -117,7 +117,7 @@ export default async function DashboardLayout({
                     <span>Commissions & Fees</span>
                   </Link>
                 )}
-                {user.role === 'DIRECTOR' && (
+                {(user.role === 'SUPERADMIN' || user.role === 'DIRECTOR') && (
                   <Link
                     href="/dashboard/settings"
                     className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-850 hover:text-indigo-600 transition-all text-sm font-medium"

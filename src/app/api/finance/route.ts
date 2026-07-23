@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE') {
+    if (authUser.role !== 'SUPERADMIN' && authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE') {
       return NextResponse.json({ error: 'Forbidden: Restricted to Finance and Directors' }, { status: 403 });
     }
 
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const authUser = getAuthUser(req);
-    if (!authUser || (authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
+    if (!authUser || (authUser.role !== 'SUPERADMIN' && authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

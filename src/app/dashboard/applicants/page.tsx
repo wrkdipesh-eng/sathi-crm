@@ -1203,7 +1203,7 @@ export default function ApplicantsListPage() {
                     </select>
                   </div>
 
-                  {currentUser?.role === 'DIRECTOR' ? (
+                  {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'DIRECTOR') ? (
                     <div>
                       <label className="block text-[10px] text-slate-400 font-medium mb-1">
                         Branch Assignment *

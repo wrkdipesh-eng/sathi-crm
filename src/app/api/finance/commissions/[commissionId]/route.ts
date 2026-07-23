@@ -6,7 +6,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ commiss
   const params = await props.params;
   try {
     const authUser = getAuthUser(req);
-    if (!authUser || (authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
+    if (!authUser || (authUser.role !== 'SUPERADMIN' && authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -134,7 +134,7 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ commis
   const params = await props.params;
   try {
     const authUser = getAuthUser(req);
-    if (!authUser || (authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
+    if (!authUser || (authUser.role !== 'SUPERADMIN' && authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

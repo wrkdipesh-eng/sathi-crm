@@ -1410,7 +1410,7 @@ export default function FinanceLedgerPage() {
           </select>
 
           {/* Branch Filter */}
-          {currentUser?.role === 'DIRECTOR' || currentUser?.role === 'FINANCE' ? (
+          {currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'DIRECTOR' || currentUser?.role === 'FINANCE' ? (
             <select
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}

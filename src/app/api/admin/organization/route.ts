@@ -4,7 +4,7 @@ import { getAuthUser } from '@/lib/auth';
 import { Role } from '@prisma/client';
 
 function checkDirector(authUser: any) {
-  return authUser && authUser.role === Role.DIRECTOR;
+  return authUser && (authUser.role === Role.DIRECTOR || authUser.role === Role.SUPERADMIN);
 }
 
 // GET: Retrieve organization customization details

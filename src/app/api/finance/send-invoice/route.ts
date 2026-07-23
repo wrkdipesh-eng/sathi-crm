@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Require Director or Finance access
-    if (authUser.role !== Role.DIRECTOR && authUser.role !== Role.FINANCE) {
+    if (authUser.role !== Role.SUPERADMIN && authUser.role !== Role.DIRECTOR && authUser.role !== Role.FINANCE) {
       return NextResponse.json({ error: 'Forbidden: Access restricted to Directors and Finance officers' }, { status: 403 });
     }
 

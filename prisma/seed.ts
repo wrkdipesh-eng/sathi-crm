@@ -144,6 +144,16 @@ async function main() {
     },
   });
 
+  const superadmin = await prisma.user.create({
+    data: {
+      email: 'superadmin@kavyaglobalnetwork.com.np',
+      passwordHash,
+      name: 'Kavya Superadmin',
+      role: Role.SUPERADMIN,
+      organizationId: org.id,
+    },
+  });
+
   const ktmMgr = await prisma.user.create({
     data: {
       email: 'ktm.mgr@kavyaglobalnetwork.com.np',

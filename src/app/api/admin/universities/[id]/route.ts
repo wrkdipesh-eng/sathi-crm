@@ -16,7 +16,7 @@ export async function PATCH(
     }
 
     // Require Director access
-    if (authUser.role !== Role.DIRECTOR) {
+    if (authUser.role !== Role.DIRECTOR && authUser.role !== Role.SUPERADMIN) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
@@ -97,7 +97,7 @@ export async function DELETE(
     }
 
     // Require Director access
-    if (authUser.role !== Role.DIRECTOR) {
+    if (authUser.role !== Role.DIRECTOR && authUser.role !== Role.SUPERADMIN) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 

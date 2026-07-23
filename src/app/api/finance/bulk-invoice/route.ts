@@ -5,7 +5,7 @@ import { getAuthUser } from '@/lib/auth';
 export async function PATCH(req: NextRequest) {
   try {
     const authUser = getAuthUser(req);
-    if (!authUser || (authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
+    if (!authUser || (authUser.role !== 'SUPERADMIN' && authUser.role !== 'DIRECTOR' && authUser.role !== 'FINANCE')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
