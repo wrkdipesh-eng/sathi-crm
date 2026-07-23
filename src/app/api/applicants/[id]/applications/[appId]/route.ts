@@ -61,7 +61,10 @@ export async function PATCH(
 
       // Auto-create commission ledger entry if stage is VISA_FILED
       if (newPrimaryStage === PipelineStage.VISA_FILED) {
-        await createCommissionIfVisaFiled(applicantId, prisma);
+        await createCommissionIfVisaFiled(applicantId, prisma, {
+          targetUniversity: newPrimaryUniversity,
+          targetCourse: newPrimaryCourse,
+        });
       }
 
       await prisma.application.update({
@@ -113,6 +116,16 @@ export async function PATCH(
           applicantId,
         },
       });
+
+      // Auto-create a commission ledger entry for this specific secondary
+      // application when it reaches VISA_FILED -- it may target a different
+      // university than whatever the applicant's primary slot is on.
+      if (stage === PipelineStage.VISA_FILED) {
+        await createCommissionIfVisaFiled(applicantId, prisma, {
+          targetUniversity: updated.targetUniversity,
+          targetCourse: updated.targetCourse,
+        });
+      }
     }
 
     return NextResponse.json({ success: true, application: updated });

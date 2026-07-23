@@ -1,34 +1,61 @@
 import { fetchSellingRates, FALLBACK_RATES } from './forex';
 
-export async function createCommissionIfVisaFiled(applicantId: string, tx: any) {
-  // 1. Check if a commission record already exists for this applicant
-  const existing = await tx.commissionLedger.findFirst({
-    where: { applicantId }
-  });
-  if (existing) {
-    console.log(`Commission record already exists for applicant ${applicantId}. Skipping auto-creation.`);
-    return;
-  }
-
-  // 2. Fetch applicant details
+/**
+ * Auto-creates a commission ledger entry when a target (the primary slot on
+ * Applicant, or a specific secondary Application) reaches VISA_FILED.
+ *
+ * `target` lets a secondary Application pass in its own university/course
+ * instead of the applicant's primary ones -- without it, every call falls
+ * back to reading the applicant's current primary target, which is only
+ * correct for the primary-slot trigger path.
+ */
+export async function createCommissionIfVisaFiled(
+  applicantId: string,
+  tx: any,
+  target?: { targetUniversity?: string | null; targetCourse?: string | null }
+) {
+  // 1. Fetch applicant details
   const applicant = await tx.applicant.findUnique({
     where: { id: applicantId },
     include: { subAgent: true }
   });
 
-  if (!applicant || !applicant.targetUniversity) {
-    console.log(`Applicant not found or target university missing for ${applicantId}. Skipping auto-commission.`);
+  if (!applicant) {
+    console.log(`Applicant not found for ${applicantId}. Skipping auto-commission.`);
+    return;
+  }
+
+  const resolvedUniversity = target?.targetUniversity ?? applicant.targetUniversity;
+  const resolvedCourse = target?.targetCourse ?? applicant.targetCourse;
+
+  if (!resolvedUniversity) {
+    console.log(`Target university missing for applicant ${applicantId}. Skipping auto-commission.`);
+    return;
+  }
+
+  // 2. Check if a commission record already exists for this specific
+  // (applicant, university) placement -- an applicant with several target
+  // applications at different universities should get a commission for
+  // each one that reaches VISA_FILED, not just the first ever recorded.
+  const existing = await tx.commissionLedger.findFirst({
+    where: {
+      applicantId,
+      partnerUniversity: { equals: resolvedUniversity, mode: 'insensitive' },
+    }
+  });
+  if (existing) {
+    console.log(`Commission record already exists for applicant ${applicantId} at ${resolvedUniversity}. Skipping auto-creation.`);
     return;
   }
 
   // 3. Extract the base university name (removing suffix like [Direct] or [Portal: ...])
-  const baseUniName = applicant.targetUniversity.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
+  const baseUniName = resolvedUniversity.replace(/\s+\[(Direct|Portal:.*)\]$/, '').trim();
 
   // 4. Try to find matching PartnerUniversity to extract tuition fee and commission percentage
   const partnerUni = await tx.partnerUniversity.findFirst({
     where: {
       name: { equals: baseUniName, mode: 'insensitive' },
-      course: applicant.targetCourse ? { equals: applicant.targetCourse, mode: 'insensitive' } : undefined
+      course: resolvedCourse ? { equals: resolvedCourse, mode: 'insensitive' } : undefined
     }
   });
 
@@ -48,7 +75,7 @@ export async function createCommissionIfVisaFiled(applicantId: string, tx: any) 
   const studentCount = await tx.commissionLedger.count({
     where: {
       partnerUniversity: {
-        equals: applicant.targetUniversity,
+        equals: resolvedUniversity,
         mode: 'insensitive'
       }
     }
@@ -156,7 +183,7 @@ export async function createCommissionIfVisaFiled(applicantId: string, tx: any) 
   await tx.commissionLedger.create({
     data: {
       applicantId,
-      partnerUniversity: applicant.targetUniversity,
+      partnerUniversity: resolvedUniversity,
       commissionAmountForeign,
       currency,
       nprExchangeRate: exchangeRate,
