@@ -530,12 +530,12 @@ export default function ApplicantsListPage() {
 
   // Plain-language names for the category quick-filter codes, reused by the active-filter chips below
   const CATEGORY_LABELS: Record<string, string> = {
-    LEAD: 'Lead Stage',
-    INQUIRING: 'Inquiring',
-    CLASS_ENROLLMENTS: 'Class Enrollments',
-    ABROAD_ENROLLMENTS: 'Abroad Enrollments',
-    DECISION: 'Decision',
-    ACTIVE_PIPELINES: 'Active Pipelines',
+    LEAD: 'New Leads',
+    INQUIRING: 'In Counselling',
+    CLASS_ENROLLMENTS: 'Preparing to Apply',
+    ABROAD_ENROLLMENTS: 'Applying & Visa',
+    DECISION: 'Decision Made',
+    ACTIVE_PIPELINES: 'Currently Active',
     PRE_DEPARTURE: 'Pre-Departure',
   };
 
@@ -721,7 +721,10 @@ export default function ApplicantsListPage() {
         {/* Quick pill filters */}
         <div className="space-y-3.5 border-t border-slate-800/60 pt-4">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-400">Browse By</span>
+            <div>
+              <span className="text-xs font-bold text-slate-400">Quick Filters</span>
+              <p className="text-[10px] text-slate-500 mt-0.5">Tap any group to show just those students below.</p>
+            </div>
             {(priorityFilter || categoryFilter || stuckFilter) && (
               <button
                 onClick={() => {
@@ -738,7 +741,7 @@ export default function ApplicantsListPage() {
 
           {/* Priority Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-20 shrink-0">Priority</span>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-24 shrink-0">Urgency</span>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setPriorityFilter(priorityFilter === 'HOT' ? '' : 'HOT')}
@@ -792,7 +795,7 @@ export default function ApplicantsListPage() {
 
           {/* Pipeline Stage Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-20 shrink-0">Stage</span>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-24 shrink-0">Journey Stage</span>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setCategoryFilter(categoryFilter === 'LEAD' ? '' : 'LEAD')}
@@ -803,7 +806,7 @@ export default function ApplicantsListPage() {
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                <span>Lead Stage ({leadCount})</span>
+                <span>New Leads ({leadCount})</span>
               </button>
 
               <button
@@ -815,7 +818,7 @@ export default function ApplicantsListPage() {
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                <span>Inquiring ({inquiringCount})</span>
+                <span>In Counselling ({inquiringCount})</span>
               </button>
 
               <button
@@ -827,7 +830,7 @@ export default function ApplicantsListPage() {
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-                <span>Class Enrollments ({classEnrollmentCount})</span>
+                <span>Preparing to Apply ({classEnrollmentCount})</span>
               </button>
 
               <button
@@ -839,7 +842,7 @@ export default function ApplicantsListPage() {
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                <span>Abroad Enrollments ({abroadEnrollmentCount})</span>
+                <span>Applying &amp; Visa ({abroadEnrollmentCount})</span>
               </button>
 
               <button
@@ -851,14 +854,14 @@ export default function ApplicantsListPage() {
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Decision ({decisionCount})</span>
+                <span>Decision Made ({decisionCount})</span>
               </button>
             </div>
           </div>
 
           {/* Stats Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-20 shrink-0">Overview</span>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider w-24 shrink-0">Quick Views</span>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => {
@@ -888,7 +891,7 @@ export default function ApplicantsListPage() {
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                <span>Active Pipelines ({activePipelinesCount})</span>
+                <span>Currently Active ({activePipelinesCount})</span>
               </button>
 
               <button
@@ -904,7 +907,7 @@ export default function ApplicantsListPage() {
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                <span>Stuck Leads ({stuckLeadsCount})</span>
+                <span>Needs Attention ({stuckLeadsCount})</span>
               </button>
             </div>
           </div>
