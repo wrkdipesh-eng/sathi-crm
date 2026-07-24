@@ -81,7 +81,13 @@ export default function ApplicantsListPage() {
     name: '',
     email: '',
     phone: '',
-    qualificationLevel: '',
+    applyingForLevel: '',
+    plusTwoCourse: '',
+    plusTwoGpa: '',
+    bachelorCourse: '',
+    bachelorGpa: '',
+    masterCourse: '',
+    masterGpa: '',
     academicHistory: '',
     testType: '',
     testTypeOther: '',
@@ -444,11 +450,21 @@ export default function ApplicantsListPage() {
     const effectiveTestType = (formData.testType === 'OTHER' ? formData.testTypeOther.trim() : formData.testType) || '';
     const scoreValue = formData.testScore.trim();
     const numericScore = parseFloat(scoreValue);
-    // Combine the guided Qualification Level with the free-text stream/GPA
-    // detail into the single academicHistory string the backend stores.
-    const combinedAcademicHistory = [formData.qualificationLevel, formData.academicHistory.trim()]
-      .filter(Boolean)
-      .join(' - ');
+    // Build the single academicHistory string the backend stores from
+    // whichever prior-qualification fields apply to the program level the
+    // applicant is applying for (+2 for Bachelor's, +2 & Bachelor's for
+    // Master's, +2 & Bachelor's & Master's for Doctoral).
+    const academicParts: string[] = [];
+    if (formData.plusTwoCourse.trim() || formData.plusTwoGpa.trim()) {
+      academicParts.push(`+2: ${formData.plusTwoCourse.trim()}${formData.plusTwoGpa.trim() ? `, ${formData.plusTwoGpa.trim()}` : ''}`);
+    }
+    if ((formData.applyingForLevel === 'MASTERS' || formData.applyingForLevel === 'DOCTORAL') && (formData.bachelorCourse.trim() || formData.bachelorGpa.trim())) {
+      academicParts.push(`Bachelor's: ${formData.bachelorCourse.trim()}${formData.bachelorGpa.trim() ? `, ${formData.bachelorGpa.trim()}` : ''}`);
+    }
+    if (formData.applyingForLevel === 'DOCTORAL' && (formData.masterCourse.trim() || formData.masterGpa.trim())) {
+      academicParts.push(`Master's: ${formData.masterCourse.trim()}${formData.masterGpa.trim() ? `, ${formData.masterGpa.trim()}` : ''}`);
+    }
+    const combinedAcademicHistory = academicParts.join(' | ');
 
     const requestData = {
       ...formData,
@@ -486,7 +502,13 @@ export default function ApplicantsListPage() {
         name: '',
         email: '',
         phone: '',
-        qualificationLevel: '',
+        applyingForLevel: '',
+        plusTwoCourse: '',
+        plusTwoGpa: '',
+        bachelorCourse: '',
+        bachelorGpa: '',
+        masterCourse: '',
+        masterGpa: '',
         academicHistory: '',
         testType: '',
         testTypeOther: '',
@@ -1659,40 +1681,132 @@ export default function ApplicantsListPage() {
                   2. Academic & Test Scores
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="qualificationLevel">
-                      Qualification Level *
+                  <div className="md:col-span-3">
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="applyingForLevel">
+                      Applying For (Program Level) *
                     </label>
                     <select
-                      id="qualificationLevel"
-                      name="qualificationLevel"
+                      id="applyingForLevel"
+                      name="applyingForLevel"
                       required
-                      value={formData.qualificationLevel}
+                      value={formData.applyingForLevel}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
                     >
-                      <option value="">Select Level (min. +2)</option>
-                      <option value="+2 / A-Levels">+2 / A-Levels</option>
-                      <option value="Bachelor's Degree">Bachelor's Degree</option>
-                      <option value="Master's Degree">Master's Degree</option>
+                      <option value="">Select Program Level</option>
+                      <option value="BACHELORS">Bachelor's Degree</option>
+                      <option value="MASTERS">Master's Degree</option>
+                      <option value="DOCTORAL">PhD / DBA / MRes (Doctoral)</option>
                     </select>
-                    <p className="text-[9px] text-slate-500 mt-1">Only +2 and above are eligible for placement.</p>
+                    <p className="text-[9px] text-slate-500 mt-1">
+                      {formData.applyingForLevel === 'DOCTORAL'
+                        ? "Needs +2, Bachelor's, and Master's academic records."
+                        : formData.applyingForLevel === 'MASTERS'
+                        ? "Needs +2 and Bachelor's academic records."
+                        : 'Needs +2 academic records (minimum eligibility).'}
+                    </p>
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="academicHistory">
-                      Stream & GPA / Percentage
-                    </label>
-                    <input
-                      id="academicHistory"
-                      type="text"
-                      name="academicHistory"
-                      value={formData.academicHistory}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Science, GPA 3.25 or BBS, 62%"
-                      className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
-                    />
-                  </div>
+                  {formData.applyingForLevel && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="plusTwoCourse">
+                          +2 / A-Levels Stream
+                        </label>
+                        <input
+                          id="plusTwoCourse"
+                          type="text"
+                          name="plusTwoCourse"
+                          value={formData.plusTwoCourse}
+                          onChange={handleInputChange}
+                          placeholder="e.g. Science"
+                          className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="plusTwoGpa">
+                          +2 GPA / Percentage
+                        </label>
+                        <input
+                          id="plusTwoGpa"
+                          type="text"
+                          name="plusTwoGpa"
+                          value={formData.plusTwoGpa}
+                          onChange={handleInputChange}
+                          placeholder="e.g. GPA 3.25 or 62%"
+                          className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {(formData.applyingForLevel === 'MASTERS' || formData.applyingForLevel === 'DOCTORAL') && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="bachelorCourse">
+                          Bachelor's Course
+                        </label>
+                        <input
+                          id="bachelorCourse"
+                          type="text"
+                          name="bachelorCourse"
+                          value={formData.bachelorCourse}
+                          onChange={handleInputChange}
+                          placeholder="e.g. BBS"
+                          className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="bachelorGpa">
+                          Bachelor's GPA / Percentage
+                        </label>
+                        <input
+                          id="bachelorGpa"
+                          type="text"
+                          name="bachelorGpa"
+                          value={formData.bachelorGpa}
+                          onChange={handleInputChange}
+                          placeholder="e.g. GPA 3.1 or 62%"
+                          className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {formData.applyingForLevel === 'DOCTORAL' && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="masterCourse">
+                          Master's Course
+                        </label>
+                        <input
+                          id="masterCourse"
+                          type="text"
+                          name="masterCourse"
+                          value={formData.masterCourse}
+                          onChange={handleInputChange}
+                          placeholder="e.g. Master of IT"
+                          className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="masterGpa">
+                          Master's GPA / Percentage
+                        </label>
+                        <input
+                          id="masterGpa"
+                          type="text"
+                          name="masterGpa"
+                          value={formData.masterGpa}
+                          onChange={handleInputChange}
+                          placeholder="e.g. GPA 3.6 or 70%"
+                          className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="md:col-span-3 border-t border-slate-800/60 pt-4" />
 
                   <div>
                     <label className="block text-[10px] text-slate-400 font-medium mb-1">
