@@ -35,6 +35,8 @@ export default function DashboardOverview() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedBranch, setSelectedBranch] = useState<string>('');
+  const [branches, setBranches] = useState<any[]>([]);
 
   // Inline drill-down: clicking any dashboard metric shows the matching leads
   // right here on the dashboard instead of navigating away, so a director can
@@ -61,6 +63,11 @@ export default function DashboardOverview() {
           const userData = await userRes.json();
           setCurrentUser(userData.user);
         }
+        const branchRes = await fetch('/api/branches');
+        if (branchRes.ok) {
+          const branchData = await branchRes.json();
+          setBranches(branchData.branches || []);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -72,12 +79,16 @@ export default function DashboardOverview() {
     async function fetchMetrics() {
       setLoading(true);
       try {
-        const url = selectedCountry
-          ? `/api/reports?country=${encodeURIComponent(selectedCountry)}`
-          : '/api/reports';
-        const leadsUrl = selectedCountry
-          ? `/api/applicants?targetCountry=${encodeURIComponent(selectedCountry)}`
-          : '/api/applicants';
+        const reportParams = new URLSearchParams();
+        if (selectedCountry) reportParams.set('country', selectedCountry);
+        if (selectedBranch) reportParams.set('branchId', selectedBranch);
+        const url = reportParams.toString() ? `/api/reports?${reportParams}` : '/api/reports';
+
+        const leadParams = new URLSearchParams();
+        if (selectedCountry) leadParams.set('targetCountry', selectedCountry);
+        if (selectedBranch) leadParams.set('branchId', selectedBranch);
+        const leadsUrl = leadParams.toString() ? `/api/applicants?${leadParams}` : '/api/applicants';
+
         const [reportsRes, leadsRes] = await Promise.all([fetch(url), fetch(leadsUrl)]);
         if (reportsRes.ok) {
           const reportsData = await reportsRes.json();
@@ -95,7 +106,7 @@ export default function DashboardOverview() {
     }
     fetchMetrics();
     setDrill(null);
-  }, [selectedCountry]);
+  }, [selectedCountry, selectedBranch]);
 
   if (loading) {
     return (
@@ -203,20 +214,41 @@ export default function DashboardOverview() {
           </p>
         </div>
 
-        {/* Country Filter */}
-        <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 shadow-sm text-xs font-semibold text-slate-300">
-          <Filter className="w-3.5 h-3.5 text-indigo-500" />
-          <span className="text-slate-400">Target Country:</span>
-          <select
-            value={selectedCountry}
-            onChange={(e) => setSelectedCountry(e.target.value)}
-            className="bg-transparent border-none text-slate-105 font-bold focus:outline-none cursor-pointer pr-1"
-          >
-            <option value="" className="bg-slate-900 text-slate-200">All Countries</option>
-            {countries.map((c: string) => (
-              <option key={c} value={c} className="bg-slate-900 text-slate-200">{c}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Branch Filter — only for roles that span multiple branches, so a
+              director/superadmin can view one branch's overview at a time */}
+          {currentUser && !currentUser.branchId && ['SUPERADMIN', 'DIRECTOR', 'ACCOUNTS', 'FINANCE', 'DOCUMENTATION_OFFICER', 'FRONT_DESK_OFFICER', 'MANAGER'].includes(currentUser.role) && branches.length > 0 && (
+            <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 shadow-sm text-xs font-semibold text-slate-300">
+              <MapPin className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-slate-400">Branch:</span>
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="bg-transparent border-none text-slate-100 font-bold focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="" className="bg-slate-900 text-slate-200">All Branches</option>
+                {branches.map((b: any) => (
+                  <option key={b.id} value={b.id} className="bg-slate-900 text-slate-200">{b.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Country Filter */}
+          <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 shadow-sm text-xs font-semibold text-slate-300">
+            <Filter className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="text-slate-400">Target Country:</span>
+            <select
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+              className="bg-transparent border-none text-slate-100 font-bold focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="" className="bg-slate-900 text-slate-200">All Countries</option>
+              {countries.map((c: string) => (
+                <option key={c} value={c} className="bg-slate-900 text-slate-200">{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -303,6 +335,7 @@ export default function DashboardOverview() {
               </h3>
               <p className="text-[11px] text-slate-500 mt-0.5">
                 {drillLeads.length} {drillLeads.length === 1 ? 'lead' : 'leads'}
+                {selectedBranch ? ` · ${branches.find((b) => b.id === selectedBranch)?.name || 'Branch'}` : ''}
                 {selectedCountry ? ` · ${selectedCountry}` : ''} · click a name to open the full profile
               </p>
             </div>

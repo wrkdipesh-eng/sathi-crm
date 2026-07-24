@@ -12,11 +12,18 @@ export async function GET(req: NextRequest) {
 
     const accessFilter = getAccessQueryFilter(authUser);
 
-    // Get country from query params and create combinedFilter
+    // Get country / branch from query params and create combinedFilter
     const country = req.nextUrl.searchParams.get('country');
+    const branchId = req.nextUrl.searchParams.get('branchId');
     const combinedFilter = { ...accessFilter, deletedAt: null } as any;
     if (country) {
       combinedFilter.targetCountry = country;
+    }
+    // Branch scoping: only honored for roles that aren't already pinned to a
+    // single branch (getAccessQueryFilter already restricts branch-scoped
+    // roles); for org-wide roles this lets a director view one branch's numbers.
+    if (branchId && !(accessFilter as any).branchId) {
+      combinedFilter.branchId = branchId;
     }
 
     // Run all independent queries in parallel — ~10x faster than sequential
