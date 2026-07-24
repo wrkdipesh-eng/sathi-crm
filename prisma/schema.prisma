@@ -131,6 +131,7 @@ model Applicant {
 
   priority        String? // HOT, WARM, COLD (urgency/engagement level)
   applicantStatus String? // INQUIRY, REAL, CLOSED, REJECTED (whether they're verified/real)
+  everRefused     Boolean @default(false) // Set once a Visa Refused transition ever happens; stays true even after the applicant loops back into an active stage, so decision/reporting counts don't lose track of the refusal
 
   committedSubmissionDate DateTime? // When applicant committed to submit application
   lastFollowUpDate        DateTime? // Track last follow-up task due date

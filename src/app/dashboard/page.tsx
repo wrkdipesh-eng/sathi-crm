@@ -287,7 +287,7 @@ export default function DashboardOverview() {
 
         <button
           type="button"
-          onClick={() => openDrill('decided', 'Decided Cases (Visa Approval)', (a) => ['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage))}
+          onClick={() => openDrill('decided', 'Decided Cases (Visa Approval)', (a) => ['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage) || a.everRefused)}
           className={`text-left p-6 rounded-2xl bg-slate-900 border shadow-sm transition-all group cursor-pointer ${drill?.key === 'decided' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-800 hover:border-emerald-500/40'}`}
         >
           <div className="flex items-center justify-between mb-3">
@@ -644,7 +644,7 @@ export default function DashboardOverview() {
                 <button
                   key={vs.country}
                   type="button"
-                  onClick={() => openDrill(`visa-${vs.country}`, `Decided Cases — ${vs.country}`, (a) => a.targetCountry === vs.country && ['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage))}
+                  onClick={() => openDrill(`visa-${vs.country}`, `Decided Cases — ${vs.country}`, (a) => a.targetCountry === vs.country && (['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage) || a.everRefused))}
                   className={`w-full text-left flex justify-between items-center p-3 bg-slate-850/50 rounded-xl border cursor-pointer transition-all ${drill?.key === `visa-${vs.country}` ? 'border-indigo-500 ring-1 ring-indigo-500/30' : 'border-slate-800 hover:border-indigo-500/30 hover:bg-slate-850/40'}`}
                 >
                   <div className="flex items-center space-x-2.5">

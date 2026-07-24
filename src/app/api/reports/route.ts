@@ -97,12 +97,20 @@ export async function GET(req: NextRequest) {
         include: { assignedApplicants: { where: combinedFilter } },
       }),
 
-      // Visa stats
+      // Visa stats -- a Visa Refused case loops the applicant back into
+      // Counseling (see the stage-transition route), so "decided" here also
+      // has to catch anyone ever flagged everRefused, not just whoever is
+      // currently parked in VISA_REFUSED (almost no one, post loop-back).
       prisma.applicant.findMany({
         where: {
           AND: [
             combinedFilter,
-            { pipelineStage: { in: [PipelineStage.VISA_GRANTED, PipelineStage.VISA_REFUSED, PipelineStage.PRE_DEPARTURE] } },
+            {
+              OR: [
+                { pipelineStage: { in: [PipelineStage.VISA_GRANTED, PipelineStage.VISA_REFUSED, PipelineStage.PRE_DEPARTURE] } },
+                { everRefused: true },
+              ],
+            },
           ],
         },
       }),

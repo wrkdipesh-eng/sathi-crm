@@ -128,6 +128,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
           stageUpdatedAt: now,
           priority: priorityResult.priority,
           applicantStatus: newStatus,
+          everRefused: isVisaRefusal ? true : undefined,
           lastPriorityChangeAt: shouldLog ? now : applicant.lastPriorityChangeAt,
           priorityChangeReason: shouldLog ? logReason : applicant.priorityChangeReason,
         },
