@@ -2,9 +2,12 @@ import { isValidPhoneNumber } from 'libphonenumber-js';
 
 const EMAIL_FORMAT_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Domains that are always well-known deliverable mail providers; skip the
-// (slower, network-dependent) MX lookup for these to keep the UI snappy.
-const KNOWN_MAILBOX_DOMAINS = new Set([
+// Only these consumer mailbox providers are accepted -- school/work/custom
+// domains are rejected outright, even if they have a valid MX record. This
+// is a deliberate business rule (not a deliverability check) to keep lead
+// contact info restricted to a small set of providers staff can reliably
+// reach students on.
+const ALLOWED_EMAIL_DOMAINS = new Set([
   'gmail.com',
   'googlemail.com',
   'outlook.com',
@@ -23,14 +26,9 @@ export interface EmailVerificationResult {
   reason?: string;
 }
 
-// Verifies an email's domain can actually receive mail by checking for a
-// DNS MX record. Deliberately does NOT fall back to an A/AAAA record: while
-// RFC 5321 permits delivering to a bare A record when no MX exists, in
-// practice a domain with only an A record and no MX is almost always a
-// parked/typo-squatted domain (e.g. "gmial.com") serving an ad page, not a
-// real mail server — accepting it would defeat the point of this check.
-// This confirms the domain is real and mail-capable; it cannot confirm the
-// specific mailbox exists without an SMTP handshake, which is out of scope.
+// Accepts only a fixed whitelist of consumer mailbox domains (see
+// ALLOWED_EMAIL_DOMAINS) -- everything else is rejected, regardless of
+// whether the domain can actually receive mail.
 export async function verifyEmailDomain(email: string): Promise<EmailVerificationResult> {
   const trimmed = email.trim();
   if (!isValidEmailFormat(trimmed)) {
@@ -42,37 +40,14 @@ export async function verifyEmailDomain(email: string): Promise<EmailVerificatio
     return { valid: false, reason: 'Email address format is invalid' };
   }
 
-  if (KNOWN_MAILBOX_DOMAINS.has(domain)) {
+  if (ALLOWED_EMAIL_DOMAINS.has(domain)) {
     return { valid: true };
   }
 
-  const dns = await import('node:dns/promises');
-  const DNS_TIMEOUT_CODE = 'MX_LOOKUP_TIMEOUT';
-  const DNS_TIMEOUT_MS = 5000;
-
-  try {
-    const mxRecords = await Promise.race([
-      dns.resolveMx(domain),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(Object.assign(new Error('DNS lookup timed out'), { code: DNS_TIMEOUT_CODE })), DNS_TIMEOUT_MS)
-      ),
-    ]);
-    if (mxRecords && mxRecords.length > 0) {
-      return { valid: true };
-    }
-    return { valid: false, reason: `The domain "${domain}" does not appear to accept email` };
-  } catch (err) {
-    // Any real answer from the DNS resolver (ENOTFOUND, ENODATA, SERVFAIL,
-    // REFUSED, ...) means the domain has no working MX record — reject.
-    // Only our own artificial timeout above is genuinely ambiguous (we
-    // don't know the real answer), so that's the one case we fail open on
-    // rather than blocking a legitimate lead over a slow DNS server.
-    const code = (err as NodeJS.ErrnoException)?.code;
-    if (code === DNS_TIMEOUT_CODE) {
-      return { valid: true };
-    }
-    return { valid: false, reason: `The domain "${domain}" does not appear to accept email` };
-  }
+  return {
+    valid: false,
+    reason: `Only Gmail, Yahoo, Outlook, Hotmail, iCloud, or Live email addresses are accepted`,
+  };
 }
 
 export function isValidPhone(phone: string, defaultCountry: 'NP' = 'NP'): boolean {
