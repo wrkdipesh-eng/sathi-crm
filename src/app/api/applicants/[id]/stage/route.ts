@@ -102,15 +102,17 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       });
 
       // 3. Update applicant stage fields & auto-update priority & status.
-      // Priority/status are calculated off newStage (a refusal triggers the
-      // HOT re-engage reset) even though the applicant lands on finalStage.
+      // Priority is calculated off newStage (a refusal triggers the HOT
+      // re-engage reset), but applicantStatus reflects finalStage -- an
+      // applicant resting in COUNSELLING must show status INQUIRY, not the
+      // REJECTED they'd get from the transient VISA_REFUSED pass-through.
       const priorityResult = calculatePriority(
         newStage,
         applicant.missedFollowUpCount,
         applicant.committedSubmissionDate,
         applicant.createdAt
       );
-      const newStatus = calculateApplicantStatus(newStage);
+      const newStatus = calculateApplicantStatus(finalStage);
 
       const priorityChanged = applicant.priority !== priorityResult.priority;
       const statusChanged = applicant.applicantStatus !== newStatus;
