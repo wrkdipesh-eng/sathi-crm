@@ -344,7 +344,7 @@ export default function DashboardOverview() {
                     <th className="px-6 py-3">Stage</th>
                     <th className="px-6 py-3">Priority</th>
                     <th className="px-6 py-3">Counselor / Branch</th>
-                    <th className="px-6 py-3">Target</th>
+                    <th className="px-6 py-3">Applying For</th>
                     <th className="px-6 py-3 text-right">Days in Stage</th>
                   </tr>
                 </thead>
@@ -375,7 +375,12 @@ export default function DashboardOverview() {
                         {a.counselor?.name || 'Unassigned'}
                         <div className="text-[10px] text-slate-500">{a.branch?.name || ''}</div>
                       </td>
-                      <td className="px-6 py-3 text-slate-400">{a.targetCountry || '—'}</td>
+                      <td className="px-6 py-3 text-slate-400">
+                        <div className="text-slate-300 font-medium">{a.targetCourse || 'Undecided'}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          {a.targetUniversity ? `${a.targetUniversity} · ` : ''}{a.targetCountry || '—'}
+                        </div>
+                      </td>
                       <td className={`px-6 py-3 text-right font-mono ${(a.daysInCurrentStage || 0) >= 7 ? 'text-amber-600 font-bold' : 'text-slate-400'}`}>
                         {a.daysInCurrentStage || 0}d
                       </td>
