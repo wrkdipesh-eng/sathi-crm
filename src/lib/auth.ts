@@ -59,7 +59,10 @@ export function getAuthUser(req: NextRequest): JwtPayload | null {
  * - SUPERADMIN, DIRECTOR: Full access to all branches/applicants under the organization.
  * - ACCOUNTS, FINANCE: Full access to organization data.
  * - MANAGER, BRANCH_MANAGER: Access restricted to applicants belonging to their primary branch.
- * - SENIOR_COUNSELOR, COUNSELOR: Access restricted to applicants assigned to them.
+ * - SENIOR_COUNSELOR, COUNSELOR: Can see every applicant in their own branch
+ *   (not just leads assigned to them), so they can cover for colleagues --
+ *   but see canWriteApplicant / the PATCH route for why they still can't
+ *   reassign a lead to a different counselor.
  * - DOCUMENTATION_OFFICER, FRONT_DESK_OFFICER: View-only access to organization data.
  * - SUB_AGENT: Access restricted to applicants submitted by them.
  * - STUDENT_PORTAL: Can only see their own applicant record.
@@ -90,7 +93,10 @@ export function getAccessQueryFilter(user: JwtPayload) {
 
     case Role.SENIOR_COUNSELOR:
     case Role.COUNSELOR:
-      return { ...baseFilter, counselorId: user.userId };
+      if (!user.branchId) {
+        return { ...baseFilter, branchId: 'NONE' };
+      }
+      return { ...baseFilter, branchId: user.branchId };
 
     case Role.SUB_AGENT:
       return { ...baseFilter, subAgentId: user.userId };
@@ -162,7 +168,10 @@ export function canWriteApplicant(user: JwtPayload, applicantBranchId: string, a
   }
 
   if (user.role === Role.SENIOR_COUNSELOR || user.role === Role.COUNSELOR) {
-    return user.userId === applicantCounselorId;
+    // Matches the broadened branch-wide read access in getAccessQueryFilter.
+    // Reassigning a lead to a *different* counselor is still blocked
+    // separately in the PATCH route regardless of this branch check.
+    return user.branchId === applicantBranchId;
   }
 
   if (user.role === Role.SUB_AGENT) {

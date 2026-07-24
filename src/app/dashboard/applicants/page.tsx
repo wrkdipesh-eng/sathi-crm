@@ -2048,10 +2048,17 @@ export default function ApplicantsListPage() {
                       <option value="">Unassigned</option>
                       {counselors
                         .filter(c => !formData.branchId || c.branchId === formData.branchId)
+                        .filter(c =>
+                          !(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') ||
+                          c.id === currentUser?.id
+                        )
                         .map((c) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                     </select>
+                    {(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') && (
+                      <p className="text-[10px] text-slate-500 mt-1">You can only self-assign or leave this unassigned.</p>
+                    )}
                   </div>
 
                   {/* Lead Priority is not set manually here -- it's assigned

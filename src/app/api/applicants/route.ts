@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser, getAccessQueryFilter } from '@/lib/auth';
-import { PipelineStage, DocumentStatus, CommunicationType } from '@prisma/client';
+import { PipelineStage, DocumentStatus, CommunicationType, Role } from '@prisma/client';
 import { verifyEmailDomain, isValidPhone } from '@/lib/validation';
 
 // Helper: Seed checklist based on country (dynamic from DB)
@@ -208,6 +208,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Name, target country, source, and branch are required' },
         { status: 400 }
+      );
+    }
+
+    // Counselors/Senior Counselors can self-assign or leave a new lead
+    // unassigned, but cannot hand it directly to a different counselor.
+    if (
+      (authUser.role === Role.COUNSELOR || authUser.role === Role.SENIOR_COUNSELOR) &&
+      counselorId &&
+      counselorId !== authUser.userId
+    ) {
+      return NextResponse.json(
+        { error: 'Counselors cannot assign a lead to another counselor' },
+        { status: 403 }
       );
     }
 

@@ -1156,14 +1156,21 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   {/* Settings */}
                   <div>
                     <label className="block text-[10px] text-slate-400 font-medium mb-1.5">Assigned Counselor</label>
-                    <select name="counselorId" defaultValue={applicant.counselorId || ''} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none">
+                    <select name="counselorId" defaultValue={applicant.counselorId || ''} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none disabled:opacity-50">
                       <option value="">Unassigned</option>
                       {counselors
                         .filter(c => c.branchId === applicant.branchId)
+                        .filter(c =>
+                          !(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') ||
+                          c.id === currentUser?.id
+                        )
                         .map((c) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                     </select>
+                    {(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') && (
+                      <p className="text-[10px] text-slate-500 mt-1">You can only self-assign or unassign this lead.</p>
+                    )}
                   </div>
 
                   <div>

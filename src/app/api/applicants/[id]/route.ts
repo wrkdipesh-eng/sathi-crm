@@ -38,8 +38,12 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // If Counselor: can only see their assigned leads
-    if (authUser.role === Role.COUNSELOR && applicant.counselorId !== authUser.userId) {
+    // If Counselor/Senior Counselor: can see every lead in their own branch
+    // (not just ones assigned to them), matching getAccessQueryFilter.
+    if (
+      (authUser.role === Role.COUNSELOR || authUser.role === Role.SENIOR_COUNSELOR) &&
+      applicant.branchId !== authUser.branchId
+    ) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -117,6 +121,20 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       branchCommissionSplit,
       priority,
     } = body;
+
+    // Counselors/Senior Counselors can self-assign or unassign a lead, but
+    // cannot hand it off to a different counselor.
+    if (
+      (authUser.role === Role.COUNSELOR || authUser.role === Role.SENIOR_COUNSELOR) &&
+      counselorId !== undefined &&
+      counselorId &&
+      counselorId !== authUser.userId
+    ) {
+      return NextResponse.json(
+        { error: 'Counselors cannot reassign a lead to another counselor' },
+        { status: 403 }
+      );
+    }
 
     if (email) {
       const emailCheck = await verifyEmailDomain(email);
