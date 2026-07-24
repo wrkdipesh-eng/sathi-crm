@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser, getAccessQueryFilter } from '@/lib/auth';
 import { PipelineStage, Role } from '@prisma/client';
+import { daysSince, daysAgo } from '@/lib/dates';
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,6 +26,11 @@ export async function GET(req: NextRequest) {
     if (branchId && !(accessFilter as any).branchId) {
       combinedFilter.branchId = branchId;
     }
+
+    // "Stuck" is derived live from stageUpdatedAt rather than the stored
+    // daysInCurrentStage counter, which only ever gets set once (at the
+    // last stage change) and never updates again on its own.
+    const stuckCutoff = daysAgo(7);
 
     // Run all independent queries in parallel — ~10x faster than sequential
     const [
@@ -64,7 +70,7 @@ export async function GET(req: NextRequest) {
         where: { AND: [combinedFilter, { pipelineStage: PipelineStage.PRE_DEPARTURE }] },
       }),
       prisma.applicant.count({
-        where: { AND: [combinedFilter, { daysInCurrentStage: { gte: 7 } }] },
+        where: { AND: [combinedFilter, { stageUpdatedAt: { lte: stuckCutoff } }] },
       }),
 
       // Leads by Source
@@ -118,12 +124,12 @@ export async function GET(req: NextRequest) {
 
       // Aging leads (stuck > 7 days)
       prisma.applicant.findMany({
-        where: { AND: [combinedFilter, { daysInCurrentStage: { gte: 7 } }] },
+        where: { AND: [combinedFilter, { stageUpdatedAt: { lte: stuckCutoff } }] },
         include: {
           branch: { select: { name: true } },
           counselor: { select: { name: true } },
         },
-        orderBy: { daysInCurrentStage: 'desc' },
+        orderBy: { stageUpdatedAt: 'asc' },
         take: 5,
       }),
 
@@ -248,7 +254,7 @@ export async function GET(req: NextRequest) {
         id: l.id,
         name: l.name,
         stage: l.pipelineStage,
-        days: l.daysInCurrentStage,
+        days: daysSince(l.stageUpdatedAt),
         counselor: l.counselor?.name || 'Unassigned',
         branch: l.branch?.name,
       })),

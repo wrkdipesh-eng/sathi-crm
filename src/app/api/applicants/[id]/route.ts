@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { getAuthUser, canWriteApplicant } from '@/lib/auth';
 import { Role } from '@prisma/client';
 import { verifyEmailDomain, isValidPhone } from '@/lib/validation';
+import { daysSince } from '@/lib/dates';
 
 // GET: Retrieve single applicant with full relations
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -60,7 +61,12 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    return NextResponse.json({ success: true, applicant });
+    // Surface a live "days in current stage" instead of the stale stored
+    // counter, which only ever gets set once (at the last stage change).
+    return NextResponse.json({
+      success: true,
+      applicant: { ...applicant, daysInCurrentStage: daysSince(applicant.stageUpdatedAt) },
+    });
   } catch (error: any) {
     console.error('Fetch applicant detail error:', error);
     return NextResponse.json(

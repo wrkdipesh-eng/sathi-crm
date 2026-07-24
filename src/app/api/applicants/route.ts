@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { getAuthUser, getAccessQueryFilter } from '@/lib/auth';
 import { PipelineStage, DocumentStatus, CommunicationType, Role } from '@prisma/client';
 import { verifyEmailDomain, isValidPhone } from '@/lib/validation';
+import { daysSince, daysAgo } from '@/lib/dates';
 
 // Helper: Seed checklist based on country (dynamic from DB)
 async function createChecklistDocs(applicantId: string, country: string, organizationId: string) {
@@ -147,8 +148,11 @@ export async function GET(req: NextRequest) {
               ],
             }
           : {},
-        // Filter by stuck (days in stage exceeds threshold)
-        stuck ? { daysInCurrentStage: { gte: stuckThreshold } } : {},
+        // Filter by stuck (days in stage exceeds threshold) -- computed from
+        // stageUpdatedAt rather than the stored daysInCurrentStage counter,
+        // which only ever gets set once (at the last stage change) and never
+        // updates again on its own.
+        stuck ? { stageUpdatedAt: { lte: daysAgo(stuckThreshold) } } : {},
       ],
     };
 
@@ -163,7 +167,14 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, applicants });
+    // Surface a live "days in current stage" instead of the stale stored
+    // counter -- see the stuck-filter comment above.
+    const applicantsWithLiveDays = applicants.map((a) => ({
+      ...a,
+      daysInCurrentStage: daysSince(a.stageUpdatedAt),
+    }));
+
+    return NextResponse.json({ success: true, applicants: applicantsWithLiveDays });
   } catch (error: any) {
     console.error('Fetch applicants error:', error);
     return NextResponse.json(
