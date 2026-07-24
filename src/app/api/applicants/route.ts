@@ -222,15 +222,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Counselors/Senior Counselors can self-assign or leave a new lead
-    // unassigned, but cannot hand it directly to a different counselor.
+    // Counselors/Senior Counselors can only self-assign a new lead -- they
+    // cannot hand it to a different counselor, and cannot leave it
+    // unassigned either.
     if (
       (authUser.role === Role.COUNSELOR || authUser.role === Role.SENIOR_COUNSELOR) &&
-      counselorId &&
       counselorId !== authUser.userId
     ) {
       return NextResponse.json(
-        { error: 'Counselors cannot assign a lead to another counselor' },
+        { error: 'Counselors can only self-assign a new lead, not leave it unassigned or assign it to someone else' },
         { status: 403 }
       );
     }

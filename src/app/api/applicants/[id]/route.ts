@@ -148,16 +148,20 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       priority,
     } = body;
 
-    // Counselors/Senior Counselors can self-assign or unassign a lead, but
-    // cannot hand it off to a different counselor.
+    // Counselors/Senior Counselors can only ever self-assign a lead -- they
+    // cannot hand it off to a different counselor, and cannot unassign it
+    // (once assigned, only a manager/admin can remove them from it). This
+    // only blocks an actual CHANGE: leaving counselorId exactly as it
+    // already is must stay allowed, or a counselor editing a colleague's
+    // lead (branch-wide access) could never save unrelated fields either.
     if (
       (authUser.role === Role.COUNSELOR || authUser.role === Role.SENIOR_COUNSELOR) &&
       counselorId !== undefined &&
-      counselorId &&
+      counselorId !== applicant.counselorId &&
       counselorId !== authUser.userId
     ) {
       return NextResponse.json(
-        { error: 'Counselors cannot reassign a lead to another counselor' },
+        { error: 'Counselors can only self-assign a lead, not unassign or reassign it' },
         { status: 403 }
       );
     }

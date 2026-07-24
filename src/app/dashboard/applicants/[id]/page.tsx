@@ -583,6 +583,8 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
     );
   }
 
+  const isCounselorRole = currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR';
+
   return (
     <div className="space-y-6">
       
@@ -1150,20 +1152,36 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   {/* Settings */}
                   <div>
                     <label className="block text-[10px] text-slate-400 font-medium mb-1.5">Assigned Counselor</label>
-                    <select name="counselorId" defaultValue={applicant.counselorId || ''} className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none disabled:opacity-50">
-                      <option value="">Unassigned</option>
-                      {counselors
-                        .filter(c => c.branchId === applicant.branchId)
-                        .filter(c =>
-                          !(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') ||
-                          c.id === currentUser?.id
-                        )
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
+                    <select
+                      name="counselorId"
+                      defaultValue={applicant.counselorId || ''}
+                      key={applicant.counselorId}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                    >
+                      {isCounselorRole ? (
+                        <>
+                          {/* Always include whoever it's actually assigned to right
+                              now (even a colleague, or nobody) so saving an unrelated
+                              field can't silently change the assignment. */}
+                          {!applicant.counselorId && <option value="">Unassigned</option>}
+                          {applicant.counselorId && applicant.counselorId !== currentUser?.id && (
+                            <option value={applicant.counselorId}>{applicant.counselor?.name || 'Assigned counselor'}</option>
+                          )}
+                          <option value={currentUser?.id}>{currentUser?.name} (You)</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="">Unassigned</option>
+                          {counselors
+                            .filter(c => c.branchId === applicant.branchId)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </>
+                      )}
                     </select>
-                    {(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') && (
-                      <p className="text-[10px] text-slate-500 mt-1">You can only self-assign or unassign this lead.</p>
+                    {isCounselorRole && (
+                      <p className="text-[10px] text-slate-500 mt-1">You can only self-assign this lead; only a manager can unassign or reassign it.</p>
                     )}
                   </div>
 

@@ -143,6 +143,11 @@ export default function ApplicantsListPage() {
             setFormData(prev => ({ ...prev, branchId: userData.user.branchId }));
             setVisitorForm(prev => ({ ...prev, branchId: userData.user.branchId }));
           }
+          // Counselors can only ever self-assign a lead, so default straight
+          // to themselves rather than making them pick from a list of one.
+          if (userData.user.role === 'COUNSELOR' || userData.user.role === 'SENIOR_COUNSELOR') {
+            setFormData(prev => ({ ...prev, counselorId: userData.user.id }));
+          }
         }
 
         const metaRes = await fetch('/api/branches');
@@ -514,7 +519,7 @@ export default function ApplicantsListPage() {
         portalName: '',
         source: 'WALK_IN',
         branchId: currentUser?.branchId || '',
-        counselorId: '',
+        counselorId: (currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') ? (currentUser?.id || '') : '',
         subAgentId: '',
         subAgentCommissionSplit: '',
         branchCommissionSplit: '',
@@ -2002,9 +2007,12 @@ export default function ApplicantsListPage() {
                       name="counselorId"
                       value={formData.counselorId}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                      disabled={currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR'}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none disabled:opacity-50"
                     >
-                      <option value="">Unassigned</option>
+                      {!(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') && (
+                        <option value="">Unassigned</option>
+                      )}
                       {counselors
                         .filter(c => !formData.branchId || c.branchId === formData.branchId)
                         .filter(c =>
@@ -2016,7 +2024,7 @@ export default function ApplicantsListPage() {
                         ))}
                     </select>
                     {(currentUser?.role === 'COUNSELOR' || currentUser?.role === 'SENIOR_COUNSELOR') && (
-                      <p className="text-[10px] text-slate-500 mt-1">You can only self-assign or leave this unassigned.</p>
+                      <p className="text-[10px] text-slate-500 mt-1">New leads are always assigned to you.</p>
                     )}
                   </div>
 
