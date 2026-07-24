@@ -966,7 +966,7 @@ export default function AdminSettingsPage() {
                             <span>{u.branch?.name || 'HQ / None'}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-300 text-[8px] font-bold uppercase rounded tracking-wide border border-indigo-500/20">
+                            <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[8px] font-bold uppercase rounded tracking-wide border border-indigo-200">
                               {u.role.replace('_', ' ')}
                             </span>
                           </td>

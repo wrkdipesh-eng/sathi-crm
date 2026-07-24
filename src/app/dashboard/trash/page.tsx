@@ -192,7 +192,7 @@ export default function TrashPage() {
                           <button
                             onClick={() => handlePermanentDelete('APPLICANTS', a.id, a.name)}
                             disabled={busyId === a.id}
-                            className="whitespace-nowrap px-2.5 py-1.5 bg-rose-950/40 hover:bg-rose-900/40 text-rose-400 border border-rose-900/50 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50"
+                            className="whitespace-nowrap px-2.5 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-200 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50"
                           >
                             Delete Permanently
                           </button>
@@ -252,7 +252,7 @@ export default function TrashPage() {
                         <button
                           onClick={() => handlePermanentDelete('VISITORS', v.id, v.name)}
                           disabled={busyId === v.id}
-                          className="whitespace-nowrap px-2.5 py-1.5 bg-rose-950/40 hover:bg-rose-900/40 text-rose-400 border border-rose-900/50 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50"
+                          className="whitespace-nowrap px-2.5 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-200 text-[10px] font-bold rounded-lg transition-all disabled:opacity-50"
                         >
                           Delete Permanently
                         </button>

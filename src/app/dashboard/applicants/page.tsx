@@ -744,7 +744,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setPriorityFilter(priorityFilter === 'HOT' ? '' : 'HOT')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   priorityFilter === 'HOT'
-                    ? 'bg-rose-500/20 text-rose-455 border-rose-500/50'
+                    ? 'bg-rose-500/20 text-rose-700 border-rose-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-rose-400 hover:border-rose-500/30'
                 }`}
               >
@@ -756,7 +756,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setPriorityFilter(priorityFilter === 'WARM' ? '' : 'WARM')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   priorityFilter === 'WARM'
-                    ? 'bg-orange-500/20 text-orange-455 border-orange-500/50'
+                    ? 'bg-orange-500/20 text-orange-700 border-orange-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-orange-405 hover:border-orange-500/30'
                 }`}
               >
@@ -768,7 +768,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setPriorityFilter(priorityFilter === 'COLD' ? '' : 'COLD')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   priorityFilter === 'COLD'
-                    ? 'bg-sky-500/20 text-sky-455 border-sky-500/50'
+                    ? 'bg-sky-500/20 text-sky-700 border-sky-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-sky-400 hover:border-sky-500/30'
                 }`}
               >
@@ -798,7 +798,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setCategoryFilter(categoryFilter === 'LEAD' ? '' : 'LEAD')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   categoryFilter === 'LEAD'
-                    ? 'bg-rose-500/20 text-rose-455 border-rose-500/40'
+                    ? 'bg-rose-500/20 text-rose-700 border-rose-500/40'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -810,7 +810,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setCategoryFilter(categoryFilter === 'INQUIRING' ? '' : 'INQUIRING')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   categoryFilter === 'INQUIRING'
-                    ? 'bg-indigo-500/20 text-indigo-455 border-indigo-500/40'
+                    ? 'bg-indigo-500/20 text-indigo-700 border-indigo-500/40'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -822,7 +822,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setCategoryFilter(categoryFilter === 'CLASS_ENROLLMENTS' ? '' : 'CLASS_ENROLLMENTS')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   categoryFilter === 'CLASS_ENROLLMENTS'
-                    ? 'bg-sky-500/20 text-sky-455 border-sky-500/40'
+                    ? 'bg-sky-500/20 text-sky-700 border-sky-500/40'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -834,7 +834,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setCategoryFilter(categoryFilter === 'ABROAD_ENROLLMENTS' ? '' : 'ABROAD_ENROLLMENTS')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   categoryFilter === 'ABROAD_ENROLLMENTS'
-                    ? 'bg-amber-500/20 text-amber-455 border-amber-500/40'
+                    ? 'bg-amber-500/20 text-amber-700 border-amber-500/40'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -846,7 +846,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setCategoryFilter(categoryFilter === 'DECISION' ? '' : 'DECISION')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   categoryFilter === 'DECISION'
-                    ? 'bg-emerald-500/20 text-emerald-455 border-emerald-500/40'
+                    ? 'bg-emerald-500/20 text-emerald-700 border-emerald-500/40'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -868,7 +868,7 @@ export default function ApplicantsListPage() {
                 }}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   (!priorityFilter && !categoryFilter && !stuckFilter)
-                    ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/50'
+                    ? 'bg-indigo-500/20 text-indigo-700 border-indigo-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -883,7 +883,7 @@ export default function ApplicantsListPage() {
                 }}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   categoryFilter === 'ACTIVE_PIPELINES'
-                    ? 'bg-purple-500/20 text-purple-400 border-purple-500/50'
+                    ? 'bg-purple-500/20 text-purple-700 border-purple-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -899,7 +899,7 @@ export default function ApplicantsListPage() {
                 }}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   stuckFilter
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
+                    ? 'bg-amber-500/20 text-amber-700 border-amber-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
@@ -1089,9 +1089,9 @@ export default function ApplicantsListPage() {
                           </Link>
                           {app.priority && (
                             <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase ${
-                              app.priority === 'HOT' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-                              app.priority === 'WARM' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                              'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                              app.priority === 'HOT' ? 'bg-rose-100 text-rose-700 border border-rose-200' :
+                              app.priority === 'WARM' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
+                              'bg-sky-100 text-sky-700 border border-sky-200'
                             }`}>
                               {app.priority}
                             </span>
@@ -1111,7 +1111,7 @@ export default function ApplicantsListPage() {
                             </span>
                           )}
                           <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
-                            <span className="px-1 py-0.2 bg-indigo-950/40 text-indigo-300 border border-indigo-900/30 text-[8px] rounded uppercase font-bold tracking-wide">
+                            <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[8px] rounded uppercase font-bold tracking-wide">
                               Primary
                             </span>
                             <span className="text-[10px] text-indigo-400 font-semibold">{app.targetCountry}</span>
@@ -1253,7 +1253,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setVisitorStatusFilter(visitorStatusFilter === 'NEW' ? '' : 'NEW')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   visitorStatusFilter === 'NEW'
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
+                    ? 'bg-amber-500/20 text-amber-700 border-amber-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-amber-400 hover:border-amber-500/30'
                 }`}
               >
@@ -1264,7 +1264,7 @@ export default function ApplicantsListPage() {
                 onClick={() => setVisitorStatusFilter(visitorStatusFilter === 'CONTACTED' ? '' : 'CONTACTED')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   visitorStatusFilter === 'CONTACTED'
-                    ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/50'
+                    ? 'bg-indigo-500/20 text-indigo-700 border-indigo-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-indigo-400 hover:border-indigo-500/30'
                 }`}
               >
@@ -1446,7 +1446,7 @@ export default function ApplicantsListPage() {
 
             <form onSubmit={handleLogVisitor} className="p-6 space-y-4">
               {visitorFormError && (
-                <div className="p-3 bg-rose-950/40 border border-rose-800 rounded-xl text-rose-400 text-xs font-medium">
+                <div className="p-3 bg-rose-100 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium">
                   {visitorFormError}
                 </div>
               )}

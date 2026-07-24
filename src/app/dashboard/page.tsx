@@ -250,7 +250,7 @@ export default function DashboardOverview() {
               <AlertTriangle className="w-5 h-5" />
             </div>
           </div>
-          <h2 className={`text-4xl font-extrabold font-mono ${kpis.stuckLeads > 0 ? 'text-amber-500' : 'text-slate-100'}`}>{kpis.stuckLeads}</h2>
+          <h2 className={`text-4xl font-extrabold font-mono ${kpis.stuckLeads > 0 ? 'text-amber-600' : 'text-slate-100'}`}>{kpis.stuckLeads}</h2>
           <p className="text-xs text-slate-500 mt-2">Leads stuck in the same stage for over a week</p>
         </Link>
       </div>

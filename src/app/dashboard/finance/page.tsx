@@ -1142,13 +1142,13 @@ export default function FinanceLedgerPage() {
                 Live Forex (NRB):
               </span>
               <div className="flex items-center space-x-3 font-mono">
-                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇺🇸 USD</span> Rs. {forexRates.USD?.toFixed(2)}</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-600 font-bold mr-1">🇺🇸 USD</span> Rs. {forexRates.USD?.toFixed(2)}</span>
                 <span className="text-slate-800">|</span>
-                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇦🇺 AUD</span> Rs. {forexRates.AUD?.toFixed(2)}</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-600 font-bold mr-1">🇦🇺 AUD</span> Rs. {forexRates.AUD?.toFixed(2)}</span>
                 <span className="text-slate-800">|</span>
-                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇨🇦 CAD</span> Rs. {forexRates.CAD?.toFixed(2)}</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-600 font-bold mr-1">🇨🇦 CAD</span> Rs. {forexRates.CAD?.toFixed(2)}</span>
                 <span className="text-slate-800">|</span>
-                <span className="text-slate-300 flex items-center"><span className="text-emerald-400 font-bold mr-1">🇬🇧 GBP</span> Rs. {forexRates.GBP?.toFixed(2)}</span>
+                <span className="text-slate-300 flex items-center"><span className="text-emerald-600 font-bold mr-1">🇬🇧 GBP</span> Rs. {forexRates.GBP?.toFixed(2)}</span>
               </div>
             </div>
           )}
@@ -1264,7 +1264,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-amber-400 font-mono tracking-tight">Rs. {pendingReceivableNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-amber-600 font-mono tracking-tight">Rs. {pendingReceivableNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Pending payments awaiting university collection</span>
             </div>
           </div>
@@ -1278,7 +1278,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-emerald-500 font-mono tracking-tight">Rs. {collectedReceivableNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-emerald-600 font-mono tracking-tight">Rs. {collectedReceivableNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Successfully cleared claims from university partners</span>
             </div>
           </div>
@@ -1322,7 +1322,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-amber-400 font-mono tracking-tight">Rs. {totalAgentNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-amber-600 font-mono tracking-tight">Rs. {totalAgentNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Referral commission splits owed to sub-agents</span>
             </div>
           </div>
@@ -1336,7 +1336,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-sky-400 font-mono tracking-tight">Rs. {totalBranchNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-sky-600 font-mono tracking-tight">Rs. {totalBranchNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Intra-network splits credited to local branches</span>
             </div>
           </div>
@@ -1350,7 +1350,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-emerald-400 font-mono tracking-tight">Rs. {settledPayableNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-emerald-600 font-mono tracking-tight">Rs. {settledPayableNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Successfully disbursed & finalized splits</span>
             </div>
           </div>
@@ -1380,7 +1380,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-emerald-500 font-mono tracking-tight">Rs. {totalHqNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-emerald-600 font-mono tracking-tight">Rs. {totalHqNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Company net revenue share retained</span>
             </div>
           </div>
@@ -1394,7 +1394,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-sky-400 font-mono tracking-tight">Rs. {totalBranchNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-sky-600 font-mono tracking-tight">Rs. {totalBranchNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Total revenue split earned by branches</span>
             </div>
           </div>
@@ -1408,7 +1408,7 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-2xl font-black text-amber-400 font-mono tracking-tight">Rs. {totalAgentNpr.toLocaleString()}</h3>
+              <h3 className="text-2xl font-black text-amber-600 font-mono tracking-tight">Rs. {totalAgentNpr.toLocaleString()}</h3>
               <span className="text-[10px] text-slate-500 font-medium block mt-1">Total split payments owed to sub-agents</span>
             </div>
           </div>
@@ -1493,11 +1493,11 @@ export default function FinanceLedgerPage() {
                     <tr key={comm.id} className="hover:bg-slate-850/30 transition-all duration-200 group">
                       <td className="px-6 py-4 font-mono">
                         {financeTab === 'PAYABLES' || (financeTab === 'ALL' && hasPayableSplit) ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-950/40 border border-amber-500/20 text-amber-400">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 border border-amber-200 text-amber-800">
                             📤 PAYABLE
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-950/40 border border-emerald-500/20 text-emerald-400">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-100 border border-emerald-200 text-emerald-800">
                             📥 RECEIVABLE
                           </span>
                         )}
@@ -1516,7 +1516,7 @@ export default function FinanceLedgerPage() {
                       <td className="px-6 py-4 font-mono text-indigo-400">@ {comm.nprExchangeRate.toFixed(2)}</td>
                       <td className="px-6 py-4 font-mono font-bold text-slate-100 bg-slate-950/20 px-3 py-1 rounded-lg inline-block my-2">Rs. {comm.commissionAmountNpr.toLocaleString()}</td>
                       {currentUser?.role !== 'SUB_AGENT' && (
-                         <td className="px-6 py-4 font-mono text-amber-400">
+                         <td className="px-6 py-4 font-mono text-amber-600">
                            {comm.subAgentAmountNpr > 0 ? (
                              <div className="space-y-1">
                                <div className="font-bold">Rs. {comm.subAgentAmountNpr.toLocaleString()}</div>
@@ -1532,7 +1532,7 @@ export default function FinanceLedgerPage() {
                          </td>
                        )}
                        {currentUser?.role !== 'SUB_AGENT' && (
-                         <td className="px-6 py-4 font-mono text-sky-400">
+                         <td className="px-6 py-4 font-mono text-sky-600">
                            {comm.branchAmountNpr > 0 ? (
                              <div className="space-y-1">
                                <div className="font-bold">Rs. {comm.branchAmountNpr.toLocaleString()}</div>
@@ -1547,7 +1547,7 @@ export default function FinanceLedgerPage() {
                            ) : <span className="text-slate-600 font-mono">-</span>}
                          </td>
                        )}
-                      <td className="px-6 py-4 font-mono font-bold text-emerald-400">Rs. {comm.hqAmountNpr.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-mono font-bold text-emerald-600">Rs. {comm.hqAmountNpr.toLocaleString()}</td>
                       <td className="px-6 py-4 text-center">
                         <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
                           comm.status === 'RECEIVED'
@@ -1744,8 +1744,30 @@ export default function FinanceLedgerPage() {
               </div>
             )}
 
-            {/* Invoice Sheet */}
-            <div className="p-8 space-y-8 overflow-y-auto print:overflow-visible flex-1 print:p-0">
+            {/* Invoice Sheet -- pin a standard light-document slate ramp so the
+                printable invoice always renders as black-on-white regardless of
+                the app's active theme (the invoice uses normal Tailwind slate
+                semantics, which the app's themed CSS variables would otherwise
+                invert). */}
+            <div
+              className="p-8 space-y-8 overflow-y-auto print:overflow-visible flex-1 print:p-0 bg-white"
+              style={{
+                ['--slate-50' as any]: '#f8fafc',
+                ['--slate-100' as any]: '#f1f5f9',
+                ['--slate-200' as any]: '#e2e8f0',
+                ['--slate-300' as any]: '#cbd5e1',
+                ['--slate-350' as any]: '#94a3b8',
+                ['--slate-400' as any]: '#64748b',
+                ['--slate-500' as any]: '#475569',
+                ['--slate-600' as any]: '#334155',
+                ['--slate-700' as any]: '#1e293b',
+                ['--slate-800' as any]: '#1e293b',
+                ['--slate-850' as any]: '#0f172a',
+                ['--slate-900' as any]: '#0f172a',
+                ['--slate-950' as any]: '#020617',
+                color: '#1e293b',
+              }}
+            >
               
               {/* Header */}
               <div className="flex justify-between items-start border-b border-slate-100 pb-6">
@@ -2519,7 +2541,7 @@ export default function FinanceLedgerPage() {
                   {selectedUni && (
                     <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <label className="block text-[10px] text-emerald-400 font-bold mb-1 font-mono uppercase tracking-wider">2. Intake Batch Filter</label>
+                        <label className="block text-[10px] text-emerald-600 font-bold mb-1 font-mono uppercase tracking-wider">2. Intake Batch Filter</label>
                         <select
                           value={intakeFilter}
                           onChange={(e) => setIntakeFilter(e.target.value)}
@@ -2609,7 +2631,7 @@ export default function FinanceLedgerPage() {
                         <button
                           type="button"
                           onClick={addBulkSlabRow}
-                          className="px-2 py-1 bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 text-[9px] rounded font-mono cursor-pointer"
+                          className="px-2 py-1 bg-emerald-100 border border-emerald-200 text-emerald-800 text-[9px] rounded font-mono cursor-pointer"
                         >
                           + Add First Slab
                         </button>
@@ -2632,7 +2654,7 @@ export default function FinanceLedgerPage() {
                               }`}
                             >
                               <div className="flex justify-between items-center border-b border-slate-800/60 pb-1">
-                                <span className="font-mono text-[9px] text-slate-500">Slab #{idx + 1} {isActive && <span className="text-emerald-400 font-bold ml-1 font-sans">● Active</span>}</span>
+                                <span className="font-mono text-[9px] text-slate-500">Slab #{idx + 1} {isActive && <span className="text-emerald-600 font-bold ml-1 font-sans">● Active</span>}</span>
                                 <button
                                   type="button"
                                   onClick={() => removeBulkSlabRow(idx)}
@@ -2966,7 +2988,7 @@ export default function FinanceLedgerPage() {
                     </div>
 
                     <div className="text-right space-y-1">
-                      <div className="inline-block px-3 py-1 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 font-extrabold text-[10px] uppercase tracking-widest rounded-lg">
+                      <div className="inline-block px-3 py-1 bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold text-[10px] uppercase tracking-widest rounded-lg">
                         Official Commission Claim Invoice
                       </div>
                       <div className="text-xs text-slate-300 font-mono font-bold mt-2">
@@ -3279,7 +3301,7 @@ export default function FinanceLedgerPage() {
                   </div>
 
                   <div className="text-right space-y-1">
-                    <div className="inline-block px-3 py-1 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 font-extrabold text-[10px] uppercase tracking-widest rounded-lg">
+                    <div className="inline-block px-3 py-1 bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold text-[10px] uppercase tracking-widest rounded-lg">
                       Official Commission Claim Invoice
                     </div>
                     <div className="text-xs text-slate-300 font-mono font-bold mt-2">
