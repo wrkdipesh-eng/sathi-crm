@@ -18,7 +18,9 @@ import {
   Trash2,
   Pencil,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Phone,
+  Globe2
 } from 'lucide-react';
 import { isValidEmailFormat, isValidPhone } from '@/lib/validation';
 import { canCreateApplicant } from '@/lib/auth';
@@ -552,6 +554,28 @@ export default function ApplicantsListPage() {
       case 'PRE_DEPARTURE': return 'bg-teal-50 text-teal-700 border border-teal-100';
       default: return 'bg-slate-100 text-slate-700 border border-slate-200';
     }
+  };
+
+  // Friendly "Visa Granted" instead of a shouty "VISA_GRANTED"
+  const humanizeStage = (stg: string) =>
+    stg.split('_').map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+
+  const SOURCE_LABELS: Record<string, string> = Object.fromEntries(SOURCES.map((s) => [s.value, s.label]));
+
+  const getInitials = (name: string) =>
+    name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || '').join('') || '?';
+
+  const AVATAR_COLORS = [
+    'bg-indigo-100 text-indigo-700',
+    'bg-emerald-100 text-emerald-700',
+    'bg-amber-100 text-amber-700',
+    'bg-rose-100 text-rose-700',
+    'bg-sky-100 text-sky-700',
+    'bg-purple-100 text-purple-700',
+  ];
+  const getAvatarColor = (name: string) => {
+    const hash = name.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return AVATAR_COLORS[hash % AVATAR_COLORS.length];
   };
 
   // Real-time counts computed from the fetched (scope-filtered) list
@@ -1117,124 +1141,118 @@ export default function ApplicantsListPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="px-6 py-4">Applicant Name</th>
-                  <th className="px-6 py-4">Target Course / Country</th>
+                  <th className="px-6 py-4">Applicant</th>
+                  <th className="px-6 py-4">Applying For</th>
                   <th className="px-6 py-4">Counselor / Branch</th>
                   <th className="px-6 py-4">Source</th>
-                  <th className="px-6 py-4">Pipeline Stage</th>
-                  <th className="px-6 py-4">Days in Stage</th>
+                  <th className="px-6 py-4">Stage</th>
+                  <th className="px-6 py-4">Time in Stage</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50 text-xs text-slate-350">
                 {applicants.map((app) => {
                   const isStuck = app.daysInCurrentStage >= stuckThreshold;
+                  const extraApps = app.applications?.length || 0;
                   return (
-                    <tr 
-                      key={app.id} 
+                    <tr
+                      key={app.id}
                       className={`transition-all border-b border-slate-800/40 ${
                         isStuck
                           ? 'bg-amber-500/10 hover:bg-amber-500/15 border-l-2 border-l-amber-500/60'
                           : 'hover:bg-slate-850/40'
                       }`}
                     >
-                      <td className="px-6 py-4 font-medium text-slate-200">
-                        <div className="flex items-center space-x-2">
-                          <Link 
-                            href={`/dashboard/applicants/${app.id}`}
-                            className="hover:text-indigo-600 font-bold transition-all block text-sm"
-                          >
-                            {app.name}
-                          </Link>
-                          {app.priority && (
-                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wide uppercase ${
-                              app.priority === 'HOT' ? 'bg-rose-100 text-rose-700 border border-rose-200' :
-                              app.priority === 'WARM' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
-                              'bg-sky-100 text-sky-700 border border-sky-200'
-                            }`}>
-                              {app.priority}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">{app.phone || app.email || 'No contact'}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {/* Primary Target */}
-                        <div className="mb-2">
-                          <span className="font-semibold text-slate-200 truncate block max-w-[200px]" title={app.targetCourse}>
-                            {app.targetCourse || 'Undecided'}
-                          </span>
-                          {app.targetUniversity && (
-                            <span className="text-slate-350 text-[11px] font-medium block truncate max-w-[200px] mt-0.5">
-                              {app.targetUniversity}
-                            </span>
-                          )}
-                          <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
-                            <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[8px] rounded uppercase font-bold tracking-wide">
-                              Primary
-                            </span>
-                            <span className="text-[10px] text-indigo-400 font-semibold">{app.targetCountry}</span>
-                            {app.representationType && (
-                              <span className="px-1.5 py-0.2 bg-slate-900 text-slate-400 border border-slate-800 text-[8px] rounded-full uppercase font-bold tracking-wide">
-                                {app.representationType === 'PORTAL' ? `Portal: ${app.portalName || 'N/A'}` : 'Direct'}
-                              </span>
-                            )}
+                      <td className="px-6 py-4 align-top">
+                        <div className="flex items-start gap-3">
+                          <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold ${getAvatarColor(app.name)}`}>
+                            {getInitials(app.name)}
                           </div>
-                        </div>
-                        
-                        {/* Secondary Targets */}
-                        {app.applications && app.applications.map((otherApp: any) => (
-                          <div key={otherApp.id} className="mt-2.5 pt-2.5 border-t border-slate-800/40">
-                            <span className="text-slate-300 text-[11px] truncate block max-w-[200px] font-medium" title={otherApp.targetCourse}>
-                              {otherApp.targetCourse || 'Undecided'}
-                            </span>
-                            {otherApp.targetUniversity && (
-                              <span className="text-slate-400 text-[10px] block truncate max-w-[200px] mt-0.5">
-                                {otherApp.targetUniversity}
-                              </span>
-                            )}
-                            <div className="flex items-center flex-wrap gap-1 mt-1 text-[10px]">
-                              <span className="px-1 py-0.2 bg-slate-800 text-slate-400 border border-slate-700/60 text-[8px] rounded uppercase font-bold tracking-wide">
-                                Secondary
-                              </span>
-                              <span className="text-slate-400 font-semibold">{otherApp.targetCountry}</span>
-                              {otherApp.stage && (
-                                <span className="px-1.5 py-0.2 bg-slate-900 text-slate-400 border border-slate-800 text-[8px] rounded-full uppercase font-bold tracking-wide ml-0.5">
-                                  {otherApp.stage.replace('_', ' ')}
+                          <div className="min-w-0">
+                            <div className="flex items-center flex-wrap gap-1.5">
+                              <Link
+                                href={`/dashboard/applicants/${app.id}`}
+                                className="font-bold text-sm text-slate-200 hover:text-indigo-600 transition-all"
+                              >
+                                {app.name}
+                              </Link>
+                              {app.priority && (
+                                <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase ${
+                                  app.priority === 'HOT' ? 'bg-rose-100 text-rose-700' :
+                                  app.priority === 'WARM' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-sky-100 text-sky-700'
+                                }`}>
+                                  {app.priority}
                                 </span>
                               )}
                             </div>
+                            <span className="flex items-center gap-1 text-[11px] text-slate-400 mt-1">
+                              <Phone className="w-3 h-3 shrink-0" />
+                              {app.phone || app.email || 'No contact'}
+                            </span>
                           </div>
-                        ))}
+                        </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-slate-300">{app.counselor?.name || 'Unassigned'}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{app.branch?.name}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-0.5 bg-slate-850 text-[10px] text-slate-400 rounded-md font-medium border border-slate-800">
-                          {app.source}
+                      <td className="px-6 py-4 align-top">
+                        <span className="font-semibold text-slate-200 text-[13px] truncate block max-w-[220px]" title={app.targetCourse}>
+                          {app.targetCourse || 'Undecided'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${getStageBadgeColor(app.pipelineStage)}`}>
-                          {app.pipelineStage.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {isStuck ? (
-                          <span className="flex items-center space-x-1 text-amber-600 font-bold animate-pulse text-[11px]">
-                            <Clock className="w-3.5 h-3.5 text-amber-600 mr-0.5" />
-                            <span>{app.daysInCurrentStage} days (Stuck)</span>
+                        {app.targetUniversity && (
+                          <span className="flex items-center gap-1 text-slate-400 text-[11px] mt-1 truncate max-w-[220px]" title={app.targetUniversity}>
+                            <BookOpen className="w-3 h-3 shrink-0" />
+                            {app.targetUniversity}
                           </span>
-                        ) : (
-                          <span className="text-slate-400 font-mono text-[11px]">{app.daysInCurrentStage} day{app.daysInCurrentStage !== 1 && 's'}</span>
+                        )}
+                        <span className="flex items-center gap-1 text-[11px] text-indigo-400 font-medium mt-1">
+                          <Globe2 className="w-3 h-3 shrink-0" />
+                          {app.targetCountry}
+                          {app.representationType && (
+                            <span className="text-slate-500 font-normal">
+                              · {app.representationType === 'PORTAL' ? (app.portalName || 'Portal') : 'Direct'}
+                            </span>
+                          )}
+                        </span>
+                        {extraApps > 0 && (
+                          <span className="inline-flex items-center mt-2 px-2 py-0.5 bg-slate-850 text-slate-400 border border-slate-800 text-[10px] font-semibold rounded-full" title={app.applications.map((a: any) => `${a.targetCourse || 'Undecided'} — ${a.targetCountry}`).join(', ')}>
+                            +{extraApps} more application{extraApps !== 1 ? 's' : ''}
+                          </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 align-top">
+                        <div className={app.counselor?.name ? 'text-slate-200 font-medium' : 'text-slate-500 italic'}>
+                          {app.counselor?.name || 'Unassigned'}
+                        </div>
+                        <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1">
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          {app.branch?.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 align-top">
+                        <span className="inline-block px-2.5 py-1 bg-slate-850 text-[11px] text-slate-300 rounded-lg font-semibold border border-slate-800">
+                          {SOURCE_LABELS[app.source] || app.source}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 align-top">
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${getStageBadgeColor(app.pipelineStage)}`}>
+                          {humanizeStage(app.pipelineStage)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 align-top">
+                        {isStuck ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 rounded-lg font-bold text-[11px]">
+                            <Clock className="w-3.5 h-3.5" />
+                            {app.daysInCurrentStage} day{app.daysInCurrentStage !== 1 && 's'} — stuck
+                          </span>
+                        ) : (
+                          <span className="inline-block px-2.5 py-1 bg-slate-850 text-slate-400 border border-slate-800 rounded-lg text-[11px] font-medium">
+                            {app.daysInCurrentStage} day{app.daysInCurrentStage !== 1 && 's'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right align-top">
                         <Link
                           href={`/dashboard/applicants/${app.id}`}
-                          className="whitespace-nowrap px-3 py-1.5 bg-slate-850 hover:bg-indigo-50 text-indigo-600 border border-slate-800 text-[10px] font-bold rounded-lg transition-all"
+                          className="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-sm"
                         >
                           View Profile
                         </Link>
