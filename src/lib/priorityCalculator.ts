@@ -1,11 +1,17 @@
 import prisma from '@/lib/prisma';
 import { PipelineStage } from '@prisma/client';
+import { daysSince } from '@/lib/dates';
 
 export interface PriorityResult {
   priority: string | null;
   reason: string;
   missedFollowUpCount: number;
 }
+
+// Same "stuck" threshold used everywhere else in the app (reports, the
+// Leads page's default stuckThreshold) -- kept as one constant so this rule
+// can't silently drift out of sync with what the UI calls "stuck".
+const STUCK_THRESHOLD_DAYS = 7;
 
 /**
  * Calculate priority based on engagement, commitment, and follow-ups
@@ -16,6 +22,9 @@ export interface PriorityResult {
  * - COMMITMENT set + not expired → HOT (reason: SUBMISSION_COMMITTED)
  * - Commitment date passed unmet → WARM (reason: COMMITMENT_MISSED)
  * - 2+ missed follow-ups → COLD (reason: FOLLOWUP_MISSED)
+ * - Stuck in the same stage 7+ days with no commitment → COLD (reason:
+ *   STAGE_STUCK) — the same stalled-engagement signal as missed follow-ups,
+ *   so a lead nobody has moved forward doesn't sit at a false HOT/WARM.
  * - Default engaged leads → WARM
  *
  * Once the applicant is off the lead-conversion track, priority stops
@@ -34,7 +43,8 @@ export function calculatePriority(
   pipelineStage: PipelineStage,
   missedFollowUpCount: number,
   committedSubmissionDate?: Date | null,
-  applicantCreatedAt?: Date
+  applicantCreatedAt?: Date,
+  stageUpdatedAt?: Date
 ): PriorityResult {
   const now = new Date();
   const status = calculateApplicantStatus(pipelineStage);
@@ -85,6 +95,17 @@ export function calculatePriority(
         missedFollowUpCount,
       };
     }
+  }
+
+  // RULE 2.5: Stuck in the current stage with no commitment made → COLD.
+  // No commitment date means RULE 2 above didn't already resolve this lead,
+  // so being stuck here specifically means "nobody has moved this forward."
+  if (stageUpdatedAt && daysSince(stageUpdatedAt) >= STUCK_THRESHOLD_DAYS) {
+    return {
+      priority: 'COLD',
+      reason: 'STAGE_STUCK',
+      missedFollowUpCount,
+    };
   }
 
   // RULE 3: NEW ENTRY (very recent, no commitment yet)
@@ -201,6 +222,7 @@ export async function updateApplicantPriority(
         missedFollowUpCount: true,
         committedSubmissionDate: true,
         createdAt: true,
+        stageUpdatedAt: true,
       },
     });
 
@@ -216,7 +238,8 @@ export async function updateApplicantPriority(
       applicant.pipelineStage as PipelineStage,
       actualMissedCount,
       applicant.committedSubmissionDate,
-      applicant.createdAt
+      applicant.createdAt,
+      applicant.stageUpdatedAt
     );
 
     // Calculate new applicant status
@@ -265,6 +288,8 @@ export async function updateApplicantPriority(
                 ? `Applicant reached "${applicant.pipelineStage}" — priority cleared, no longer tracked as a lead`
                 : result.reason === 'RE_ENGAGE'
                 ? `Visa refused — reset to HOT in case the applicant reapplies to the same or a different destination`
+                : result.reason === 'STAGE_STUCK'
+                ? `Sitting in "${applicant.pipelineStage}" for ${STUCK_THRESHOLD_DAYS}+ days with no commitment date set`
                 : !priorityChanged && statusChanged
                 ? `Status changed from "${applicant.applicantStatus || 'none'}" to "${newApplicantStatus}" (priority unchanged: ${result.priority})`
                 : undefined,

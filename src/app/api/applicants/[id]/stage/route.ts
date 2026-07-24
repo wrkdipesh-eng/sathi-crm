@@ -110,7 +110,8 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         newStage,
         applicant.missedFollowUpCount,
         applicant.committedSubmissionDate,
-        applicant.createdAt
+        applicant.createdAt,
+        now // just transitioned, so 0 days into the new stage -- not stuck
       );
       const newStatus = calculateApplicantStatus(finalStage);
 

@@ -63,6 +63,8 @@ function describePriorityReason(applicant: any): string {
       return 'Application already submitted — no longer tracked as a lead.';
     case 'RE_ENGAGE':
       return 'Visa was refused — reset to HOT in case they reapply.';
+    case 'STAGE_STUCK':
+      return 'Stuck in the same stage for 7+ days with no commitment date set.';
     case 'STATUS_CHANGE':
       return 'Pipeline stage changed; priority itself was unaffected.';
     case 'AUTO_ASSIGNMENT':
