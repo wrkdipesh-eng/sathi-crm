@@ -2965,7 +2965,24 @@ export default function FinanceLedgerPage() {
               </div>
 
               {/* Right Column: Live Invoice Preview */}
-              <div className="w-full lg:w-[60%] p-6 space-y-6 overflow-y-auto print:overflow-visible print:p-8 print:text-slate-100 bg-[#020a06] print:bg-[#020a06] text-slate-100 min-h-0">
+              <div
+                className="w-full lg:w-[60%] p-6 space-y-6 overflow-y-auto print:overflow-visible print:p-8 print:text-slate-100 bg-[#020a06] print:bg-[#020a06] text-slate-100 min-h-0"
+                style={{
+                  ['--slate-50' as any]: '#f8fafc',
+                  ['--slate-100' as any]: '#f1f5f9',
+                  ['--slate-200' as any]: '#e2e8f0',
+                  ['--slate-300' as any]: '#cbd5e1',
+                  ['--slate-350' as any]: '#94a3b8',
+                  ['--slate-400' as any]: '#94a3b8',
+                  ['--slate-500' as any]: '#64748b',
+                  ['--slate-600' as any]: '#475569',
+                  ['--slate-700' as any]: '#334155',
+                  ['--slate-800' as any]: '#1e293b',
+                  ['--slate-850' as any]: '#0f172a',
+                  ['--slate-900' as any]: '#0f172a',
+                  ['--slate-950' as any]: '#020617',
+                }}
+              >
                 {!selectedUni ? (
                   <div className="flex flex-col items-center justify-center py-40 text-slate-500">
                     <FileSpreadsheet className="w-14 h-14 text-slate-700 animate-pulse mb-3" />
@@ -3020,7 +3037,7 @@ export default function FinanceLedgerPage() {
                         <span className="font-extrabold text-slate-200 print:text-slate-955 block text-xs">{billingToDetails.institution}</span>
                         <span className="text-slate-400 font-medium">
                           {billingToDetails.address}<br/>
-                          Intake Filter: <span className="text-slate-300 print:text-slate-805 font-semibold">{intakeFilter || 'All Pending Intakes'}</span><br/>
+                          Intake Filter: <span className="text-slate-300 print:text-slate-900 font-semibold">{intakeFilter || 'All Pending Intakes'}</span><br/>
                           Total Verified Students: <span className="text-emerald-400 font-bold">{bulkCalculations.length} Student(s)</span>
                         </span>
                       </div>
@@ -3032,7 +3049,7 @@ export default function FinanceLedgerPage() {
                     <div className="bg-[#03150d] print:bg-slate-50 border border-emerald-500/20 print:border-slate-300 p-3 rounded-2xl flex flex-wrap justify-between items-center gap-3 text-xs leading-none">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                        <span className="text-slate-300 print:text-slate-805 font-bold">
+                        <span className="text-slate-300 print:text-slate-900 font-bold">
                           Active Volume Slab Tier Applied:
                         </span>
                       </div>
@@ -3123,33 +3140,33 @@ export default function FinanceLedgerPage() {
                       <div className="space-y-1.5 text-slate-400 font-mono text-[10px] leading-relaxed">
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Bank Name:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.bankName}</span>
+                          <span className="text-slate-200 print:text-slate-900 font-bold">{bankDetails.bankName}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Branch:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.branch}</span>
+                          <span className="text-slate-200 print:text-slate-900 font-bold">{bankDetails.branch}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Account Name:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.accountName}</span>
+                          <span className="text-slate-200 print:text-slate-900 font-bold">{bankDetails.accountName}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Account No (NPR):</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.accountNo}</span>
+                          <span className="text-slate-200 print:text-slate-900 font-bold">{bankDetails.accountNo}</span>
                         </div>
                         <div className="flex justify-between border-b border-slate-900/60 pb-1">
                           <span>Swift Code:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">{bankDetails.swiftCode}</span>
+                          <span className="text-slate-200 print:text-slate-900 font-bold">{bankDetails.swiftCode}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>PAN Registration:</span>
-                          <span className="text-slate-250 print:text-slate-900 font-bold">609823412</span>
+                          <span className="text-slate-200 print:text-slate-900 font-bold">609823412</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-emerald-950/20 print:bg-slate-100 border border-emerald-500/20 print:border-slate-300 p-4 rounded-2xl space-y-3 font-mono">
-                      <span className="font-bold text-[9px] text-[#eab308] print:text-slate-855 uppercase tracking-wider block">Financial Summary Statement</span>
+                      <span className="font-bold text-[9px] text-[#eab308] print:text-slate-900 uppercase tracking-wider block">Financial Summary Statement</span>
                       <div className="space-y-2 text-[11px] leading-none">
                         <div className="flex justify-between text-slate-350 print:text-slate-700">
                           <span>Gross Base Commission:</span>
@@ -3283,8 +3300,29 @@ export default function FinanceLedgerPage() {
               </div>
             </div>
 
-            {/* Well-Structured Executive Invoice Sheet */}
-            <div className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-8 print:text-slate-100 bg-[#020a06] print:bg-[#020a06] text-slate-100">
+            {/* Well-Structured Executive Invoice Sheet -- this is a deliberately
+                dark-designed invoice (dark sheet, light text). Pin the dark slate
+                ramp so it renders correctly (light text on dark surfaces) in any
+                app theme, instead of the light theme flipping its surfaces to
+                white and leaving the light text invisible. */}
+            <div
+              className="p-8 space-y-6 overflow-y-auto print:overflow-visible flex-1 print:p-8 print:text-slate-100 bg-[#020a06] print:bg-[#020a06] text-slate-100"
+              style={{
+                ['--slate-50' as any]: '#f8fafc',
+                ['--slate-100' as any]: '#f1f5f9',
+                ['--slate-200' as any]: '#e2e8f0',
+                ['--slate-300' as any]: '#cbd5e1',
+                ['--slate-350' as any]: '#94a3b8',
+                ['--slate-400' as any]: '#94a3b8',
+                ['--slate-500' as any]: '#64748b',
+                ['--slate-600' as any]: '#475569',
+                ['--slate-700' as any]: '#334155',
+                ['--slate-800' as any]: '#1e293b',
+                ['--slate-850' as any]: '#0f172a',
+                ['--slate-900' as any]: '#0f172a',
+                ['--slate-950' as any]: '#020617',
+              }}
+            >
               <div className="max-w-4xl mx-auto bg-slate-950 print:bg-slate-950 border border-slate-800 print:border-slate-800 rounded-3xl p-8 print:p-8 shadow-2xl space-y-6 font-sans print-sheet">
                 
                 {/* Executive Branding Header */}
@@ -3401,7 +3439,7 @@ export default function FinanceLedgerPage() {
                     </div>
                     <div className="flex justify-between text-slate-400">
                       <span>Base Foreign Commission:</span>
-                      <span className="font-bold text-slate-200 print:text-slate-900">
+                      <span className="font-bold text-slate-200">
                         {generatedInvoiceData.bulkCalculations?.[0]?.currency} {generatedInvoiceData.bulkCalculations?.reduce((sum: number, c: any) => sum + c.baseCommForeign, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
