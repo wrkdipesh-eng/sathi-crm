@@ -82,7 +82,8 @@ export default function ApplicantsListPage() {
     email: '',
     phone: '',
     academicHistory: '',
-    testType: 'IELTS',
+    testType: '',
+    testTypeOther: '',
     testScore: '',
     targetCountry: '',
     targetCourse: '',
@@ -436,10 +437,17 @@ export default function ApplicantsListPage() {
 
     setIsSubmitting(true);
 
-    // Build the request body with formatted test scores
+    // Build the request body with formatted test scores -- test info is
+    // entirely optional (many leads apply without having sat a test yet),
+    // and "Other" lets counselors record test types not in the fixed list.
+    const effectiveTestType = (formData.testType === 'OTHER' ? formData.testTypeOther.trim() : formData.testType) || '';
+    const scoreValue = formData.testScore.trim();
+    const numericScore = parseFloat(scoreValue);
     const requestData = {
       ...formData,
-      testScores: formData.testScore ? { [formData.testType.toLowerCase()]: parseFloat(formData.testScore) } : {},
+      testScores: (effectiveTestType && scoreValue)
+        ? { [effectiveTestType.toLowerCase().replace(/\s+/g, '_')]: isNaN(numericScore) ? scoreValue : numericScore }
+        : {},
     };
 
     try {
@@ -471,7 +479,8 @@ export default function ApplicantsListPage() {
         email: '',
         phone: '',
         academicHistory: '',
-        testType: 'IELTS',
+        testType: '',
+        testTypeOther: '',
         testScore: '',
         targetCountry: 'Australia',
         targetCourse: '',
@@ -1634,13 +1643,14 @@ export default function ApplicantsListPage() {
                 </div>
               </div>
 
-              {/* 2. Academic & Tests */}
+              {/* 2. Academic & Tests -- entirely optional; most leads walk in
+                  before they've sat any English/entry test */}
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider border-b border-slate-800 pb-1.5">
                   2. Academic & Test Scores
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-3">
                     <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="academicHistory">
                       Academic History (Latest qualification & GPA/Percentage)
                     </label>
@@ -1654,49 +1664,90 @@ export default function ApplicantsListPage() {
                       className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1">
+                      Test Type
+                    </label>
+                    <select
+                      name="testType"
+                      value={formData.testType}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                    >
+                      <option value="">No Test Taken Yet</option>
+                      <option value="IELTS">IELTS</option>
+                      <option value="PTE">PTE</option>
+                      <option value="TOEFL">TOEFL</option>
+                      <option value="Duolingo">Duolingo</option>
+                      <option value="SAT">SAT</option>
+                      <option value="OTHER">Other (specify)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="testScore">
+                      Score
+                    </label>
+                    <input
+                      id="testScore"
+                      type="text"
+                      name="testScore"
+                      value={formData.testScore}
+                      onChange={handleInputChange}
+                      disabled={!formData.testType}
+                      placeholder={formData.testType ? 'e.g. 7.5 / 64' : 'N/A'}
+                      className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600 disabled:opacity-50 disabled:bg-slate-900"
+                    />
+                  </div>
+
+                  {formData.testType === 'OTHER' && (
                     <div>
-                      <label className="block text-[10px] text-slate-400 font-medium mb-1">
-                        Test Type
-                      </label>
-                      <select
-                        name="testType"
-                        value={formData.testType}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
-                      >
-                        <option value="IELTS">IELTS</option>
-                        <option value="PTE">PTE</option>
-                        <option value="SAT">SAT</option>
-                        <option value="TOEFL">TOEFL</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="testScore">
-                        Score
+                      <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="testTypeOther">
+                        Specify Test Name
                       </label>
                       <input
-                        id="testScore"
+                        id="testTypeOther"
                         type="text"
-                        name="testScore"
-                        value={formData.testScore}
+                        name="testTypeOther"
+                        value={formData.testTypeOther}
                         onChange={handleInputChange}
-                        placeholder="e.g. 7.5 / 64"
+                        placeholder="e.g. CAEL, CELPIP, MOI"
                         className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
                       />
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
-              {/* 3. Study Abroad Intent */}
+              {/* 3. Study Abroad Intent -- country first, then the partner
+                  university listing filters down to just that country's
+                  courses (set up under Control Panel > Partner Universities) */}
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider border-b border-slate-800 pb-1.5">
                   3. Study Abroad Placement Details
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-3">
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">Select Represented University (Optional Auto-fill)</label>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1">
+                      Target Country *
+                    </label>
+                    <select
+                      name="targetCountry"
+                      value={formData.targetCountry}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                    >
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.countryName}>{c.countryName}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1 font-mono">
+                      Select Partner University & Course ({formData.targetCountry || 'choose a country first'})
+                    </label>
                     <select
                       onChange={(e) => {
                         const val = e.target.value;
@@ -1718,28 +1769,14 @@ export default function ApplicantsListPage() {
                       className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
                     >
                       <option value="">-- Choose Partner University Listing --</option>
-                      {partnerUnis.map((uni) => (
-                        <option key={uni.id} value={uni.id}>
-                          {uni.name} ({uni.course} - {uni.country}) {uni.type === 'PORTAL' ? `[Portal: ${uni.portalName || 'N/A'}]` : '[Direct]'}
-                        </option>
-                      ))}
+                      {partnerUnis
+                        .filter((uni) => !formData.targetCountry || uni.country === formData.targetCountry)
+                        .map((uni) => (
+                          <option key={uni.id} value={uni.id}>
+                            {uni.name} ({uni.course}) {uni.type === 'PORTAL' ? `[Portal: ${uni.portalName || 'N/A'}]` : '[Direct]'}
+                          </option>
+                        ))}
                       <option value="CUSTOM">Custom (Fill manual fields below)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1">
-                      Target Country *
-                    </label>
-                    <select
-                      name="targetCountry"
-                      value={formData.targetCountry}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
-                    >
-                      {countries.map((c) => (
-                        <option key={c.id} value={c.countryName}>{c.countryName}</option>
-                      ))}
                     </select>
                   </div>
                   <div>
@@ -1874,25 +1911,10 @@ export default function ApplicantsListPage() {
                     </select>
                   </div>
 
-
-
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="priority">
-                      Lead Priority
-                    </label>
-                    <select
-                      id="priority"
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
-                    >
-                      <option value="">No Priority</option>
-                      <option value="HOT">🔥 Hot</option>
-                      <option value="WARM">⚡ Warm</option>
-                      <option value="COLD">❄️ Cold</option>
-                    </select>
-                  </div>
+                  {/* Lead Priority is not set manually here -- it's assigned
+                      automatically (new entries start HOT and move based on
+                      follow-up/commitment activity), consistent with the
+                      priority automation set up for this org. */}
 
                   {/* Sub-agent section, only active when source is SUB_AGENT */}
                   {formData.source === 'SUB_AGENT' && (
