@@ -54,16 +54,23 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       return NextResponse.json({ success: true, message: 'Already in this stage' });
     }
 
+    // A visa refusal loops the applicant back into Counseling to be
+    // re-engaged as a fresh lead (they may reapply) rather than sitting in
+    // a dead-end stage. The refusal itself is still logged for history/
+    // reporting -- only the applicant's resting stage differs from newStage.
+    const isVisaRefusal = newStage === PipelineStage.VISA_REFUSED;
+    const finalStage = isVisaRefusal ? PipelineStage.COUNSELLING : newStage;
+
     // Process transition in transaction
     const updatedApplicant = await prisma.$transaction(async (tx) => {
       // 1. Close current active stage log
       const activeLog = applicant.pipelineStageLogs[0];
       const now = new Date();
-      
+
       if (activeLog) {
         const diffTime = Math.abs(now.getTime() - activeLog.enteredAt.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+
         await tx.pipelineStageLog.update({
           where: { id: activeLog.id },
           data: {
@@ -73,17 +80,30 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         });
       }
 
-      // 2. Open new stage log
+      // 2. Open new stage log. A refusal logs an instant VISA_REFUSED entry
+      // (for history) immediately followed by the active COUNSELLING one.
+      if (isVisaRefusal) {
+        await tx.pipelineStageLog.create({
+          data: {
+            applicantId: id,
+            stage: PipelineStage.VISA_REFUSED,
+            enteredAt: now,
+            exitedAt: now,
+            durationDays: 0,
+          },
+        });
+      }
       await tx.pipelineStageLog.create({
         data: {
           applicantId: id,
-          stage: newStage,
+          stage: finalStage,
           enteredAt: now,
         },
       });
 
-      // 3. Update applicant stage fields & auto-update priority & status
-      // Calculate new priority based on new stage and commitment
+      // 3. Update applicant stage fields & auto-update priority & status.
+      // Priority/status are calculated off newStage (a refusal triggers the
+      // HOT re-engage reset) even though the applicant lands on finalStage.
       const priorityResult = calculatePriority(
         newStage,
         applicant.missedFollowUpCount,
@@ -101,7 +121,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       const updated = await tx.applicant.update({
         where: { id },
         data: {
-          pipelineStage: newStage,
+          pipelineStage: finalStage,
           daysInCurrentStage: 0,
           stageUpdatedAt: now,
           priority: priorityResult.priority,
@@ -139,7 +159,9 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         data: {
           type: CommunicationType.NOTE,
           title: 'Stage Transitioned',
-          content: `Pipeline stage updated from "${oldStage}" to "${newStage}".`,
+          content: isVisaRefusal
+            ? `Pipeline stage updated from "${oldStage}" to "VISA_REFUSED", then automatically moved back to "COUNSELLING" for re-engagement.`
+            : `Pipeline stage updated from "${oldStage}" to "${newStage}".`,
           senderName: authUser.name,
           applicantId: id,
         },
