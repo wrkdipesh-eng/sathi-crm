@@ -20,12 +20,16 @@ export async function GET(req: NextRequest) {
     // Enforce data-isolation filter criteria
     const accessFilter = getAccessQueryFilter(authUser);
 
-    // Build the query filters
+    // Commissions auto-create as soon as an applicant hits VISA_FILED (so
+    // the placement is tracked early), but they shouldn't surface on the
+    // Commissions & Fees ledger until the visa is actually granted -- a
+    // filed-but-undecided case isn't a confirmed placement yet.
     const where: any = {
       applicant: {
         AND: [
           accessFilter,
           branchId ? { branchId } : {},
+          { pipelineStage: 'VISA_GRANTED' },
         ],
       },
       status: status ? status : undefined,
