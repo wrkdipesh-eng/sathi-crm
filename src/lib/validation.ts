@@ -40,13 +40,13 @@ export async function verifyEmailDomain(email: string): Promise<EmailVerificatio
     return { valid: false, reason: 'Email address format is invalid' };
   }
 
-  if (ALLOWED_EMAIL_DOMAINS.has(domain)) {
+  if (ALLOWED_EMAIL_DOMAINS.has(domain) || domain.endsWith('.edu.np')) {
     return { valid: true };
   }
 
   return {
     valid: false,
-    reason: `Only Gmail, Yahoo, Outlook, Hotmail, iCloud, or Live email addresses are accepted`,
+    reason: `Only Gmail, Yahoo, Outlook, Hotmail, iCloud, Live, or .edu.np college email addresses are accepted`,
   };
 }
 
