@@ -97,6 +97,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    if (email) {
+      const existingVisitor = await prisma.visitor.findFirst({
+        where: { email, organizationId: authUser.organizationId },
+      });
+      if (existingVisitor) {
+        return NextResponse.json({ error: 'A visitor with this email already exists' }, { status: 400 });
+      }
+    }
+    if (phone) {
+      const existingVisitor = await prisma.visitor.findFirst({
+        where: { phone, organizationId: authUser.organizationId },
+      });
+      if (existingVisitor) {
+        return NextResponse.json({ error: 'A visitor with this phone number already exists' }, { status: 400 });
+      }
+    }
+
     const visitor = await prisma.visitor.create({
       data: {
         name,

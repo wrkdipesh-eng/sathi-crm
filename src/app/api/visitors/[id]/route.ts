@@ -53,6 +53,22 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     if (convertedApplicantId !== undefined && status !== 'CONVERTED') {
       return NextResponse.json({ error: 'convertedApplicantId can only be set alongside status: CONVERTED' }, { status: 400 });
     }
+    if (email && email !== visitor.email) {
+      const existingVisitor = await prisma.visitor.findFirst({
+        where: { email, organizationId: visitor.organizationId, id: { not: id } },
+      });
+      if (existingVisitor) {
+        return NextResponse.json({ error: 'A visitor with this email already exists' }, { status: 400 });
+      }
+    }
+    if (phone && phone !== visitor.phone) {
+      const existingVisitor = await prisma.visitor.findFirst({
+        where: { phone, organizationId: visitor.organizationId, id: { not: id } },
+      });
+      if (existingVisitor) {
+        return NextResponse.json({ error: 'A visitor with this phone number already exists' }, { status: 400 });
+      }
+    }
 
     const accessFilter = getVisitorAccessQueryFilter(authUser) as any;
     if (branchId !== undefined) {
