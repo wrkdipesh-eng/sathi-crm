@@ -140,19 +140,6 @@ export default function AdminSettingsPage() {
     }
   };
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('organization_theme_palette') || 'light-executive';
-    const savedCustom = localStorage.getItem('organization_custom_theme_colors');
-    let colorsObj = customThemeColors;
-    if (savedCustom) {
-      try {
-        colorsObj = JSON.parse(savedCustom);
-        setCustomThemeColors(colorsObj);
-      } catch (e) {}
-    }
-    setOrgForm(prev => ({ ...prev, themePalette: savedTheme }));
-    applyThemeColors(savedTheme, colorsObj);
-  }, []);
   const [isSavingOrg, setIsSavingOrg] = useState(false);
   const [orgError, setOrgError] = useState<string | null>(null);
 
@@ -302,6 +289,8 @@ export default function AdminSettingsPage() {
       if (orgRes.ok) {
         const data = await orgRes.json();
         if (data.organization) {
+          const themePalette = data.organization.themePalette || 'light-executive';
+          const colorsObj = data.organization.customThemeColors || customThemeColors;
           setOrgForm(prev => ({
             ...prev,
             name: data.organization.name || '',
@@ -310,7 +299,12 @@ export default function AdminSettingsPage() {
             logoIcon: data.organization.logoIcon || 'Globe',
             faviconUrl: data.organization.faviconUrl || '',
             titleTag: data.organization.titleTag || '',
+            themePalette,
           }));
+          if (data.organization.customThemeColors) {
+            setCustomThemeColors(colorsObj);
+          }
+          applyThemeColors(themePalette, colorsObj);
         }
       }
 
@@ -751,8 +745,6 @@ export default function AdminSettingsPage() {
     setOrgError(null);
 
     try {
-      localStorage.setItem('organization_theme_palette', orgForm.themePalette);
-      localStorage.setItem('organization_custom_theme_colors', JSON.stringify(customThemeColors));
       localStorage.setItem('organization_favicon_url', orgForm.faviconUrl);
       localStorage.setItem('organization_title_tag', orgForm.titleTag);
       applyThemeColors(orgForm.themePalette, customThemeColors);
@@ -760,7 +752,10 @@ export default function AdminSettingsPage() {
       const res = await fetch('/api/admin/organization', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orgForm),
+        body: JSON.stringify({
+          ...orgForm,
+          customThemeColors: orgForm.themePalette === 'custom' ? customThemeColors : undefined,
+        }),
       });
 
       const data = await res.json();

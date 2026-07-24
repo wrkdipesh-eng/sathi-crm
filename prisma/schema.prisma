@@ -57,6 +57,11 @@ model Organization {
   logoIcon            String?
   faviconUrl          String?
   titleTag            String?
+  // Org-wide UI theme -- set once by a Director/Superadmin in Control Panel
+  // and applied to every staff login server-side, instead of the old
+  // per-browser localStorage preference.
+  themePalette        String              @default("light-executive")
+  customThemeColors   Json?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   branches            Branch[]

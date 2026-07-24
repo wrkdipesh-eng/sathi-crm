@@ -11,6 +11,8 @@ export async function GET(req: NextRequest) {
         logoIcon: true,
         faviconUrl: true,
         titleTag: true,
+        themePalette: true,
+        customThemeColors: true,
       },
     });
 

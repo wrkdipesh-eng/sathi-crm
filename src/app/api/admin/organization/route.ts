@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
         logoIcon: true,
         faviconUrl: true,
         titleTag: true,
+        themePalette: true,
+        customThemeColors: true,
       },
     });
 
@@ -48,10 +50,15 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, tagline, logoUrl, logoIcon, faviconUrl, titleTag } = body;
+    const { name, tagline, logoUrl, logoIcon, faviconUrl, titleTag, themePalette, customThemeColors } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: 'Organization Name is required' }, { status: 400 });
+    }
+
+    const VALID_PALETTES = ['dark-emerald', 'dark-slate', 'dark-purple', 'light-executive', 'custom'];
+    if (themePalette !== undefined && !VALID_PALETTES.includes(themePalette)) {
+      return NextResponse.json({ error: 'Invalid theme palette' }, { status: 400 });
     }
 
     const updatedOrg = await prisma.organization.update({
@@ -63,6 +70,8 @@ export async function PATCH(req: NextRequest) {
         logoIcon: logoIcon ? logoIcon.trim() : null,
         faviconUrl: faviconUrl ? faviconUrl.trim() : null,
         titleTag: titleTag ? titleTag.trim() : null,
+        themePalette: themePalette !== undefined ? themePalette : undefined,
+        customThemeColors: customThemeColors !== undefined ? customThemeColors : undefined,
       },
     });
 
