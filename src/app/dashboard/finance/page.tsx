@@ -775,9 +775,11 @@ export default function FinanceLedgerPage() {
     }
   }, [editCommType, editCommPercent, editTuitionFee]);
 
+  // Only visa-granted applicants can be placed against a commission -- an
+  // applicant still filed/pending isn't a confirmed placement yet.
   const fetchApplicants = async () => {
     try {
-      const res = await fetch('/api/applicants');
+      const res = await fetch('/api/applicants?stage=VISA_GRANTED');
       const data = await res.json();
       if (data.success) {
         setApplicants(data.applicants);
@@ -2271,13 +2273,16 @@ export default function FinanceLedgerPage() {
                   }}
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-350 focus:outline-none"
                 >
-                  <option value="">Select Applicant...</option>
+                  <option value="">
+                    {applicants.length === 0 ? 'No visa-granted applicants yet' : 'Select Applicant...'}
+                  </option>
                   {applicants.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name} ({a.branch?.name || 'No Branch'})
                     </option>
                   ))}
                 </select>
+                <p className="text-[10px] text-slate-500 mt-1">Only applicants with an approved (Visa Granted) status can be placed here.</p>
               </div>
 
 
