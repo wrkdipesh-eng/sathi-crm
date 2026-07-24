@@ -81,6 +81,7 @@ export default function ApplicantsListPage() {
     name: '',
     email: '',
     phone: '',
+    qualificationLevel: '',
     academicHistory: '',
     testType: '',
     testTypeOther: '',
@@ -443,8 +444,15 @@ export default function ApplicantsListPage() {
     const effectiveTestType = (formData.testType === 'OTHER' ? formData.testTypeOther.trim() : formData.testType) || '';
     const scoreValue = formData.testScore.trim();
     const numericScore = parseFloat(scoreValue);
+    // Combine the guided Qualification Level with the free-text stream/GPA
+    // detail into the single academicHistory string the backend stores.
+    const combinedAcademicHistory = [formData.qualificationLevel, formData.academicHistory.trim()]
+      .filter(Boolean)
+      .join(' - ');
+
     const requestData = {
       ...formData,
+      academicHistory: combinedAcademicHistory,
       testScores: (effectiveTestType && scoreValue)
         ? { [effectiveTestType.toLowerCase().replace(/\s+/g, '_')]: isNaN(numericScore) ? scoreValue : numericScore }
         : {},
@@ -478,6 +486,7 @@ export default function ApplicantsListPage() {
         name: '',
         email: '',
         phone: '',
+        qualificationLevel: '',
         academicHistory: '',
         testType: '',
         testTypeOther: '',
@@ -1650,9 +1659,29 @@ export default function ApplicantsListPage() {
                   2. Academic & Test Scores
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-3">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="qualificationLevel">
+                      Qualification Level *
+                    </label>
+                    <select
+                      id="qualificationLevel"
+                      name="qualificationLevel"
+                      required
+                      value={formData.qualificationLevel}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 text-xs focus:outline-none"
+                    >
+                      <option value="">Select Level (min. +2)</option>
+                      <option value="+2 / A-Levels">+2 / A-Levels</option>
+                      <option value="Bachelor's Degree">Bachelor's Degree</option>
+                      <option value="Master's Degree">Master's Degree</option>
+                    </select>
+                    <p className="text-[9px] text-slate-500 mt-1">Only +2 and above are eligible for placement.</p>
+                  </div>
+
+                  <div className="md:col-span-2">
                     <label className="block text-[10px] text-slate-400 font-medium mb-1" htmlFor="academicHistory">
-                      Academic History (Latest qualification & GPA/Percentage)
+                      Stream & GPA / Percentage
                     </label>
                     <input
                       id="academicHistory"
@@ -1660,7 +1689,7 @@ export default function ApplicantsListPage() {
                       name="academicHistory"
                       value={formData.academicHistory}
                       onChange={handleInputChange}
-                      placeholder="e.g. +2 Science, GPA 3.25 / BBS, 62%"
+                      placeholder="e.g. Science, GPA 3.25 or BBS, 62%"
                       className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-xs focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
                     />
                   </div>
