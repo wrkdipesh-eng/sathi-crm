@@ -118,8 +118,10 @@ export async function GET(req: NextRequest) {
             ? { pipelineStage: 'CLASS_ENROLLMENT' }
             : category === 'ABROAD_ENROLLMENTS' || category === 'ABROAD_ENROLLMENT'
             ? { pipelineStage: { in: ['APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED'] } }
-            : category === 'DECISION'
-            ? { OR: [{ pipelineStage: { in: ['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'] } }, { everRefused: true }] }
+            : category === 'VISA_GRANTED'
+            ? { pipelineStage: { in: ['VISA_GRANTED', 'PRE_DEPARTURE'] } }
+            : category === 'VISA_REFUSED'
+            ? { OR: [{ pipelineStage: 'VISA_REFUSED' }, { everRefused: true }] }
             : {}
           : {},
         // Filter by target country

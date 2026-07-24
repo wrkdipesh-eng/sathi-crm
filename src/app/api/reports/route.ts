@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
       inquiringCount,
       classEnrollmentCount,
       abroadEnrollmentCount,
-      decisionCount,
+      grantedCount,
+      refusedCount,
       countriesGroup,
     ] = await Promise.all([
       // Core KPIs
@@ -152,6 +153,17 @@ export async function GET(req: NextRequest) {
           ],
         },
       }),
+      // A refusal loops the applicant back into Counseling (see the stage-
+      // transition route), so this also has to catch everRefused, not just
+      // whoever is currently still parked in VISA_REFUSED.
+      prisma.applicant.count({
+        where: {
+          AND: [
+            combinedFilter,
+            { OR: [{ pipelineStage: PipelineStage.VISA_REFUSED }, { everRefused: true }] },
+          ],
+        },
+      }),
 
       // Get list of unique target countries for filters
       prisma.applicant.groupBy({
@@ -249,7 +261,8 @@ export async function GET(req: NextRequest) {
         inquiringCount,
         classEnrollmentCount,
         abroadEnrollmentCount,
-        decisionCount,
+        grantedCount,
+        refusedCount,
       },
       leadsByCountry,
     });

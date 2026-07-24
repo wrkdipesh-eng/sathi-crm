@@ -142,7 +142,8 @@ export default function DashboardOverview() {
       inquiringCount: 0,
       classEnrollmentCount: 0,
       abroadEnrollmentCount: 0,
-      decisionCount: 0
+      grantedCount: 0,
+      refusedCount: 0
     }
   } = data;
 
@@ -187,12 +188,20 @@ export default function DashboardOverview() {
       bar: 'bg-amber-500', text: 'text-amber-400', dot: 'bg-amber-500',
     },
     {
-      key: 'DECISION',
-      label: 'Decision Made',
-      sub: 'Visa granted, refused, or preparing to depart',
-      count: quickFilters.decisionCount,
+      key: 'VISA_GRANTED',
+      label: 'Visa Granted',
+      sub: 'Approved, or preparing to depart',
+      count: quickFilters.grantedCount,
       match: (a: any) => ['VISA_GRANTED', 'PRE_DEPARTURE'].includes(a.pipelineStage),
       bar: 'bg-emerald-500', text: 'text-emerald-400', dot: 'bg-emerald-500',
+    },
+    {
+      key: 'VISA_REFUSED',
+      label: 'Visa Refused',
+      sub: 'Refused -- may still reapply',
+      count: quickFilters.refusedCount,
+      match: (a: any) => a.pipelineStage === 'VISA_REFUSED' || a.everRefused,
+      bar: 'bg-rose-500', text: 'text-rose-400', dot: 'bg-rose-500',
     },
   ];
   const funnelMax = Math.max(1, ...funnelStages.map((s) => s.count));

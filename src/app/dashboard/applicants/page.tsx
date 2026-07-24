@@ -403,8 +403,10 @@ export default function ApplicantsListPage() {
           if (stage !== 'CLASS_ENROLLMENT') return false;
         } else if (categoryFilter === 'ABROAD_ENROLLMENTS') {
           if (!['APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED'].includes(stage)) return false;
-        } else if (categoryFilter === 'DECISION') {
-          if (!['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(stage) && !app.everRefused) return false;
+        } else if (categoryFilter === 'VISA_GRANTED') {
+          if (!['VISA_GRANTED', 'PRE_DEPARTURE'].includes(stage)) return false;
+        } else if (categoryFilter === 'VISA_REFUSED') {
+          if (stage !== 'VISA_REFUSED' && !app.everRefused) return false;
         } else if (categoryFilter === 'ACTIVE_PIPELINES') {
           if (!['COUNSELLING', 'CLASS_ENROLLMENT', 'APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED', 'VISA_GRANTED'].includes(stage)) return false;
         } else if (categoryFilter === 'PRE_DEPARTURE') {
@@ -562,7 +564,8 @@ export default function ApplicantsListPage() {
   const inquiringCount = allApplicants.filter(a => a.pipelineStage === 'COUNSELLING').length;
   const classEnrollmentCount = allApplicants.filter(a => a.pipelineStage === 'CLASS_ENROLLMENT').length;
   const abroadEnrollmentCount = allApplicants.filter(a => ['APPLICATION_SUBMITTED', 'OFFER', 'VISA_FILED'].includes(a.pipelineStage)).length;
-  const decisionCount = allApplicants.filter(a => ['VISA_GRANTED', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage) || a.everRefused).length;
+  const grantedCount = allApplicants.filter(a => ['VISA_GRANTED', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
+  const refusedCount = allApplicants.filter(a => a.pipelineStage === 'VISA_REFUSED' || a.everRefused).length;
 
   const totalLeadsCount = allApplicants.length;
   const activePipelinesCount = allApplicants.filter(a => !['INQUIRY', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
@@ -574,7 +577,8 @@ export default function ApplicantsListPage() {
     INQUIRING: 'In Counselling',
     CLASS_ENROLLMENTS: 'Preparing to Apply',
     ABROAD_ENROLLMENTS: 'Applying & Visa',
-    DECISION: 'Decision Made',
+    VISA_GRANTED: 'Visa Granted',
+    VISA_REFUSED: 'Visa Refused',
     ACTIVE_PIPELINES: 'Currently Active',
     PRE_DEPARTURE: 'Pre-Departure',
   };
@@ -886,15 +890,27 @@ export default function ApplicantsListPage() {
               </button>
 
               <button
-                onClick={() => setCategoryFilter(categoryFilter === 'DECISION' ? '' : 'DECISION')}
+                onClick={() => setCategoryFilter(categoryFilter === 'VISA_GRANTED' ? '' : 'VISA_GRANTED')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
-                  categoryFilter === 'DECISION'
+                  categoryFilter === 'VISA_GRANTED'
                     ? 'bg-emerald-500/20 text-emerald-700 border-emerald-500/40'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>Decision Made ({decisionCount})</span>
+                <span>Visa Granted ({grantedCount})</span>
+              </button>
+
+              <button
+                onClick={() => setCategoryFilter(categoryFilter === 'VISA_REFUSED' ? '' : 'VISA_REFUSED')}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
+                  categoryFilter === 'VISA_REFUSED'
+                    ? 'bg-rose-500/20 text-rose-700 border-rose-500/40'
+                    : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span>Visa Refused ({refusedCount})</span>
               </button>
             </div>
           </div>
