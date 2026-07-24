@@ -494,7 +494,7 @@ export default function DashboardOverview() {
                       <span className="text-[10px] text-slate-500 block mt-0.5">{vs.approved} approved out of {vs.total} cases</span>
                     </div>
                   </div>
-                  <span className="px-2 py-1 rounded bg-indigo-950/60 text-indigo-300 font-bold font-mono text-sm border border-indigo-900/50">
+                  <span className="px-2.5 py-1 rounded-md bg-indigo-600 text-white font-bold font-mono text-sm shadow-sm">
                     {vs.rate}%
                   </span>
                 </Link>
