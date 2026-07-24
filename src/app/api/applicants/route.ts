@@ -3,7 +3,8 @@ import prisma from '@/lib/prisma';
 import { getAuthUser, getAccessQueryFilter } from '@/lib/auth';
 import { PipelineStage, DocumentStatus, CommunicationType, Role } from '@prisma/client';
 import { verifyEmailDomain, isValidPhone } from '@/lib/validation';
-import { daysSince, daysAgo } from '@/lib/dates';
+import { daysSince } from '@/lib/dates';
+import { computeLivePriorities } from '@/lib/priorityCalculator';
 
 // Helper: Seed checklist based on country (dynamic from DB)
 async function createChecklistDocs(applicantId: string, country: string, organizationId: string) {
@@ -77,8 +78,6 @@ export async function GET(req: NextRequest) {
     const counselorId = searchParams.get('counselorId');
     const source = searchParams.get('source');
     const university = searchParams.get('university');
-    const stuck = searchParams.get('stuck') === 'true';
-    const stuckThreshold = parseInt(searchParams.get('stuckThreshold') || '7', 10);
     const priority = searchParams.get('priority');
     const category = searchParams.get('category');
     const targetCountry = searchParams.get('targetCountry');
@@ -148,11 +147,6 @@ export async function GET(req: NextRequest) {
               ],
             }
           : {},
-        // Filter by stuck (days in stage exceeds threshold) -- computed from
-        // stageUpdatedAt rather than the stored daysInCurrentStage counter,
-        // which only ever gets set once (at the last stage change) and never
-        // updates again on its own.
-        stuck ? { stageUpdatedAt: { lte: daysAgo(stuckThreshold) } } : {},
       ],
     };
 
@@ -167,14 +161,18 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: 'desc' },
     });
 
-    // Surface a live "days in current stage" instead of the stale stored
-    // counter -- see the stuck-filter comment above.
-    const applicantsWithLiveDays = applicants.map((a) => ({
+    // Surface live "days in current stage" and priority instead of the
+    // stored columns, which only update when a real trigger event fires
+    // (stage change, commitment change, follow-up completion) and can
+    // otherwise silently go stale.
+    const livePriorities = await computeLivePriorities(applicants);
+    const applicantsWithLiveFields = applicants.map((a) => ({
       ...a,
       daysInCurrentStage: daysSince(a.stageUpdatedAt),
+      priority: livePriorities.get(a.id)?.priority ?? a.priority,
     }));
 
-    return NextResponse.json({ success: true, applicants: applicantsWithLiveDays });
+    return NextResponse.json({ success: true, applicants: applicantsWithLiveFields });
   } catch (error: any) {
     console.error('Fetch applicants error:', error);
     return NextResponse.json(

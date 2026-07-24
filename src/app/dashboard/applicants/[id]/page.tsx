@@ -583,8 +583,6 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
     );
   }
 
-  const isStuck = applicant.daysInCurrentStage >= 7;
-
   return (
     <div className="space-y-6">
       
@@ -619,12 +617,6 @@ export default function ApplicantDetailPage(props: { params: Promise<{ id: strin
                   'bg-slate-700/40 text-slate-300 border-slate-600'
                 }`}>
                   {applicant.applicantStatus === 'REAL' ? 'Real Applicant' : applicant.applicantStatus}
-                </span>
-              )}
-              {isStuck && (
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-[10px] flex items-center animate-pulse">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  Stuck lead ({applicant.daysInCurrentStage} days in stage)
                 </span>
               )}
             </div>

@@ -4,6 +4,7 @@ import { getAuthUser, canWriteApplicant } from '@/lib/auth';
 import { Role } from '@prisma/client';
 import { verifyEmailDomain, isValidPhone } from '@/lib/validation';
 import { daysSince } from '@/lib/dates';
+import { calculatePriority, countMissedFollowUps } from '@/lib/priorityCalculator';
 
 // GET: Retrieve single applicant with full relations
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -61,11 +62,30 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Surface a live "days in current stage" instead of the stale stored
-    // counter, which only ever gets set once (at the last stage change).
+    // Surface live "days in current stage" and priority instead of the
+    // stored columns, which only update when a real trigger event fires
+    // (stage change, commitment change, follow-up completion) and can
+    // otherwise silently go stale. priorityChangeReason is overridden too
+    // so the "why" text on the profile page always matches the badge
+    // actually shown.
+    const liveMissedCount = await countMissedFollowUps(applicant.id);
+    const livePriority = calculatePriority(
+      applicant.pipelineStage,
+      liveMissedCount,
+      applicant.committedSubmissionDate,
+      applicant.createdAt,
+      applicant.stageUpdatedAt
+    );
+
     return NextResponse.json({
       success: true,
-      applicant: { ...applicant, daysInCurrentStage: daysSince(applicant.stageUpdatedAt) },
+      applicant: {
+        ...applicant,
+        daysInCurrentStage: daysSince(applicant.stageUpdatedAt),
+        priority: livePriority.priority,
+        priorityChangeReason: livePriority.reason,
+        missedFollowUpCount: liveMissedCount,
+      },
     });
   } catch (error: any) {
     console.error('Fetch applicant detail error:', error);

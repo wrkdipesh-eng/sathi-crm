@@ -7,11 +7,9 @@ import {
   Search,
   Filter,
   UserPlus,
-  Clock,
   MapPin,
   CheckCircle,
   FileText,
-  AlertTriangle,
   Loader2,
   BookOpen,
   X,
@@ -56,14 +54,12 @@ export default function ApplicantsListPage() {
   const [universityFilter, setUniversityFilter] = useState('');
   const [targetCountryFilter, setTargetCountryFilter] = useState('');
 
-  const [stuckFilter, setStuckFilter] = useState(false);
-  const [stuckThreshold, setStuckThreshold] = useState(7);
   const [priorityFilter, setPriorityFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [initialized, setInitialized] = useState(false);
   // Advanced filters (Counselor, Lead Source, Target Country, University,
-  // exact stage, stuck-leads threshold) are hidden by default -- most staff
-  // only ever need Search, Branch, and the category/priority pills below.
+  // exact stage) are hidden by default -- most staff only ever need Search,
+  // Branch, and the category/priority pills below.
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   
   // Metadata for select dropdowns
@@ -190,10 +186,6 @@ export default function ApplicantsListPage() {
       if (sourceFilter) params.append('source', sourceFilter);
       if (universityFilter) params.append('university', universityFilter);
       if (targetCountryFilter) params.append('targetCountry', targetCountryFilter);
-      if (stuckFilter) {
-        params.append('stuck', 'true');
-        params.append('stuckThreshold', stuckThreshold.toString());
-      }
 
       const res = await fetch(`/api/applicants?${params.toString()}`);
       if (res.ok) {
@@ -212,14 +204,12 @@ export default function ApplicantsListPage() {
       const params = new URLSearchParams(window.location.search);
       const pri = params.get('priority');
       const cat = params.get('category');
-      const stuck = params.get('stuck');
       const counselor = params.get('counselorId');
       const src = params.get('source');
       const country = params.get('targetCountry') || params.get('country');
 
       if (pri) setPriorityFilter(pri);
       if (cat) setCategoryFilter(cat);
-      if (stuck === 'true') setStuckFilter(true);
       if (counselor) setCounselorFilter(counselor);
       if (src) setSourceFilter(src);
       if (country) setTargetCountryFilter(country);
@@ -232,7 +222,7 @@ export default function ApplicantsListPage() {
     if (initialized) {
       fetchApplicants();
     }
-  }, [initialized, search, stage, branchFilter, counselorFilter, sourceFilter, universityFilter, stuckFilter, stuckThreshold, targetCountryFilter]);
+  }, [initialized, search, stage, branchFilter, counselorFilter, sourceFilter, universityFilter, targetCountryFilter]);
 
   // Fetch visitors based on filter
   const fetchVisitors = async () => {
@@ -593,7 +583,6 @@ export default function ApplicantsListPage() {
 
   const totalLeadsCount = allApplicants.length;
   const activePipelinesCount = allApplicants.filter(a => !['INQUIRY', 'VISA_REFUSED', 'PRE_DEPARTURE'].includes(a.pipelineStage)).length;
-  const stuckLeadsCount = allApplicants.filter(a => a.daysInCurrentStage >= stuckThreshold).length;
 
   // Plain-language names for the category quick-filter codes, reused by the active-filter chips below
   const CATEGORY_LABELS: Record<string, string> = {
@@ -626,7 +615,6 @@ export default function ApplicantsListPage() {
   }
   if (universityFilter) activeFilterChips.push({ key: 'university', label: `University: "${universityFilter}"`, onRemove: () => setUniversityFilter('') });
   if (targetCountryFilter) activeFilterChips.push({ key: 'country', label: `Country: ${targetCountryFilter}`, onRemove: () => setTargetCountryFilter('') });
-  if (stuckFilter) activeFilterChips.push({ key: 'stuck', label: `Stuck Only (${stuckThreshold}+ days)`, onRemove: () => setStuckFilter(false) });
   if (priorityFilter) activeFilterChips.push({ key: 'priority', label: `Priority: ${priorityFilter === 'NONE' ? 'No Priority' : priorityFilter}`, onRemove: () => setPriorityFilter('') });
   if (categoryFilter) activeFilterChips.push({ key: 'category', label: CATEGORY_LABELS[categoryFilter] || categoryFilter, onRemove: () => setCategoryFilter('') });
 
@@ -638,7 +626,6 @@ export default function ApplicantsListPage() {
     setSourceFilter('');
     setUniversityFilter('');
     setTargetCountryFilter('');
-    setStuckFilter(false);
     setPriorityFilter('');
     setCategoryFilter('');
   };
@@ -739,8 +726,8 @@ export default function ApplicantsListPage() {
       {/* Filters Section -- Search + Branch stay visible at all times; the
           category pills below answer "which leads do I want to see" in
           plain language; anything more technical (exact stage, counselor,
-          source, country, university, stuck-leads threshold) is tucked
-          behind "More filters" so the page isn't overwhelming by default. */}
+          source, country, university) is tucked behind "More filters" so
+          the page isn't overwhelming by default. */}
       <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-5">
         <div className="flex items-center space-x-2 text-xs font-bold text-indigo-400 uppercase tracking-wider">
           <Filter className="w-3.5 h-3.5" />
@@ -793,12 +780,11 @@ export default function ApplicantsListPage() {
               <span className="text-xs font-bold text-slate-400">Quick Filters</span>
               <p className="text-[10px] text-slate-500 mt-0.5">Tap any group to show just those students below.</p>
             </div>
-            {(priorityFilter || categoryFilter || stuckFilter) && (
+            {(priorityFilter || categoryFilter) && (
               <button
                 onClick={() => {
                   setPriorityFilter('');
                   setCategoryFilter('');
-                  setStuckFilter(false);
                 }}
                 className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-4 cursor-pointer transition-all select-none animate-fade-in"
               >
@@ -947,10 +933,9 @@ export default function ApplicantsListPage() {
                 onClick={() => {
                   setPriorityFilter('');
                   setCategoryFilter('');
-                  setStuckFilter(false);
                 }}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
-                  (!priorityFilter && !categoryFilter && !stuckFilter)
+                  (!priorityFilter && !categoryFilter)
                     ? 'bg-indigo-500/20 text-indigo-700 border-indigo-500/50'
                     : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
                 }`}
@@ -960,10 +945,7 @@ export default function ApplicantsListPage() {
               </button>
 
               <button
-                onClick={() => {
-                  setCategoryFilter(categoryFilter === 'ACTIVE_PIPELINES' ? '' : 'ACTIVE_PIPELINES');
-                  setStuckFilter(false);
-                }}
+                onClick={() => setCategoryFilter(categoryFilter === 'ACTIVE_PIPELINES' ? '' : 'ACTIVE_PIPELINES')}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
                   categoryFilter === 'ACTIVE_PIPELINES'
                     ? 'bg-purple-500/20 text-purple-700 border-purple-500/50'
@@ -972,22 +954,6 @@ export default function ApplicantsListPage() {
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                 <span>Currently Active ({activePipelinesCount})</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setStuckFilter(!stuckFilter);
-                  setCategoryFilter('');
-                  setPriorityFilter('');
-                }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer border ${
-                  stuckFilter
-                    ? 'bg-amber-500/20 text-amber-700 border-amber-500/50'
-                    : 'bg-slate-950/40 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
-                }`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                <span>Needs Attention ({stuckLeadsCount})</span>
               </button>
             </div>
           </div>
@@ -1085,35 +1051,6 @@ export default function ApplicantsListPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Stuck Leads Filter */}
-              <div className="flex flex-wrap items-center gap-4">
-                <label className="flex items-center space-x-2 text-xs text-slate-300 font-medium cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={stuckFilter}
-                    onChange={(e) => setStuckFilter(e.target.checked)}
-                    className="w-4 h-4 accent-indigo-600 rounded bg-slate-950 border-slate-800 focus:ring-indigo-500/20"
-                  />
-                  <span className="flex items-center space-x-1">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Show Stuck Leads Only</span>
-                  </span>
-                </label>
-
-                {stuckFilter && (
-                  <div className="flex items-center space-x-2 animate-fade-in">
-                    <span className="text-[10px] text-slate-400">Threshold (days):</span>
-                    <input
-                      type="number"
-                      min="1"
-                      value={stuckThreshold}
-                      onChange={(e) => setStuckThreshold(Math.max(1, parseInt(e.target.value) || 7))}
-                      className="w-14 px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-slate-200 text-xs font-mono text-center"
-                    />
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>
@@ -1152,16 +1089,11 @@ export default function ApplicantsListPage() {
               </thead>
               <tbody className="divide-y divide-slate-800/50 text-xs text-slate-350">
                 {applicants.map((app) => {
-                  const isStuck = app.daysInCurrentStage >= stuckThreshold;
                   const extraApps = app.applications?.length || 0;
                   return (
                     <tr
                       key={app.id}
-                      className={`transition-all border-b border-slate-800/40 ${
-                        isStuck
-                          ? 'bg-amber-500/10 hover:bg-amber-500/15 border-l-2 border-l-amber-500/60'
-                          : 'hover:bg-slate-850/40'
-                      }`}
+                      className="transition-all border-b border-slate-800/40 hover:bg-slate-850/40"
                     >
                       <td className="px-6 py-4 align-top">
                         <div className="flex items-start gap-3">
@@ -1238,16 +1170,9 @@ export default function ApplicantsListPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 align-top">
-                        {isStuck ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 rounded-lg font-bold text-[11px]">
-                            <Clock className="w-3.5 h-3.5" />
-                            {app.daysInCurrentStage} day{app.daysInCurrentStage !== 1 && 's'} — stuck
-                          </span>
-                        ) : (
-                          <span className="inline-block px-2.5 py-1 bg-slate-850 text-slate-400 border border-slate-800 rounded-lg text-[11px] font-medium">
-                            {app.daysInCurrentStage} day{app.daysInCurrentStage !== 1 && 's'}
-                          </span>
-                        )}
+                        <span className="inline-block px-2.5 py-1 bg-slate-850 text-slate-400 border border-slate-800 rounded-lg text-[11px] font-medium">
+                          {app.daysInCurrentStage} day{app.daysInCurrentStage !== 1 && 's'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-right align-top">
                         <Link

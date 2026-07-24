@@ -8,8 +8,6 @@ import {
   CheckCircle2,
   DollarSign,
   Award,
-  AlertTriangle,
-  ArrowRight,
   TrendingUp,
   Globe,
   Loader2,
@@ -130,7 +128,6 @@ export default function DashboardOverview() {
     kpis,
     counselorConversions,
     visaStats,
-    agingLeads,
     leadsByCountry = [],
     leadsBySource = [],
     quickFilters = {
@@ -261,9 +258,9 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Executive Summary — the four numbers a director cares about most.
+      {/* Executive Summary — the numbers a director cares about most.
           Clicking a card opens the matching leads inline below, not a new page. */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <button
           type="button"
           onClick={() => openDrill('total', 'All Leads', () => true)}
@@ -309,27 +306,6 @@ export default function DashboardOverview() {
           <p className="text-xs text-slate-500 mt-2">
             {totalDecided > 0 ? `${totalApproved} of ${totalDecided} decided cases approved` : 'No visa decisions logged yet'}
           </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => openDrill('stuck', 'Needs Attention (Stuck Leads)', (a) => (a.daysInCurrentStage || 0) >= 7)}
-          className={`text-left p-6 rounded-2xl border shadow-sm transition-all group cursor-pointer ${
-            drill?.key === 'stuck'
-              ? 'bg-amber-500/10 border-amber-500 ring-2 ring-amber-500/30'
-              : kpis.stuckLeads > 0
-              ? 'bg-amber-500/10 border-amber-500/40 hover:border-amber-500'
-              : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Needs Attention</span>
-            <div className={`p-2 rounded-xl group-hover:scale-105 transition-transform ${kpis.stuckLeads > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-500'}`}>
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </div>
-          <h2 className={`text-4xl font-extrabold font-mono ${kpis.stuckLeads > 0 ? 'text-amber-600' : 'text-slate-100'}`}>{kpis.stuckLeads}</h2>
-          <p className="text-xs text-slate-500 mt-2">Leads stuck in the same stage for over a week</p>
         </button>
       </div>
 
@@ -670,60 +646,6 @@ export default function DashboardOverview() {
               ))
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Stuck Leads Aging Card Report */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="font-bold text-sm text-slate-100 flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-2 text-amber-500" />
-              Leads That Need Immediate Attention
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5 ml-6">Sitting in the same stage for over a week with no progress</p>
-          </div>
-          <Link href="/dashboard/applicants?stuck=true" className="text-xs text-indigo-600 hover:underline flex items-center font-semibold shrink-0">
-            <span>View All</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-1" />
-          </Link>
-        </div>
-
-        <div className="overflow-x-auto">
-          {agingLeads.length === 0 ? (
-            <p className="text-slate-500 text-center py-4 text-xs">Nothing stuck right now — every lead is moving forward on schedule.</p>
-          ) : (
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="pb-2">Student Name</th>
-                  <th className="pb-2">Current Pipeline Stage</th>
-                  <th className="pb-2">Assigned Counselor</th>
-                  <th className="pb-2">Branch Office</th>
-                  <th className="pb-2 text-right">Days Stuck</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-850 text-slate-300">
-                {agingLeads.map((al: any) => (
-                  <tr key={al.id} className="hover:bg-slate-850/50">
-                    <td className="py-2.5 font-bold text-slate-200">
-                      <Link href={`/dashboard/applicants/${al.id}`} className="hover:text-indigo-600 hover:underline">
-                        {al.name}
-                      </Link>
-                    </td>
-                    <td className="py-2.5">
-                      <span className="px-1.5 py-0.5 bg-slate-850 text-[9px] rounded font-semibold text-slate-400">
-                        {al.stage.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="py-2.5">{al.counselor}</td>
-                    <td className="py-2.5 text-slate-400">{al.branch}</td>
-                    <td className="py-2.5 text-right font-mono font-bold text-amber-600">{al.days} days</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
       </div>
 

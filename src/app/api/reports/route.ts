@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser, getAccessQueryFilter } from '@/lib/auth';
 import { PipelineStage, Role } from '@prisma/client';
-import { daysSince, daysAgo } from '@/lib/dates';
+import { computeLivePriorities } from '@/lib/priorityCalculator';
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,27 +27,17 @@ export async function GET(req: NextRequest) {
       combinedFilter.branchId = branchId;
     }
 
-    // "Stuck" is derived live from stageUpdatedAt rather than the stored
-    // daysInCurrentStage counter, which only ever gets set once (at the
-    // last stage change) and never updates again on its own.
-    const stuckCutoff = daysAgo(7);
-
     // Run all independent queries in parallel — ~10x faster than sequential
     const [
       totalLeads,
       activePipelines,
       visaApproved,
-      stuckLeads,
       leadsBySourceGroup,
       leadsByCountryGroup,
       branches,
       counselors,
       visaApplicants,
-      agingLeads,
-      hotCount,
-      warmCount,
-      coldCount,
-      noPriorityCount,
+      priorityFields,
       leadCount,
       inquiringCount,
       classEnrollmentCount,
@@ -68,9 +58,6 @@ export async function GET(req: NextRequest) {
       }),
       prisma.applicant.count({
         where: { AND: [combinedFilter, { pipelineStage: PipelineStage.PRE_DEPARTURE }] },
-      }),
-      prisma.applicant.count({
-        where: { AND: [combinedFilter, { stageUpdatedAt: { lte: stuckCutoff } }] },
       }),
 
       // Leads by Source
@@ -122,22 +109,14 @@ export async function GET(req: NextRequest) {
         },
       }),
 
-      // Aging leads (stuck > 7 days)
+      // Priority counts are computed live below (not via the stored
+      // `priority` column, which only updates on real trigger events and
+      // can otherwise silently go stale) -- this just fetches what's needed
+      // to calculate it per applicant.
       prisma.applicant.findMany({
-        where: { AND: [combinedFilter, { stageUpdatedAt: { lte: stuckCutoff } }] },
-        include: {
-          branch: { select: { name: true } },
-          counselor: { select: { name: true } },
-        },
-        orderBy: { stageUpdatedAt: 'asc' },
-        take: 5,
+        where: combinedFilter,
+        select: { id: true, pipelineStage: true, committedSubmissionDate: true, createdAt: true, stageUpdatedAt: true },
       }),
-
-      // Quick filter — priority counts
-      prisma.applicant.count({ where: { AND: [combinedFilter, { priority: 'HOT' }] } }),
-      prisma.applicant.count({ where: { AND: [combinedFilter, { priority: 'WARM' }] } }),
-      prisma.applicant.count({ where: { AND: [combinedFilter, { priority: 'COLD' }] } }),
-      prisma.applicant.count({ where: { AND: [combinedFilter, { priority: null }] } }),
 
       // Quick filter — stage counts
       prisma.applicant.count({ where: { AND: [combinedFilter, { pipelineStage: PipelineStage.INQUIRY }] } }),
@@ -177,6 +156,16 @@ export async function GET(req: NextRequest) {
         where: accessFilter,
       }),
     ]);
+
+    // Derive live priority counts (see the priorityFields query above)
+    const livePriorities = await computeLivePriorities(priorityFields);
+    let hotCount = 0, warmCount = 0, coldCount = 0, noPriorityCount = 0;
+    for (const result of livePriorities.values()) {
+      if (result.priority === 'HOT') hotCount++;
+      else if (result.priority === 'WARM') warmCount++;
+      else if (result.priority === 'COLD') coldCount++;
+      else noPriorityCount++;
+    }
 
     // Shape derived data
     const countries = countriesGroup.map((g) => g.targetCountry).filter(Boolean);
@@ -245,19 +234,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       countries,
-      kpis: { totalLeads, activePipelines, visaApproved, stuckLeads },
+      kpis: { totalLeads, activePipelines, visaApproved },
       leadsBySource,
       revenueByBranch,
       counselorConversions,
       visaStats,
-      agingLeads: agingLeads.map((l) => ({
-        id: l.id,
-        name: l.name,
-        stage: l.pipelineStage,
-        days: daysSince(l.stageUpdatedAt),
-        counselor: l.counselor?.name || 'Unassigned',
-        branch: l.branch?.name,
-      })),
       quickFilters: {
         hotCount,
         warmCount,

@@ -183,6 +183,61 @@ export async function countMissedFollowUps(applicantId: string): Promise<number>
   return missedFollowUps;
 }
 
+export interface LivePriorityInput {
+  id: string;
+  pipelineStage: PipelineStage;
+  committedSubmissionDate: Date | null;
+  createdAt: Date;
+  stageUpdatedAt: Date;
+}
+
+/**
+ * Compute priority live for a batch of applicants, for display/filtering
+ * purposes -- does NOT persist anything or touch the audit trail (that
+ * still only happens via the real trigger events in updateApplicantPriority:
+ * commitment changes, follow-up completion, stage transitions, the manual
+ * recalc endpoint). This exists so every place that shows or filters by
+ * priority (lists, reports, detail pages) reflects the truth right now
+ * rather than whatever the stored column happened to be set to last.
+ *
+ * One batched groupBy for missed follow-ups instead of N queries.
+ */
+export async function computeLivePriorities(
+  applicants: LivePriorityInput[]
+): Promise<Map<string, PriorityResult>> {
+  const now = new Date();
+  const ids = applicants.map((a) => a.id);
+
+  const missedGroups = ids.length
+    ? await prisma.communicationLog.groupBy({
+        by: ['applicantId'],
+        where: {
+          applicantId: { in: ids },
+          type: 'TASK',
+          dueDate: { lt: now },
+          status: { not: 'COMPLETED' },
+        },
+        _count: { id: true },
+      })
+    : [];
+  const missedByApplicant = new Map(missedGroups.map((g) => [g.applicantId, g._count.id]));
+
+  const result = new Map<string, PriorityResult>();
+  for (const a of applicants) {
+    result.set(
+      a.id,
+      calculatePriority(
+        a.pipelineStage,
+        missedByApplicant.get(a.id) || 0,
+        a.committedSubmissionDate,
+        a.createdAt,
+        a.stageUpdatedAt
+      )
+    );
+  }
+  return result;
+}
+
 /**
  * Get the most recent follow-up task's due date
  */
